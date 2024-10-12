@@ -1,4 +1,4 @@
-import loginImage from "@/assets/login-image.png";
+import loginImage from "@/assets/auth-image.png";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
