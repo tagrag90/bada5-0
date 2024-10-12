@@ -6,16 +6,16 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-10 bg-[#4F4F4F] shadow-sm">
+    <header className="sticky top-0 z-10 bg-black shadow-sm">
       <div className="mx-auto flex max-w-7xl flex-nowrap items-center justify-center gap-5 px-5 py-3">
         <Image
           src={Logo} //
           alt="logo"
-          width={40}
-          height={40}
-          className="hidden rounded-full md:block"
+          width={45}
+          height={45}
+          className="rounded-full md:block"
         />
-        <Link href="/" className="text-lg font-bold text-primary text-white">
+        <Link href="/" className="hidden text-lg font-bold text-white">
           DTB
         </Link>
         <SearchField />
