@@ -1,4 +1,4 @@
-import signupImage from "@/assets/signup-image.png";
+import signupImage from "@/assets/singup-image.png";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
