@@ -19,10 +19,10 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | 馬山商會",
-    default: "馬山商會",
+    template: "%s | Dive to Bada",
+    default: "Dive to Bada",
   },
-  description: "The social media app for 馬山商會",
+  description: "The social media app for Entertainment",
 };
 
 export default function RootLayout({
