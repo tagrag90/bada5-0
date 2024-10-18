@@ -28,7 +28,7 @@ interface UserButtonProps {
 export default function UserButton({ className }: UserButtonProps) {
   const { user } = useSession();
 
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
 
   const queryClient = useQueryClient();
 
@@ -54,11 +54,11 @@ export default function UserButton({ className }: UserButtonProps) {
           </DropdownMenuItem>
         </Link>
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
+          {/* <DropdownMenuSubTrigger>
             <Monitor className="mr-2 size-4" />
             Theme
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
+          </DropdownMenuSubTrigger> */}
+          {/* <DropdownMenuPortal>
             <DropdownMenuSubContent>
               <DropdownMenuItem onClick={() => setTheme("system")}>
                 <Monitor className="mr-2 size-4" />
@@ -76,7 +76,7 @@ export default function UserButton({ className }: UserButtonProps) {
                 {theme === "dark" && <Check className="ms-2 size-4" />}
               </DropdownMenuItem>
             </DropdownMenuSubContent>
-          </DropdownMenuPortal>
+          </DropdownMenuPortal> */}
         </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
