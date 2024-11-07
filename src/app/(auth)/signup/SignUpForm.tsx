@@ -48,9 +48,11 @@ export default function SignUpForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel className="text-md font-semibold text-black">
+                나를 나타내는 ID를 만들어주세요!
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Username" {...field} />
+                <Input placeholder="ex:Divetobada" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -61,7 +63,9 @@ export default function SignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-md font-semibold text-black">
+                로그인에 사용할 이메일이 필요해요.
+              </FormLabel>
               <FormControl>
                 <Input placeholder="Email" type="email" {...field} />
               </FormControl>
@@ -74,7 +78,9 @@ export default function SignUpForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-md font-semibold text-black">
+                비밀번호를 설정해주세요!
+              </FormLabel>
               <FormControl>
                 <PasswordInput placeholder="Password" {...field} />
               </FormControl>
@@ -83,7 +89,7 @@ export default function SignUpForm() {
           )}
         />
         <LoadingButton loading={isPending} type="submit" className="w-full">
-          Create account
+          이 계정으로 시작할게요
         </LoadingButton>
       </form>
     </Form>

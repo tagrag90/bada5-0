@@ -38,7 +38,7 @@ export default function Bookmarks() {
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
       <p className="text-center text-muted-foreground">
-        You don&apos;t have any bookmarks yet.
+        북마크한 게시물이 없어요.
       </p>
     );
   }
