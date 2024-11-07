@@ -12,12 +12,12 @@ export async function login(
   credentials: LoginValues,
 ): Promise<{ error: string }> {
   try {
-    const { email, password } = loginSchema.parse(credentials);
+    const { username, password } = loginSchema.parse(credentials);
 
     const existingUser = await prisma.user.findFirst({
       where: {
         username: {
-          equals: email,
+          equals: username,
           mode: "insensitive",
         },
       },
