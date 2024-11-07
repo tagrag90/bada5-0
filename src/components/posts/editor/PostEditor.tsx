@@ -43,7 +43,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "What's happening there?",
+        placeholder: "무슨 일이 있었나요?",
       }),
     ],
   });

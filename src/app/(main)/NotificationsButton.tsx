@@ -40,7 +40,7 @@ export default function NotificationsButton({
             </span>
           )}
         </div>
-        <span className="hidden lg:inline">Notifications</span>
+        <span className="hidden lg:inline">알림</span>
       </Link>
     </Button>
   );
