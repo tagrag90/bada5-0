@@ -6,6 +6,8 @@ import { Bookmark, Home } from "lucide-react";
 import Link from "next/link";
 import MessagesButton from "./MessagesButton";
 import NotificationsButton from "./NotificationsButton";
+import UserAvatar from "@/components/UserAvatar";
+import { cn } from "@/lib/utils";
 
 interface MenuBarProps {
   className?: string;
@@ -52,6 +54,26 @@ export default async function MenuBar({ className }: MenuBarProps) {
         <Link href="/bookmarks">
           <Bookmark />
           <span className="hidden lg:inline">북마크</span>
+        </Link>
+      </Button>
+
+      <Button
+        variant="ghost"
+        className="flex items-center justify-start gap-3 md:w-full"
+        title="Profile"
+      >
+        <Link
+          href={`/users/${user.username}`}
+          className="flex items-center gap-3"
+        >
+          <div className="flex items-center gap-3">
+            <UserAvatar
+              avatarUrl={user.avatarUrl}
+              size={30}
+              className="border-2 border-gray-600"
+            />
+            <span className="hidden lg:inline">프로필</span>
+          </div>
         </Link>
       </Button>
     </div>
