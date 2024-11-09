@@ -85,8 +85,8 @@ export default function UserButton({ className }: UserButtonProps) {
             logout();
           }}
         >
-          <LogOutIcon className="mr-2 size-4" />
-          Logout
+          <LogOutIcon className="mr-2 size-4 text-pink-700" />
+          <p className="text-pink-700">Logout</p>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
