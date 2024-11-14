@@ -50,7 +50,7 @@ export default function Comments({ post }: CommentsProps) {
       )}
       {status === "error" && (
         <p className="text-center text-destructive">
-          An error occurred while loading comments.
+          댓글을 불러오는 중 오류가 발생했습니다.
         </p>
       )}
       <div className="divide-y">

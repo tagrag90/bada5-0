@@ -51,7 +51,7 @@ export function useDeletePostMutation() {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "Failed to delete post. Please try again.",
+        description: "게시물 삭제에 실패했습니다. 다시 시도해 주세요.",
       });
     },
   });

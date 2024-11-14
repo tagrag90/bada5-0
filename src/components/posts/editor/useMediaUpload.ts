@@ -64,7 +64,7 @@ export default function useMediaUpload() {
     if (isUploading) {
       toast({
         variant: "destructive",
-        description: "Please wait for the current upload to finish.",
+        description: "현재 업로드가 완료될 때까지 기다려 주세요.",
       });
       return;
     }
@@ -72,7 +72,7 @@ export default function useMediaUpload() {
     if (attachments.length + files.length > 5) {
       toast({
         variant: "destructive",
-        description: "You can only upload up to 5 attachments per post.",
+        description: "게시물당 최대 5개의 첨부 파일을 업로드할 수 있습니다.",
       });
       return;
     }
