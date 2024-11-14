@@ -38,7 +38,7 @@ export default function ForYouFeed() {
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
       <p className="text-center text-muted-foreground">
-        No one has posted anything yet.
+        아직 게시물이 없습니다.
       </p>
     );
   }
@@ -46,7 +46,7 @@ export default function ForYouFeed() {
   if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading posts.
+        게시물을 불러오는 중 오류가 발생했습니다.
       </p>
     );
   }

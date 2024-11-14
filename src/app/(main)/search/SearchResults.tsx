@@ -44,16 +44,14 @@ export default function SearchResults({ query }: SearchResultsProps) {
 
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
-      <p className="text-center text-muted-foreground">
-        No posts found for this query.
-      </p>
+      <p className="text-center text-muted-foreground">검색 결과가 없습니다.</p>
     );
   }
 
   if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading posts.
+        게시물을 불러오는 중 오류가 발생했습니다.
       </p>
     );
   }

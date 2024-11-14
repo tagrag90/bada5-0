@@ -38,7 +38,7 @@ export default function FollowingFeed() {
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
       <p className="text-center text-muted-foreground">
-        No posts found. Start following people to see their posts here.
+        게시물이 없습니다. 사람들을 팔로우하여 게시물을 확인해 보세요.
       </p>
     );
   }
@@ -46,7 +46,7 @@ export default function FollowingFeed() {
   if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading posts.
+        게시물을 불러오는 중 오류가 발생했습니다.
       </p>
     );
   }

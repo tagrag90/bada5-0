@@ -15,7 +15,7 @@ export default function EditProfileButton({ user }: EditProfileButtonProps) {
   return (
     <>
       <Button variant="outline" onClick={() => setShowDialog(true)}>
-        Edit profile
+        프로필 수정
       </Button>
       <EditProfileDialog
         user={user}

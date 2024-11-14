@@ -60,14 +60,14 @@ export function useSubmitPostMutation() {
       });
 
       toast({
-        description: "Post created",
+        description: "게시물이 작성되었습니다.",
       });
     },
     onError(error) {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "Failed to post. Please try again.",
+        description: "게시물 작성에 실패했습니다. 다시 시도해 주세요.",
       });
     },
   });

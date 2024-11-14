@@ -142,7 +142,7 @@ function MediaPreview({ media }: MediaPreviewProps) {
     );
   }
 
-  return <p className="text-destructive">Unsupported media type</p>;
+  return <p className="text-destructive">지원되지 않는 미디어 유형</p>;
 }
 
 interface CommentButtonProps {
@@ -155,8 +155,7 @@ function CommentButton({ post, onClick }: CommentButtonProps) {
     <button onClick={onClick} className="flex items-center gap-2">
       <MessageSquare className="size-5" />
       <span className="text-sm font-medium tabular-nums">
-        {post._count.comments}{" "}
-        <span className="hidden sm:inline">comments</span>
+        {post._count.comments} <span className="hidden sm:inline">댓글</span>
       </span>
     </button>
   );

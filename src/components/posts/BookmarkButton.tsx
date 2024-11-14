@@ -58,7 +58,7 @@ export default function BookmarkButton({
       console.error(error);
       toast({
         variant: "destructive",
-        description: "Something went wrong. Please try again.",
+        description: "문제가 발생했습니다. 다시 시도해 주세요.",
       });
     },
   });
