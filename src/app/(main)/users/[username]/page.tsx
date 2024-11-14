@@ -106,6 +106,13 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           <div>
             <h1 className="text-2xl font-bold">{user.displayName}</h1>
             <div className="text-muted-foreground">@{user.username}</div>
+            {user.bio && (
+              <Linkify>
+                <div className="overflow-hidden whitespace-pre-line break-words">
+                  {user.bio}
+                </div>
+              </Linkify>
+            )}
           </div>
           <UserAvatar
             avatarUrl={user.avatarUrl}
@@ -114,13 +121,13 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           />
         </div>
 
-        {user.bio && (
+        {/* {user.bio && (
           <Linkify>
             <div className="overflow-hidden whitespace-pre-line break-words">
               {user.bio}
             </div>
           </Linkify>
-        )}
+        )} */}
 
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
