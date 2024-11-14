@@ -13,6 +13,15 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
+import { Instagram, Link2 } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PageProps {
   params: { username: string };
@@ -91,45 +100,91 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
   };
 
   return (
-    <div className="h-fit w-full space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <UserAvatar
-        avatarUrl={user.avatarUrl}
-        size={250}
-        className="mx-auto size-full max-h-60 max-w-60 rounded-full"
-      />
-      <div className="flex flex-wrap gap-3 sm:flex-nowrap">
-        <div className="me-auto space-y-3">
+    <div className="w-full rounded-lg border bg-card p-4 shadow-sm">
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold">{user.displayName}</h1>
+            <h1 className="text-2xl font-bold">{user.displayName}</h1>
             <div className="text-muted-foreground">@{user.username}</div>
           </div>
-          <div>Member since {formatDate(user.createdAt, "MMM d, yyyy")}</div>
-          <div className="flex items-center gap-3">
-            <span>
-              Posts:{" "}
-              <span className="font-semibold">
-                {formatNumber(user._count.posts)}
-              </span>
-            </span>
-            <FollowerCount userId={user.id} initialState={followerInfo} />
-          </div>
+          <UserAvatar
+            avatarUrl={user.avatarUrl}
+            size={80}
+            className="rounded-full"
+          />
         </div>
-        {user.id === loggedInUserId ? (
-          <EditProfileButton user={user} />
-        ) : (
-          <FollowButton userId={user.id} initialState={followerInfo} />
-        )}
-      </div>
-      {user.bio && (
-        <>
-          <hr />
+
+        {user.bio && (
           <Linkify>
             <div className="overflow-hidden whitespace-pre-line break-words">
               {user.bio}
             </div>
           </Linkify>
-        </>
-      )}
+        )}
+
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="#"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Instagram className="h-5 w-5 text-black" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>준비중</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="#"
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Link2 className="h-5 w-5 text-black" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>준비중</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="ml-auto flex gap-2">
+            {user.id === loggedInUserId ? (
+              <EditProfileButton user={user} />
+            ) : (
+              <>
+                <FollowButton userId={user.id} initialState={followerInfo} />
+                {/* <Button variant="outline">message</Button> */}
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span>
+            게시물{" "}
+            <span className="font-semibold text-foreground">
+              {formatNumber(user._count.posts)}
+            </span>
+          </span>
+          <FollowerCount userId={user.id} initialState={followerInfo} />
+          {/* <span>
+            가입일{" "}
+            <span className="font-semibold text-foreground">
+              {formatDate(user.createdAt, "yyyy.MM.dd")}
+            </span>
+          </span> */}
+        </div>
+      </div>
     </div>
   );
 }
