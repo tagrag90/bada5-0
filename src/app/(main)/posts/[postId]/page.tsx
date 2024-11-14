@@ -47,11 +47,7 @@ export default async function Page({ params: { postId } }: PageProps) {
   const { user } = await validateRequest();
 
   if (!user) {
-    return (
-      <p className="text-destructive">
-        You&apos;re not authorized to view this page.
-      </p>
-    );
+    return <p className="text-destructive">권한이 없습니다.</p>;
   }
 
   const post = await getPost(postId, user.id);

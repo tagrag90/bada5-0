@@ -55,7 +55,7 @@ export async function login(
     if (isRedirectError(error)) throw error;
     console.error(error);
     return {
-      error: "Something went wrong. Please try again.",
+      error: "문제가 발생했습니다. 다시 시도해 주세요.",
     };
   }
 }

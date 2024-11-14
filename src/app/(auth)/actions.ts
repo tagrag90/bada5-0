@@ -8,7 +8,7 @@ export async function logout() {
   const { session } = await validateRequest();
 
   if (!session) {
-    throw new Error("Unauthorized");
+    throw new Error("권한이 없습니다.");
   }
 
   await lucia.invalidateSession(session.id);
