@@ -46,7 +46,7 @@ export default function Comments({ post }: CommentsProps) {
       )}
       {status === "pending" && <Loader2 className="mx-auto animate-spin" />}
       {status === "success" && !comments.length && (
-        <p className="text-center text-muted-foreground">No comments yet.</p>
+        <p className="text-center text-muted-foreground">아직 댓글이 없어요.</p>
       )}
       {status === "error" && (
         <p className="text-center text-destructive">
