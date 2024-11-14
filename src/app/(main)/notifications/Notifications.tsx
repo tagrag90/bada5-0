@@ -60,16 +60,14 @@ export default function Notifications() {
 
   if (status === "success" && !notifications.length && !hasNextPage) {
     return (
-      <p className="text-center text-muted-foreground">
-        You don&apos;t have any notifications yet.
-      </p>
+      <p className="text-center text-muted-foreground">알림이 없습니다.</p>
     );
   }
 
   if (status === "error") {
     return (
       <p className="text-center text-destructive">
-        An error occurred while loading notifications.
+        알림을 불러오는 중 오류가 발생했습니다.
       </p>
     );
   }
