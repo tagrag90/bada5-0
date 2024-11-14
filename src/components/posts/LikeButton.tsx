@@ -66,9 +66,7 @@ export default function LikeButton({ postId, initialState }: LikeButtonProps) {
           data.isLikedByUser && "fill-red-500 text-red-500",
         )}
       />
-      <span className="text-sm font-medium tabular-nums">
-        {data.likes} <span className="hidden sm:inline">likes</span>
-      </span>
+      <span className="text-sm font-medium tabular-nums">{data.likes}</span>
     </button>
   );
 }
