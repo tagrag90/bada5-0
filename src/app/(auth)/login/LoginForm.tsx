@@ -48,10 +48,10 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-md font-semibold text-black">
-                Username
+                아이디
               </FormLabel>
               <FormControl>
-                <Input placeholder="Username" {...field} />
+                <Input placeholder="아이디" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
