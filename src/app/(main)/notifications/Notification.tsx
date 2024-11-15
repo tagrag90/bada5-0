@@ -45,8 +45,7 @@ export default function Notification({ notification }: NotificationProps) {
         <div className="space-y-3">
           <UserAvatar avatarUrl={notification.issuer.avatarUrl} size={36} />
           <div>
-            <span className="font-bold">{notification.issuer.displayName}</span>{" "}
-            <span>{message}</span>
+            <span className="font-bold"></span> <span>{message}</span>
           </div>
           {notification.post && (
             <div className="line-clamp-3 whitespace-pre-line text-muted-foreground">
