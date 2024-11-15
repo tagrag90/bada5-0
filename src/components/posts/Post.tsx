@@ -53,7 +53,7 @@ export default function Post({ post }: PostProps) {
             {post.user.id === user.id && <PostMoreButton post={post} />}
           </div>
           <Linkify>
-            <div className="mt-2 break-words text-sm">{post.content}</div>
+            <div className="mt-2 break-words text-base">{post.content}</div>
           </Linkify>
           {!!post.attachments.length && (
             <div className="mt-3">
