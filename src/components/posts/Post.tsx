@@ -53,7 +53,7 @@ export default function Post({ post }: PostProps) {
             {post.user.id === user.id && <PostMoreButton post={post} />}
           </div>
           <Linkify>
-            <div className="mt-2 break-words text-base">{post.content}</div>
+            <div className="mt-2 break-words text-sm">{post.content}</div>
           </Linkify>
           {!!post.attachments.length && (
             <div className="mt-3">
@@ -99,16 +99,33 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
+  const displayMedia = attachments.slice(0, 5);
+
   return (
-    <div
-      className={cn(
-        "flex flex-wrap gap-3",
-        attachments.length > 1 && "sm:grid sm:grid-cols-2",
-      )}
-    >
-      {attachments.map((m) => (
-        <MediaPreview key={m.id} media={m} />
-      ))}
+    <div className="relative w-full overflow-hidden">
+      <div className="scrollbar-hide flex snap-x snap-mandatory gap-1 overflow-x-auto pb-4">
+        {displayMedia.map((media, index) => (
+          <div
+            key={media.id}
+            className={cn(
+              "relative shrink-0 snap-start rounded-2xl",
+              displayMedia.length === 1
+                ? "h-80 w-full"
+                : "h-80 w-[calc(50%-2px)]",
+              displayMedia.length === 5 &&
+                index === 4 &&
+                attachments.length > 5 &&
+                "relative after:absolute after:inset-0 after:flex after:items-center after:justify-center after:rounded-2xl after:bg-black/40 after:text-2xl after:font-bold after:text-white",
+              displayMedia.length === 5 &&
+                index === 4 &&
+                attachments.length > 5 &&
+                `after:content-['+${attachments.length - 5}']`,
+            )}
+          >
+            <MediaPreview media={media} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -123,22 +140,16 @@ function MediaPreview({ media }: MediaPreviewProps) {
       <Image
         src={media.url}
         alt="Attachment"
-        width={500}
-        height={500}
-        className="mx-auto size-fit max-h-[30rem] rounded-2xl"
+        fill
+        className="rounded-2xl object-cover"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
     );
   }
 
   if (media.type === "VIDEO") {
     return (
-      <div>
-        <video
-          src={media.url}
-          controls
-          className="mx-auto size-fit max-h-[30rem] rounded-2xl"
-        />
-      </div>
+      <video src={media.url} controls className="h-full w-full object-cover" />
     );
   }
 
