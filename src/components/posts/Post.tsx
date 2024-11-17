@@ -109,9 +109,7 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
             key={media.id}
             className={cn(
               "relative shrink-0 snap-start rounded-2xl",
-              displayMedia.length === 1
-                ? "h-80 w-full"
-                : "h-80 w-[calc(50%-2px)]",
+              displayMedia.length === 1 ? "h-80 w-full" : "h-80 w-[67%]",
               displayMedia.length === 5 &&
                 index === 4 &&
                 attachments.length > 5 &&
