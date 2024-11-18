@@ -34,7 +34,7 @@ function getRandomOgImage() {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://your-domain.com"),
+  metadataBase: new URL("https://divetobada.com"),
   title: {
     default: "Dive to Bada",
     template: "%s | Dive to Bada",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Dive to Bada",
     description: "크리에이터와 아티스트들의 소셜 미디어 커뮤니티",
-    url: "https://your-domain.com",
+    url: "https://divetobada.com",
     siteName: "Dive to Bada",
     images: [
       {
