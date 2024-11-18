@@ -25,13 +25,7 @@ const geistMono = localFont({
 });
 
 // 랜덤 이미지 배열 정의
-const ogImages = [
-  "/og-images/og-1.png",
-  "/og-images/og-2.png",
-  "/og-images/og-3.png",
-  "/og-images/og-4.png",
-  "/og-images/og-5.png",
-];
+const ogImages = ["/og-images/og-1.png", "/og-images/og-2.png"];
 
 // 랜덤 이미지 선택 함수
 function getRandomOgImage() {
