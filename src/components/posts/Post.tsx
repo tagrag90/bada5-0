@@ -181,13 +181,18 @@ function CommentButton({ commentCount, onClick }: CommentButtonProps) {
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-[10px] px-4 py-2",
-        hasComments ? "bg-[#00dd89] text-white" : "bg-gray-100 text-gray-900",
+        hasComments ? "bg-[#00dd89]" : "bg-gray-100",
       )}
     >
       <MessageSquare
-        className={cn("size-5", hasComments ? "text-white" : "text-gray-500")}
+        className={cn(
+          "size-5",
+          hasComments ? "fill-white text-white" : "text-gray-500",
+        )}
       />
-      <span className="text-sm font-medium tabular-nums">{commentCount}</span>
+      <span className="text-sm font-medium tabular-nums text-gray-900">
+        {commentCount}
+      </span>
     </button>
   );
 }
