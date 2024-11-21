@@ -15,6 +15,7 @@ import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostProps {
   post: PostData;
@@ -23,6 +24,19 @@ interface PostProps {
 export default function Post({ post }: PostProps) {
   const { user } = useSession();
   const [showComments, setShowComments] = useState(false);
+  const queryClient = useQueryClient();
+  const [commentCount, setCommentCount] = useState(post._count.comments);
+
+  const updateCommentCount = (newCount: number) => {
+    setCommentCount(newCount);
+    queryClient.setQueryData(["post", post.id], (oldData: any) => ({
+      ...oldData,
+      _count: {
+        ...oldData._count,
+        comments: newCount,
+      },
+    }));
+  };
 
   return (
     <article className="group/post overflow-hidden border-b border-gray-200 bg-card p-4">
@@ -71,7 +85,7 @@ export default function Post({ post }: PostProps) {
               }}
             />
             <CommentButton
-              post={post}
+              commentCount={commentCount}
               onClick={() => setShowComments(!showComments)}
             />
             <BookmarkButton
@@ -87,7 +101,7 @@ export default function Post({ post }: PostProps) {
       </div>
       {showComments && (
         <div className="mt-3">
-          <Comments post={post} />
+          <Comments post={post} onCommentCountChange={updateCommentCount} />
         </div>
       )}
     </article>
@@ -103,7 +117,7 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
 
   return (
     <div className="relative w-full overflow-hidden">
-      <div className="scrollbar-hide flex snap-x snap-mandatory gap-1 overflow-x-auto pb-4">
+      <div className="flex snap-x snap-mandatory gap-1 overflow-x-auto pb-4 scrollbar-hide">
         {displayMedia.map((media, index) => (
           <div
             key={media.id}
@@ -155,17 +169,25 @@ function MediaPreview({ media }: MediaPreviewProps) {
 }
 
 interface CommentButtonProps {
-  post: PostData;
+  commentCount: number;
   onClick: () => void;
 }
 
-function CommentButton({ post, onClick }: CommentButtonProps) {
+function CommentButton({ commentCount, onClick }: CommentButtonProps) {
+  const hasComments = commentCount > 0;
+
   return (
-    <button onClick={onClick} className="flex items-center gap-2">
-      <MessageSquare className="size-5" />
-      <span className="text-sm font-medium tabular-nums">
-        {post._count.comments}
-      </span>
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-2 rounded-[10px] px-4 py-2",
+        hasComments ? "bg-[#00dd89] text-white" : "bg-gray-100 text-gray-900",
+      )}
+    >
+      <MessageSquare
+        className={cn("size-5", hasComments ? "text-white" : "text-gray-500")}
+      />
+      <span className="text-sm font-medium tabular-nums">{commentCount}</span>
     </button>
   );
 }

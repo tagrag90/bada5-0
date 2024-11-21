@@ -64,11 +64,13 @@ export default function BookmarkButton({
   });
 
   return (
-    <button onClick={() => mutate()} className="flex items-center gap-2">
+    <button onClick={() => mutate()} className="flex items-center gap-2 p-2">
       <Bookmark
         className={cn(
           "size-5",
-          data.isBookmarkedByUser && "fill-primary text-primary",
+          data.isBookmarkedByUser
+            ? "fill-[#ff4b6e] text-[#ff4b6e]"
+            : "fill-gray-400 text-gray-400",
         )}
       />
     </button>
