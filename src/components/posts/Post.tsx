@@ -101,7 +101,7 @@ export default function Post({ post }: PostProps) {
       </div>
       {showComments && (
         <div className="mt-3">
-          <Comments post={post} onCommentCountChange={updateCommentCount} />
+          <Comments post={post} />
         </div>
       )}
     </article>
