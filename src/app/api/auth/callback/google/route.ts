@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
           Authorization: `Bearer ${tokens.accessToken}`,
         },
       })
-      .json<{ id: string; name: string }>();
+      .json<{ id: string; name: string; email: string }>();
 
     const existingUser = await prisma.user.findUnique({
       where: {
@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
           username,
           displayName: googleUser.name,
           googleId: googleUser.id,
+          email: googleUser.email,
         },
       });
       await streamServerClient.upsertUser({
