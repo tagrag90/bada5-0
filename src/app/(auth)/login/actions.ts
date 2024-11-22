@@ -12,20 +12,20 @@ export async function login(
   credentials: LoginValues,
 ): Promise<{ error: string }> {
   try {
-    const { username, password } = loginSchema.parse(credentials);
+    const { email, password } = loginSchema.parse(credentials);
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        username: {
-          equals: username,
+        email: {
+          equals: email,
           mode: "insensitive",
         },
       },
     });
 
-    if (!existingUser || !existingUser.passwordHash) {
+    if (!existingUser) {
       return {
-        error: "아이디 또는 비밀번호가 일치하지 않습니다",
+        error: "이메일 또는 비밀번호가 일치하지 않습니다",
       };
     }
 
@@ -38,7 +38,7 @@ export async function login(
 
     if (!validPassword) {
       return {
-        error: "아이디 또는 비밀번호가 일치하지 않습니다",
+        error: "이메일 또는 비밀번호가 일치하지 않습니다",
       };
     }
 
