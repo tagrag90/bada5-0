@@ -14,8 +14,7 @@ export const signUpSchema = z.object({
 export type SignUpValues = z.infer<typeof signUpSchema>;
 
 export const loginSchema = z.object({
-  // email: requiredString,
-  username: requiredString,
+  email: requiredString.email("올바른 이메일 주소를 입력해주세요"),
   password: requiredString,
 });
 

@@ -25,7 +25,7 @@ export default function LoginForm() {
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -44,14 +44,14 @@ export default function LoginForm() {
         {error && <p className="text-center text-destructive">{error}</p>}
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-md font-semibold text-black">
-                아이디
+                이메일
               </FormLabel>
               <FormControl>
-                <Input placeholder="아이디" {...field} />
+                <Input placeholder="이메일 주소를 입력하세요" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
