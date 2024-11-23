@@ -53,7 +53,7 @@ export default function FollowingFeed() {
 
   return (
     <InfiniteScrollContainer
-      className="space-y-0"
+      className="space-y-0 md:space-y-5"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (

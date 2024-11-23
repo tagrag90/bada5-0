@@ -39,7 +39,7 @@ export default function Post({ post }: PostProps) {
   };
 
   return (
-    <article className="group/post overflow-hidden border-b border-gray-200 bg-card p-4">
+    <article className="group/post overflow-hidden border-b border-gray-200 bg-card p-4 md:rounded-2xl">
       <div className="flex items-start">
         <UserTooltip user={post.user}>
           <Link
