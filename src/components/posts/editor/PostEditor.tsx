@@ -9,15 +9,22 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useDropzone } from "@uploadthing/react";
-import { ImageIcon, Loader2, X } from "lucide-react";
+import {
+  ImageIcon,
+  Loader2,
+  X,
+  YoutubeIcon as _YoutubeIcon,
+} from "lucide-react";
 import Image from "next/image";
-import { ClipboardEvent, useRef } from "react";
+import { ClipboardEvent, useRef, useState } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
+import { YouTube } from "./extensions/YouTube";
 
 export default function PostEditor() {
   const { user } = useSession();
+  const [editorInput, setEditorInput] = useState("");
 
   const mutation = useSubmitPostMutation();
 
@@ -36,6 +43,7 @@ export default function PostEditor() {
 
   const { onClick, ...rootProps } = getRootProps();
 
+  const input = useRef("");
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -45,18 +53,26 @@ export default function PostEditor() {
       Placeholder.configure({
         placeholder: "무슨 일이 있었나요?",
       }),
+      YouTube.configure({
+        HTMLAttributes: {
+          class: "w-full aspect-video",
+        },
+      }),
     ],
+    content: "",
+    onUpdate: ({ editor }) => {
+      setEditorInput(editor.getHTML());
+      input.current = editor.getText();
+    },
   });
 
-  const input =
-    editor?.getText({
-      blockSeparator: "\n",
-    }) || "";
+  const onSubmit = async () => {
+    console.log("Submitting content:", input);
+    console.log("Editor HTML:", editor?.getHTML());
 
-  function onSubmit() {
     mutation.mutate(
       {
-        content: input,
+        content: editor?.getHTML() || "",
         mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
       },
       {
@@ -66,13 +82,52 @@ export default function PostEditor() {
         },
       },
     );
-  }
+  };
 
   function onPaste(e: ClipboardEvent<HTMLInputElement>) {
-    const files = Array.from(e.clipboardData.items)
-      .filter((item) => item.kind === "file")
-      .map((item) => item.getAsFile()) as File[];
-    startUpload(files);
+    const text = e.clipboardData.getData("text/plain");
+    const youtubeRegex =
+      /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/g;
+    const match = text.match(youtubeRegex);
+
+    if (match && match[1]) {
+      e.preventDefault();
+      const videoId = match[1];
+      editor?.commands.insertContent({
+        type: "youtube",
+        attrs: {
+          src: `https://www.youtube.com/embed/${videoId}`,
+        },
+      });
+    }
+  }
+
+  function handleYoutubeEmbed() {
+    const url = prompt("YouTube URL을 입력해주세요:");
+    if (!url) return;
+
+    try {
+      const videoId = extractYoutubeVideoId(url);
+      if (videoId) {
+        editor?.commands.insertContent({
+          type: "youtube",
+          attrs: {
+            src: `https://www.youtube.com/embed/${videoId}`,
+          },
+        });
+      } else {
+        alert("올바른 YouTube URL을 입력해주세요.");
+      }
+    } catch (e) {
+      alert("올바른 URL을 입력해주세요.");
+    }
+  }
+
+  function extractYoutubeVideoId(url: string) {
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[7].length === 11 ? match[7] : null;
   }
 
   return (
@@ -107,11 +162,17 @@ export default function PostEditor() {
         <AddAttachmentsButton
           onFilesSelected={startUpload}
           disabled={isUploading || attachments.length >= 5}
+          onYoutubeEmbed={handleYoutubeEmbed}
         />
         <LoadingButton
           onClick={onSubmit}
           loading={mutation.isPending}
-          disabled={!input.trim() || isUploading}
+          disabled={
+            (!input.current?.trim() &&
+              attachments.length === 0 &&
+              !editor?.getHTML()?.includes("youtube.com/embed")) ||
+            isUploading
+          }
           className="min-w-20"
         >
           Post
@@ -124,11 +185,13 @@ export default function PostEditor() {
 interface AddAttachmentsButtonProps {
   onFilesSelected: (files: File[]) => void;
   disabled: boolean;
+  onYoutubeEmbed: () => void;
 }
 
 function AddAttachmentsButton({
   onFilesSelected,
   disabled,
+  onYoutubeEmbed,
 }: AddAttachmentsButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -142,6 +205,15 @@ function AddAttachmentsButton({
         onClick={() => fileInputRef.current?.click()}
       >
         <ImageIcon size={20} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-primary hover:text-primary"
+        disabled={disabled}
+        onClick={onYoutubeEmbed}
+      >
+        <_YoutubeIcon size={22} />
       </Button>
       <input
         type="file"

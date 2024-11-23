@@ -2,7 +2,7 @@
 
 import { useSession } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
-import { cn, formatRelativeDate } from "@/lib/utils";
+import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
 import { MessageSquare } from "lucide-react";
 import Image from "next/image";
@@ -38,6 +38,24 @@ export default function Post({ post }: PostProps) {
     }));
   };
 
+  const convertContent = (content: string) => {
+    // YouTube 임베드 처리는 여기서만 하고
+    return convertYouTubeLinks(content);
+  };
+
+  const renderContent = () => {
+    // 여기서는 단순히 변환된 컨텐츠만 표시
+    const convertedContent = convertContent(post.content);
+    return (
+      <div className="post-content">
+        <div
+          className="whitespace-pre-line break-words"
+          dangerouslySetInnerHTML={{ __html: convertedContent }}
+        />
+      </div>
+    );
+  };
+
   return (
     <article className="group/post overflow-hidden border-b border-gray-200 bg-card p-4 md:rounded-2xl">
       <div className="flex items-start">
@@ -67,7 +85,7 @@ export default function Post({ post }: PostProps) {
             {post.user.id === user.id && <PostMoreButton post={post} />}
           </div>
           <Linkify>
-            <div className="mt-2 break-words text-base">{post.content}</div>
+            <div className="mt-2 break-words text-base">{renderContent()}</div>
           </Linkify>
           {!!post.attachments.length && (
             <div className="mt-3">

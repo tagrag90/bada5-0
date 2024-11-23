@@ -32,3 +32,15 @@ export function slugify(input: string): string {
     .replace(/ /g, "-")
     .replace(/[^a-z0-9-]/g, "");
 }
+
+export function convertYouTubeLinks(content: string): string {
+  if (content.includes("youtube.com/embed")) {
+    return content; // 이미 임베드된 경우 그대로 반환
+  }
+
+  const youtubeRegex =
+    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/g;
+  return content.replace(youtubeRegex, (match, videoId) => {
+    return `<div class="youtube-embed w-full"><iframe width="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  });
+}
