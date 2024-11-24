@@ -140,12 +140,12 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
           <div
             key={media.id}
             className={cn(
-              "relative shrink-0 snap-start rounded-2xl",
+              "relative shrink-0 snap-start rounded-md",
               displayMedia.length === 1 ? "h-80 w-full" : "h-80 w-[67%]",
               displayMedia.length === 5 &&
                 index === 4 &&
                 attachments.length > 5 &&
-                "relative after:absolute after:inset-0 after:flex after:items-center after:justify-center after:rounded-2xl after:bg-black/40 after:text-2xl after:font-bold after:text-white",
+                "relative after:absolute after:inset-0 after:flex after:items-center after:justify-center after:rounded-md after:bg-black/40 after:text-2xl after:font-bold after:text-white",
               displayMedia.length === 5 &&
                 index === 4 &&
                 attachments.length > 5 &&
@@ -171,7 +171,7 @@ function MediaPreview({ media }: MediaPreviewProps) {
         src={media.url}
         alt="Attachment"
         fill
-        className="rounded-2xl object-cover"
+        className="rounded-lg object-cover"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
     );
