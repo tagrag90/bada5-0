@@ -16,6 +16,7 @@ import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
 import { useQueryClient } from "@tanstack/react-query";
+import { MediaCarousel } from "./MediaCarousel";
 
 interface PostProps {
   post: PostData;
@@ -152,7 +153,7 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
                 `after:content-['+${attachments.length - 5}']`,
             )}
           >
-            <MediaPreview media={media} />
+            <MediaPreview media={media} attachments={attachments} />
           </div>
         ))}
       </div>
@@ -162,28 +163,40 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
 
 interface MediaPreviewProps {
   media: Media;
+  attachments: Media[];
 }
 
-function MediaPreview({ media }: MediaPreviewProps) {
-  if (media.type === "IMAGE") {
-    return (
-      <Image
-        src={media.url}
-        alt="Attachment"
-        fill
-        className="rounded-lg object-cover"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      />
-    );
-  }
+function MediaPreview({ media, attachments }: MediaPreviewProps) {
+  const [showCarousel, setShowCarousel] = useState(false);
 
-  if (media.type === "VIDEO") {
-    return (
-      <video src={media.url} controls className="h-full w-full object-cover" />
-    );
-  }
-
-  return <p className="text-destructive">지원되지 않는 미디어 유형</p>;
+  return (
+    <>
+      <div className="cursor-pointer" onClick={() => setShowCarousel(true)}>
+        {media.type === "VIDEO" ? (
+          <video src={media.url} className="rounded-lg object-cover" controls />
+        ) : (
+          <Image
+            src={media.url}
+            alt="Attachment"
+            fill
+            className="rounded-lg object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        )}
+      </div>
+      {showCarousel && (
+        <MediaCarousel
+          media={attachments.map((a) => ({
+            id: a.id,
+            url: a.url,
+            type: a.type,
+          }))}
+          initialIndex={attachments.findIndex((a) => a.id === media.id)}
+          onClose={() => setShowCarousel(false)}
+        />
+      )}
+    </>
+  );
 }
 
 interface CommentButtonProps {

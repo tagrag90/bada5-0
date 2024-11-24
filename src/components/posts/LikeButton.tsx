@@ -63,18 +63,18 @@ export default function LikeButton({ postId, initialState }: LikeButtonProps) {
       onClick={() => mutate()}
       className={cn(
         "flex items-center gap-2 rounded-[10px] px-4 py-2",
-        data.isLikedByUser ? "bg-[#00dd89]" : "bg-gray-100",
+        data.isLikedByUser ? "bg-[#ff5368]" : "bg-gray-100",
       )}
     >
-      <Zap
+      <Heart
         className={cn(
           "size-5",
-          data.isLikedByUser ? "fill-white text-white" : "text-[#00dd89]",
+          data.isLikedByUser
+            ? "fill-white text-white"
+            : "fill-[#ff5368] text-[#ff5368]",
         )}
       />
-      <span className="text-sm font-medium tabular-nums text-gray-900">
-        {data.likes} {data.likes === 1 ? "Like" : "Likes"}
-      </span>
+      <span className="text-sm font-medium tabular-nums">{data.likes}</span>
     </button>
   );
 }
