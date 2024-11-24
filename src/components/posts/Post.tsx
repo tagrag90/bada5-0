@@ -4,7 +4,7 @@ import { useSession } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
 import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -212,16 +212,23 @@ function CommentButton({ commentCount, onClick }: CommentButtonProps) {
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-[10px] px-4 py-2",
-        hasComments ? "bg-[#00dd89]" : "bg-gray-100",
+        commentCount > 0 ? "bg-black" : "bg-gray-100",
       )}
     >
-      <MessageSquare
+      <MessageCircle
         className={cn(
           "size-5",
-          hasComments ? "fill-white text-white" : "text-gray-500",
+          commentCount > 0
+            ? "fill-white text-white" // 댓글 있을 때: 흰색으로 채우기
+            : "fill-gray-500 text-gray-500", // 댓글 없을 때: 진한 회색으로 채우기
         )}
       />
-      <span className="text-sm font-medium tabular-nums text-gray-900">
+      <span
+        className={cn(
+          "text-sm font-medium tabular-nums",
+          commentCount > 0 ? "text-white" : "text-gray-500",
+        )}
+      >
         {commentCount}
       </span>
     </button>
