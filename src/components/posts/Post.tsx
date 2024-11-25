@@ -45,8 +45,25 @@ export default function Post({ post }: PostProps) {
   };
 
   const renderContent = () => {
-    // 여기서는 단순히 변환된 컨텐츠만 표시
     const convertedContent = convertContent(post.content);
+
+    // YouTube 임베드가 있는 경우
+    if (post.content?.includes("youtube.com")) {
+      return (
+        <div className="post-content">
+          <div className="mt-3">
+            <div
+              dangerouslySetInnerHTML={{
+                __html: convertedContent,
+              }}
+              className="aspect-video w-full overflow-hidden rounded-lg"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // 일반 텍스트인 경우
     return (
       <div className="post-content">
         <div
@@ -173,7 +190,14 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
     <>
       <div className="cursor-pointer" onClick={() => setShowCarousel(true)}>
         {media.type === "VIDEO" ? (
-          <video src={media.url} className="rounded-lg object-cover" controls />
+          <video
+            src={media.url}
+            className="h-full w-full rounded-lg object-cover"
+            muted // 음소거
+            autoPlay // 자동 재생
+            loop // 반복 재생
+            playsInline // 모바일에서 인라인 재생
+          />
         ) : (
           <Image
             src={media.url}

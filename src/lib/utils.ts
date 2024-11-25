@@ -44,3 +44,7 @@ export function convertYouTubeLinks(content: string): string {
     return `<div class="youtube-embed w-full"><iframe width="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
   });
 }
+
+export function stripHtmlTags(html: string) {
+  return html?.replace(/<[^>]*>/g, "") || "";
+}

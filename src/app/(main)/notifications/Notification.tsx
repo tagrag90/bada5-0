@@ -1,6 +1,6 @@
 import UserAvatar from "@/components/UserAvatar";
 import { NotificationData } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, stripHtmlTags } from "@/lib/utils";
 import { NotificationType } from "@prisma/client";
 import { Heart, MessageCircle, User2 } from "lucide-react";
 import Link from "next/link";
@@ -49,7 +49,7 @@ export default function Notification({ notification }: NotificationProps) {
           </div>
           {notification.post && (
             <div className="line-clamp-3 whitespace-pre-line text-muted-foreground">
-              {notification.post.content}
+              {stripHtmlTags(notification.post.content)}
             </div>
           )}
         </div>
