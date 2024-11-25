@@ -51,12 +51,12 @@ export default function Post({ post }: PostProps) {
     if (post.content?.includes("youtube.com")) {
       return (
         <div className="post-content">
-          <div className="mt-3">
+          <div className="relative w-full pt-[56.25%]">
             <div
               dangerouslySetInnerHTML={{
                 __html: convertedContent,
               }}
-              className="aspect-video w-full overflow-hidden rounded-lg"
+              className="absolute inset-0 overflow-hidden rounded-lg"
             />
           </div>
         </div>
@@ -188,24 +188,29 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
 
   return (
     <>
-      <div className="cursor-pointer" onClick={() => setShowCarousel(true)}>
+      <div
+        className="relative w-full pt-[56.25%]" // 16:9 비율 설정
+        onClick={() => setShowCarousel(true)}
+      >
         {media.type === "VIDEO" ? (
           <video
             src={media.url}
-            className="h-full w-full rounded-lg object-cover"
-            muted // 음소거
-            autoPlay // 자동 재생
-            loop // 반복 재생
-            playsInline // 모바일에서 인라인 재생
+            className="absolute inset-0 h-full w-full cursor-pointer rounded-lg object-cover"
+            muted
+            autoPlay
+            loop
+            playsInline
           />
         ) : (
-          <Image
-            src={media.url}
-            alt="Attachment"
-            fill
-            className="rounded-lg object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
+          <div className="absolute inset-0">
+            <Image
+              src={media.url}
+              alt="Attachment"
+              fill
+              className="cursor-pointer rounded-lg object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
         )}
       </div>
       {showCarousel && (
