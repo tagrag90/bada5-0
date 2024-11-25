@@ -14,29 +14,16 @@ export default function Comment({ comment }: CommentProps) {
   const { user } = useSession();
 
   return (
-    <div className="group/comment flex gap-3 py-3">
-      <span className="hidden sm:inline">
-        <UserTooltip user={comment.user}>
-          <Link href={`/users/${comment.user.username}`}>
-            <UserAvatar avatarUrl={comment.user.avatarUrl} size={36} />
-          </Link>
-        </UserTooltip>
-      </span>
-      <div>
-        <div className="flex items-center gap-1 text-sm">
-          <UserTooltip user={comment.user}>
-            <Link
-              href={`/users/${comment.user.username}`}
-              className="font-medium hover:underline"
-            >
-              {comment.user.displayName}
-            </Link>
-          </UserTooltip>
-          <span className="text-muted-foreground">
+    <div className="flex items-start gap-3">
+      <UserAvatar avatarUrl={comment.user.avatarUrl} size={24} />
+      <div className="flex-1">
+        <div className="flex items-center gap-3">
+          <span className="font-base">{comment.user.username}</span>
+          <span className="text-sm text-muted-foreground">
             {formatRelativeDate(comment.createdAt)}
           </span>
         </div>
-        <div>{comment.content}</div>
+        <div className="whitespace-pre-line break-words">{comment.content}</div>
       </div>
       {comment.user.id === user.id && (
         <CommentMoreButton

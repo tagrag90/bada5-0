@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
-import { formatDate, formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict, format as formatDate } from "date-fns";
+import { ko } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -9,12 +10,15 @@ export function cn(...inputs: ClassValue[]) {
 export function formatRelativeDate(from: Date) {
   const currentDate = new Date();
   if (currentDate.getTime() - from.getTime() < 24 * 60 * 60 * 1000) {
-    return formatDistanceToNowStrict(from, { addSuffix: true });
+    return formatDistanceToNowStrict(from, {
+      addSuffix: true,
+      locale: ko,
+    });
   } else {
     if (currentDate.getFullYear() === from.getFullYear()) {
-      return formatDate(from, "MMM d");
+      return formatDate(from, "M월 d일", { locale: ko });
     } else {
-      return formatDate(from, "MMM d, yyyy");
+      return formatDate(from, "yyyy년 M월 d일", { locale: ko });
     }
   }
 }

@@ -149,26 +149,13 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
-  const displayMedia = attachments.slice(0, 5);
-
   return (
     <div className="relative w-full overflow-hidden">
-      <div className="flex snap-x snap-mandatory gap-1 overflow-x-auto pb-4 scrollbar-hide">
-        {displayMedia.map((media, index) => (
+      <div className="-mr-[25%] flex snap-x snap-mandatory gap-1 overflow-x-auto scrollbar-hide">
+        {attachments.map((media) => (
           <div
             key={media.id}
-            className={cn(
-              "relative shrink-0 snap-start rounded-md",
-              displayMedia.length === 1 ? "h-80 w-full" : "h-80 w-[67%]",
-              displayMedia.length === 5 &&
-                index === 4 &&
-                attachments.length > 5 &&
-                "relative after:absolute after:inset-0 after:flex after:items-center after:justify-center after:rounded-md after:bg-black/40 after:text-2xl after:font-bold after:text-white",
-              displayMedia.length === 5 &&
-                index === 4 &&
-                attachments.length > 5 &&
-                `after:content-['+${attachments.length - 5}']`,
-            )}
+            className="relative h-[400px] w-[60%] flex-shrink-0 snap-start"
           >
             <MediaPreview media={media} attachments={attachments} />
           </div>
@@ -189,7 +176,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
   return (
     <>
       <div
-        className="relative w-full pt-[56.25%]" // 16:9 비율 설정
+        className="relative h-full w-full"
         onClick={() => setShowCarousel(true)}
       >
         {media.type === "VIDEO" ? (
