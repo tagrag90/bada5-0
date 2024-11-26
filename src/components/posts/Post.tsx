@@ -50,13 +50,13 @@ export default function Post({ post }: PostProps) {
     // YouTube 임베드가 있는 경우
     if (post.content?.includes("youtube.com")) {
       return (
-        <div className="post-content">
-          <div className="mt-3">
+        <div className="post-content -mt-2 sm:mb-4">
+          <div className="relative w-full overflow-hidden rounded-lg pt-[56.25%]">
             <div
               dangerouslySetInnerHTML={{
                 __html: convertedContent,
               }}
-              className="relative w-full overflow-hidden rounded-lg pt-[56.25%]"
+              className="absolute inset-0"
             />
           </div>
         </div>
