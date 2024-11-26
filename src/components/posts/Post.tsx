@@ -151,11 +151,11 @@ interface MediaPreviewsProps {
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
   return (
     <div className="relative w-full overflow-hidden">
-      <div className="-mr-[25%] flex snap-x snap-mandatory gap-1 overflow-x-auto scrollbar-hide">
+      <div className="flex snap-x snap-mandatory gap-1 overflow-x-auto scrollbar-hide">
         {attachments.map((media) => (
           <div
             key={media.id}
-            className="relative h-[400px] w-[60%] flex-shrink-0 snap-start"
+            className="relative h-[400px] w-[60%] flex-shrink-0 snap-start last:mr-[40%]"
           >
             <MediaPreview media={media} attachments={attachments} />
           </div>
