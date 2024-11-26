@@ -52,3 +52,12 @@ export function convertYouTubeLinks(content: string): string {
 export function stripHtmlTags(html: string) {
   return html?.replace(/<[^>]*>/g, "") || "";
 }
+
+export function convertContent(content: string): string {
+  // YouTube URL을 React Player로 변환
+  const youtubeRegex =
+    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/g;
+  return content.replace(youtubeRegex, (match, videoId) => {
+    return `<div class="youtube-player" data-url="${match}"></div>`;
+  });
+}

@@ -51,12 +51,12 @@ export default function Post({ post }: PostProps) {
     if (post.content?.includes("youtube.com")) {
       return (
         <div className="post-content sm:mb-15 -mt-1">
-          <div className="relative w-full overflow-hidden rounded-lg pt-[75%] sm:pt-[72%]">
+          <div className="relative mb-4 w-full overflow-hidden rounded-lg pt-[75%] sm:pt-[72%]">
             <div
               dangerouslySetInnerHTML={{
                 __html: convertedContent,
               }}
-              className="absolute inset-0"
+              className="absolute inset-0 [&>iframe]:rounded-lg"
             />
           </div>
         </div>
