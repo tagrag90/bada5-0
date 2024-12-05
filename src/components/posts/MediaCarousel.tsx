@@ -33,9 +33,8 @@ export function MediaCarousel({
             src={item.url}
             controls
             className="max-h-[80vh] max-w-full"
-            autoPlay
-            playsInline // 모바일 지원을 위해 추가
-            controlsList="nodownload" // 다운로드 버튼 숨기기
+            playsInline
+            controlsList="nodownload"
           >
             <source src={item.url} type="video/mp4" />
             Your browser does not support the video tag.

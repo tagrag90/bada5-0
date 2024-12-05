@@ -186,6 +186,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
             controls
             preload="metadata"
             playsInline
+            muted
           />
         ) : (
           <div className="absolute inset-0">
@@ -234,7 +235,7 @@ function CommentButton({ commentCount, onClick }: CommentButtonProps) {
         className={cn(
           "size-5",
           commentCount > 0
-            ? "fill-white text-white" // 댓글 있을 때: 흰색으로 채우기
+            ? "fill-white text-white" // 댓글 있을 때: 흰색으로 채��기
             : "fill-gray-500 text-gray-500", // 댓글 없을 때: 진한 회색으로 채우기
         )}
       />
