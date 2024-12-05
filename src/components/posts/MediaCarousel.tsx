@@ -35,7 +35,7 @@ export function MediaCarousel({
             className="max-h-[80vh] max-w-full"
             playsInline
             controlsList="nodownload"
-            muted
+            muted // 모바일에서 자동 재생 방지
           >
             <source src={item.url} type="video/mp4" />
             Your browser does not support the video tag.
