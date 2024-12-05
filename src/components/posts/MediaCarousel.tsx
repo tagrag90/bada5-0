@@ -35,6 +35,7 @@ export function MediaCarousel({
             className="max-h-[80vh] max-w-full"
             playsInline
             controlsList="nodownload"
+            muted
           >
             <source src={item.url} type="video/mp4" />
             Your browser does not support the video tag.
