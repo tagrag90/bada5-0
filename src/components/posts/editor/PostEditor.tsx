@@ -284,7 +284,12 @@ function AttachmentPreview({
           className="size-fit max-h-[30rem] rounded-2xl"
         />
       ) : (
-        <video controls className="size-fit max-h-[30rem] rounded-2xl">
+        <video 
+          controls
+          preload="metadata"
+          playsInline
+          className="size-fit max-h-[30rem] rounded-2xl"
+        >
           <source src={src} type={file.type} />
         </video>
       )}

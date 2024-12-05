@@ -183,9 +183,8 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
           <video
             src={media.url}
             className="absolute inset-0 h-full w-full cursor-pointer rounded-lg object-cover"
-            muted
-            autoPlay
-            loop
+            controls
+            preload="metadata"
             playsInline
           />
         ) : (
