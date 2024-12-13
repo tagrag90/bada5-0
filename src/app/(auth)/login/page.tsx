@@ -35,12 +35,12 @@ export default function Page() {
             <Link href="/signup" className="block text-center hover:underline">
               엇, Bada가 처음이신가요?
             </Link>
-            {/* <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-muted" />
               <span>OR</span>
               <div className="h-px flex-1 bg-muted" />
             </div>
-            <GoogleSignInButton /> */}
+            <GoogleSignInButton />
           </div>
         </div>
         {/* <Image
