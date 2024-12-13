@@ -22,7 +22,7 @@ export default function Page() {
             height={45}
             className="mb-5 rounded-full md:block"
           />
-          <h1 className="text-2xl font-bold">돌아오셨군요!</h1>
+          <h1 className="text-2xl font-bold">돌아오셨군요~</h1>
           <h1 className="text-2xl font-bold">로그인 하고 Bada를 둘러보세요.</h1>
           <div className="space-y-5">
             {/* <GoogleSignInButton />
