@@ -64,6 +64,7 @@ export default function PostEditor() {
       setEditorInput(editor.getHTML());
       input.current = editor.getText();
     },
+    immediatelyRender: false
   });
 
   const onSubmit = async () => {
