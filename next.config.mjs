@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    staleTimes: {
-      dynamic: 30,
-    },
-  },
-  serverExternalPackages: ["@node-rs/argon2"],
   images: {
-    
     remotePatterns: [
       {
         protocol: "https",
@@ -21,14 +14,28 @@ const nextConfig = {
       }
     ],
   },
-  rewrites: () => {
+  async headers() {
     return [
       {
-        source: "/hashtag/:tag",
-        destination: "/search?q=%23:tag",
-      },
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `
+              default-src 'self';
+              script-src 'self' 'unsafe-eval' 'unsafe-inline';
+              style-src 'self' 'unsafe-inline';
+              img-src 'self' https://*.ufs.sh https://utfs.io data: blob:;
+              media-src 'self' https://*.ufs.sh https://utfs.io blob:;
+              connect-src 'self' https://*.ufs.sh https://utfs.io;
+              font-src 'self';
+              frame-src 'self';
+            `.replace(/\s{2,}/g, ' ').trim()
+          }
+        ],
+      }
     ];
-  },
+  }
 };
 
 export default nextConfig;
