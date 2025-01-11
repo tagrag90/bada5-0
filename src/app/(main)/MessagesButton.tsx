@@ -36,7 +36,7 @@ export default function MessagesButton({ initialState }: MessagesButtonProps) {
             </span>
           )}
         </div>
-        <span className="hidden lg:inline">Messages</span>
+        <span className="hidden lg:inline">메시지</span>
       </Link>
     </Button>
   );
