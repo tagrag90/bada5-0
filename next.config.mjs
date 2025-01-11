@@ -1,32 +1,3 @@
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   experimental: {
-//     staleTimes: {
-//       dynamic: 30,
-//     },
-//   },
-//   serverExternalPackages: ["@node-rs/argon2"],
-//   images: {
-    
-//     remotePatterns: [
-//       {
-//         protocol: "https",
-//         hostname: "utfs.io",
-//         pathname: `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/*`,
-//       },
-//     ],
-//   },
-//   rewrites: () => {
-//     return [
-//       {
-//         source: "/hashtag/:tag",
-//         destination: "/search?q=%23:tag",
-//       },
-//     ];
-//   },
-// };
-
-// export default nextConfig;
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -36,6 +7,7 @@ const nextConfig = {
   },
   serverExternalPackages: ["@node-rs/argon2"],
   images: {
+    
     remotePatterns: [
       {
         protocol: "https",
@@ -44,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "t3dy4ejwe7.ufs.sh",  // 추가
+        hostname: "t3dy4ejwe7.ufs.sh",
         pathname: "/**",
       }
     ],
