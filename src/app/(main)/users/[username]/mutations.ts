@@ -36,16 +36,17 @@ export function useUpdateProfileMutation() {
     onSuccess: async ([updatedUser, uploadResult]) => {
       const newAvatarUrl = uploadResult?.[0].serverData.avatarUrl;
 
-      const queryFilter: QueryFilters = {
+      const queryFilter = {
         queryKey: ["post-feed"],
+        exact: true
       };
 
-      await queryClient.cancelQueries(queryFilter);
+      await queryClient.cancelQueries({ queryKey: ["post-feed"] });
 
-      queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
-        queryFilter,
+      queryClient.setQueriesData<InfiniteData<PostsPage>>(
+        { queryKey: ["post-feed"] },
         (oldData) => {
-          if (!oldData) return;
+          if (!oldData) return oldData;
 
           return {
             pageParams: oldData.pageParams,
@@ -65,7 +66,7 @@ export function useUpdateProfileMutation() {
               }),
             })),
           };
-        },
+        }
       );
 
       router.refresh();
