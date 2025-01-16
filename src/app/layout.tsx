@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     template: "%s | Dive to Bada",
   },
   description:
-    "Bada는 크리에이터와 아티스트들이 소통하고, 협업을 통해 성장할 수 있도록 돕는 소셜 미디어 커뮤니티입니다.",
+    "Bada는 크리에이터와 아티스트들이 소통하고, 협업을 통해 성장할 수 있도록 돕는 소셜미디어 커뮤니티입니다.",
   openGraph: {
     title: "Dive to Bada",
     description: "크리에이터와 아티스트들의 소셜 미디어 커뮤니티",
