@@ -4,7 +4,7 @@ import Bookmarks from "./Bookmarks";
 
 export const metadata: Metadata = {
   title: "Bookmarks",
-};
+}; 
 
 export default function Page() {
   return (

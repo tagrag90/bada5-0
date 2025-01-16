@@ -20,23 +20,33 @@ export function useDeletePostMutation() {
   const mutation = useMutation({
     mutationFn: deletePost,
     onSuccess: async (deletedPost) => {
-      const queryFilter: QueryFilters = { queryKey: ["post-feed"] };
+      await queryClient.cancelQueries({
+        queryKey: ["post-feed"],
+        exact: false
+      });
 
-      await queryClient.cancelQueries(queryFilter);
-
-      queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
-        queryFilter,
+      queryClient.setQueriesData<InfiniteData<PostsPage>>(
+        {
+          queryKey: ["post-feed"],
+          exact: false
+        },
         (oldData) => {
-          if (!oldData) return;
+          if (!oldData) return oldData;
+          
+          const firstPage = oldData.pages[0];
+          if (!firstPage) return oldData;
 
           return {
             pageParams: oldData.pageParams,
-            pages: oldData.pages.map((page) => ({
-              nextCursor: page.nextCursor,
-              posts: page.posts.filter((p) => p.id !== deletedPost.id),
-            })),
+            pages: [
+              {
+                posts: [deletedPost, ...firstPage.posts],
+                nextCursor: firstPage.nextCursor,
+              },
+              ...oldData.pages.slice(1),
+            ],
           };
-        },
+        }
       );
 
       toast({

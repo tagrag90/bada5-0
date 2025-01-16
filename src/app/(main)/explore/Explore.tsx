@@ -1,4 +1,6 @@
 "use client";
+"use client";
+
 
 import { Zap } from "lucide-react";
 import ServiceCard from "./ServiceCard";

@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import Explore from "./Explore";
 
 export const metadata: Metadata = {
-  title: "Bookmarks",
+  title: "Explore",
 };
 
 export default function Page() {
