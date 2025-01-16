@@ -35,7 +35,7 @@ export default function Explore() {
         Team_bada에서 만든 서비스들을 탐험해보세요!
       </div>
       <div className="text-base text-gray-400 font-light">
-        Let's Find all services and products that Team_bada made!
+      Let&apos;s Find all services and products that Team_bada made!
       </div>
       <div className="text-base text-gray-400">
         {services.map((service) => (
