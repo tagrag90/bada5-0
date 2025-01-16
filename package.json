@@ -36,7 +36,7 @@
     "@tiptap/react": "^2.10.3",
     "@tiptap/starter-kit": "^2.10.3",
     "@tiptap/suggestion": "^2.10.3",
-    "@uploadthing/react": "^6.7.2",
+    "@uploadthing/react": "^7.4.4",
     "@vercel/analytics": "^1.4.1",
     "arctic": "^1.9.1",
     "class-variance-authority": "^0.7.0",
@@ -62,7 +62,7 @@
     "tailwind-scrollbar-hide": "^1.1.7",
     "tailwindcss-animate": "^1.0.7",
     "tiptap-markdown": "^0.8.10",
-    "uploadthing": "^6.13.2",
+    "uploadthing": "^7.4.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
