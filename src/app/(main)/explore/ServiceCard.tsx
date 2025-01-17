@@ -10,9 +10,9 @@ interface ServiceCardProps {
 export default function ServiceCard({ icon, name, description, url }: ServiceCardProps) {
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className="block mb-4 last:mb-0">
-      <div className="rounded-lg border border-[#8B95A1] p-6 transition-all hover:shadow-md">
+      <div className="rounded-[20px] border border-[#8B95A1] p-6 transition-all hover:shadow-md">
         <div className="flex flex-col gap-4">
-          <div className="relative h-12 w-12">
+          <div className="relative h-10 w-10">
             <Image
               src={icon}
               alt={name}
