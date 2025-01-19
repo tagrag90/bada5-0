@@ -38,7 +38,7 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/">
           <Home />
-          <span className="hidden lg:inline">홈</span>
+          <span className="hidden lg:inline">Home</span>
         </Link>
       </Button>
       <NotificationsButton
@@ -53,7 +53,7 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/bookmarks">
           <Bookmark />
-          <span className="hidden lg:inline">북마크</span>
+          <span className="hidden lg:inline">Bookmarks</span>
         </Link>
       </Button>
       <Button
@@ -64,7 +64,7 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/explore">
           <Compass />
-          <span className="hidden lg:inline">탐험</span>
+          <span className="hidden lg:inline">About</span>
         </Link>
       </Button>
 
@@ -80,11 +80,11 @@ export default async function MenuBar({ className }: MenuBarProps) {
           <div className="flex items-center gap-3">
             <UserAvatar
               avatarUrl={user.avatarUrl}
-              size={30}
+              size={24}
               className="border-2 border-gray-600"
             />
             {/* <User /> */}
-            <span className="hidden lg:inline">프로필</span>
+            <span className="hidden lg:inline">Profile</span>
           </div>
         </Link>
       </Button>

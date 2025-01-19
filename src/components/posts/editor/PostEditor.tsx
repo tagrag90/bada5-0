@@ -51,7 +51,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "무슨 일이 있었나요?",
+        placeholder: "써내려 가는 모든 영감이 당신의 작품!",
       }),
       YouTube.configure({
         HTMLAttributes: {
