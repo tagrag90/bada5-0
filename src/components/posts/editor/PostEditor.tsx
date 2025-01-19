@@ -51,7 +51,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "무슨 일이 있었나요?",
+        placeholder: "무슨 일이 있었나요??",
       }),
       YouTube.configure({
         HTMLAttributes: {
