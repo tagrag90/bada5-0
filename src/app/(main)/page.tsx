@@ -26,9 +26,9 @@ export default function Home() {
       </main>
       <aside className="sticky top-[5.25rem] hidden h-fit w-72 flex-none space-y-5 rounded-2xl md:block lg:w-80">
         <NoticeCard 
-          title="We are currently under maintenance. We apologize for the inconvenience."
-          version="Ver. 5.1"
-          status="Fixing"
+          title="Divetobada is operating very well!"
+          version="Gen 6"
+          status="Stable"
         />
         <TrendsSidebar />
       </aside>
