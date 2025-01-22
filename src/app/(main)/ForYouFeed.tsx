@@ -32,28 +32,32 @@ export default function ForYouFeed() {
   const posts = data?.pages.flatMap((page) => page.posts) || [];
 
   if (status === "pending") {
-    return <PostsLoadingSkeleton />;
+    return <div className="rounded-t-2xl overflow-hidden border-[0.5px] border-[#000]/[0.3]"><PostsLoadingSkeleton /></div>;
   }
 
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
-      <p className="text-center text-muted-foreground">
-        아직 게시물이 없습니다.
-      </p>
+      <div className="rounded-t-2xl overflow-hidden bg-white p-4 border-[0.5px] border-[#000]/[0.3]">
+        <p className="text-center text-muted-foreground">
+          아직 게시물이 없습니다.
+        </p>
+      </div>
     );
   }
 
   if (status === "error") {
     return (
-      <p className="text-center text-destructive">
-        게시물을 불러오는 중 오류가 발생했습니다.
-      </p>
+      <div className="rounded-t-2xl overflow-hidden bg-white p-4 border-[0.5px] border-[#000]">
+        <p className="text-center text-destructive">
+          게시물을 불러오는 중 오류가 발생했습니다.
+        </p>
+      </div>
     );
   }
 
   return (
     <InfiniteScrollContainer
-      className="space-x-0 md:space-y-5"
+      className="rounded-t-xl overflow-hidden bg-white border-[0.5px] border-[#000]/[0.3]"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (

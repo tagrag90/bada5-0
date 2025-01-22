@@ -1,47 +1,43 @@
+"use client";
+
 import { PostData } from "@/lib/types";
-import { MoreHorizontal, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { MoreHorizontal, Trash, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import DeletePostDialog from "./DeletePostDialog";
 
 interface PostMoreButtonProps {
   post: PostData;
-  className?: string;
+  onEditClick: () => void;
 }
 
-export default function PostMoreButton({
-  post,
-  className,
-}: PostMoreButtonProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+export default function PostMoreButton({ post, onEditClick }: PostMoreButtonProps) {
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" className={className}>
-            <MoreHorizontal className="size-5 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
-            <span className="flex items-center gap-3 text-destructive">
-              <Trash2 className="size-4" />삭 제
-            </span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DeletePostDialog
-        post={post}
-        open={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-      />
-    </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-8 w-8 p-0 hover:bg-background/80"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">More</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem onClick={onEditClick} className="cursor-pointer">
+          <Pencil className="mr-2 h-4 w-4" />
+          수정
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+          <Trash className="mr-2 h-4 w-4" />
+          삭제
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

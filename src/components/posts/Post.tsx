@@ -4,7 +4,7 @@ import { useSession } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
 import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
-import { MessageSquare, MessageCircle } from "lucide-react";
+import { MessageSquare, MessageCircle, Heart, Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -17,6 +17,9 @@ import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { MediaCarousel } from "./MediaCarousel";
+import { Button } from "@/components/ui/button";
+import PostEditorModal from "@/components/posts/editor/PostEditorModal";
+
 
 interface PostProps {
   post: PostData;
@@ -27,6 +30,8 @@ export default function Post({ post }: PostProps) {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  
 
   const updateCommentCount = (newCount: number) => {
     setCommentCount(newCount);
@@ -67,15 +72,20 @@ export default function Post({ post }: PostProps) {
     return (
       <div className="post-content">
         <div
-          className="whitespace-pre-line break-words"
+          className="whitespace-pre-line break-words text-sm"
           dangerouslySetInnerHTML={{ __html: convertedContent }}
         />
       </div>
     );
   };
 
+  const handleEditClick = () => {
+    console.log("Edit clicked"); // 디버깅용
+    setIsEditorOpen(true);
+  };
+
   return (
-    <article className="group/post overflow-hidden border-b border-gray-200 bg-card p-4 md:rounded-2xl">
+    <article className="group/post overflow-hidden border border-b-0 border-[#000]/0.3 bg-card p-4">
       <div className="flex items-start">
         <UserTooltip user={post.user}>
           <Link
@@ -100,7 +110,18 @@ export default function Post({ post }: PostProps) {
                 · {formatRelativeDate(post.createdAt)}
               </span>
             </div>
-            {post.user.id === user.id && <PostMoreButton post={post} />}
+            {post.user.id === user.id && (
+              <>
+                <PostMoreButton 
+                  post={post} 
+                  onEditClick={handleEditClick} 
+                />
+                <PostEditorModal
+                  isOpen={isEditorOpen}
+                  onClose={() => setIsEditorOpen(false)}
+                />
+              </>
+            )}
           </div>
           <Linkify>
             <div className="mt-2 break-words text-base">{renderContent()}</div>
@@ -221,28 +242,26 @@ interface CommentButtonProps {
 }
 
 function CommentButton({ commentCount, onClick }: CommentButtonProps) {
-  const hasComments = commentCount > 0;
-
   return (
     <button
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-[10px] px-4 py-2",
-        commentCount > 0 ? "bg-black" : "bg-gray-100",
       )}
     >
       <MessageCircle
+        strokeWidth={1.5}
         className={cn(
           "size-5",
           commentCount > 0
-            ? "fill-white text-white" // 댓글 있을 때: 흰색으로 채��기
-            : "fill-gray-500 text-gray-500", // 댓글 없을 때: 진한 회색으로 채우기
+            ? "fill-white text-black"
+            : "fill-white text-black"
         )}
       />
       <span
         className={cn(
-          "text-sm font-medium tabular-nums",
-          commentCount > 0 ? "text-white" : "text-gray-500",
+          "text-sm font-normal tabular-nums",
+          commentCount > 0 ? "text-black" : "text-black"
         )}
       >
         {commentCount}

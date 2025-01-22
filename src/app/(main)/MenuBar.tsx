@@ -2,7 +2,7 @@ import { validateRequest } from "@/auth";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
 import streamServerClient from "@/lib/stream";
-import { Bookmark, Compass, Home, User } from "lucide-react";
+import { Bookmark, Compass, Home, SquarePlus, User } from "lucide-react";
 import Link from "next/link";
 import MessagesButton from "./MessagesButton";
 import NotificationsButton from "./NotificationsButton";
@@ -38,7 +38,6 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/">
           <Home />
-          <span className="hidden lg:inline">Home</span>
         </Link>
       </Button>
       <NotificationsButton
@@ -53,7 +52,6 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/bookmarks">
           <Bookmark />
-          <span className="hidden lg:inline">Bookmarks</span>
         </Link>
       </Button>
       <Button
@@ -64,11 +62,20 @@ export default async function MenuBar({ className }: MenuBarProps) {
       >
         <Link href="/explore">
           <Compass />
-          <span className="hidden lg:inline">About</span>
         </Link>
       </Button>
-
+{/* Write button */}
       <Button
+        variant="ghost"
+        className="flex items-center justify-start gap-3"
+        title="Write"
+        asChild
+      >
+        <Link href="/">
+          <SquarePlus />
+        </Link>
+      </Button>
+      {/* <Button
         variant="ghost"
         className="flex items-center justify-start gap-3 md:w-full"
         title="Profile"
@@ -83,11 +90,9 @@ export default async function MenuBar({ className }: MenuBarProps) {
               size={24}
               className="border-2 border-gray-600"
             />
-            {/* <User /> */}
-            <span className="hidden lg:inline">Profile</span>
           </div>
         </Link>
-      </Button>
+      </Button> */}
       
     </div>
   );

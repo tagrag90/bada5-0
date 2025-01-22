@@ -22,7 +22,11 @@ import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
 import { YouTube } from "./extensions/YouTube";
 
-export default function PostEditor() {
+interface PostEditorProps {
+  onSuccess?: () => void;
+}
+
+export default function PostEditor({ onSuccess }: PostEditorProps) {
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
 
@@ -80,6 +84,7 @@ export default function PostEditor() {
         onSuccess: () => {
           editor?.commands.clearContent();
           resetMediaUploads();
+          onSuccess?.();
         },
       },
     );
