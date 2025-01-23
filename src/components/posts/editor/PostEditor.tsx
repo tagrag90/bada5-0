@@ -11,6 +11,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useDropzone } from "@uploadthing/react";
 import {
   ImageIcon,
+  ImagesIcon,
   Loader2,
   X,
   YoutubeIcon as _YoutubeIcon,
@@ -210,7 +211,7 @@ function AddAttachmentsButton({
         disabled={disabled}
         onClick={() => fileInputRef.current?.click()}
       >
-        <ImageIcon size={20} />
+        <ImagesIcon size={20} />
       </Button>
       <Button
         variant="ghost"

@@ -18,12 +18,12 @@ export default function Comment({ comment }: CommentProps) {
       <UserAvatar avatarUrl={comment.user.avatarUrl} size={24} />
       <div className="flex-1">
         <div className="flex items-center gap-3">
-          <span className="font-base">{comment.user.username}</span>
+          <span className="font-semibold text-sm">{comment.user.username}</span>
           <span className="text-sm text-muted-foreground">
             {formatRelativeDate(comment.createdAt)}
           </span>
         </div>
-        <div className="whitespace-pre-line break-words">{comment.content}</div>
+        <div className="whitespace-pre-line break-words text-sm">{comment.content}</div>
       </div>
       {comment.user.id === user.id && (
         <CommentMoreButton
