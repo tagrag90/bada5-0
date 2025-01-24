@@ -13,12 +13,12 @@ export default function MainContent() {
   return (
     <main className="flex-1">
       <div className="mb-4">
-        <Button
+        {/* <Button
           onClick={() => setIsEditorOpen(true)}
           className="w-full rounded-full bg-foreground px-6 py-2 text-background hover:bg-foreground/90"
         >
           무슨 생각을 하고 계신가요?
-        </Button>
+        </Button> */}
       </div>
 
       <PostEditorModal 

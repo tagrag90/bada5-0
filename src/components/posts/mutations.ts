@@ -11,9 +11,7 @@ import { deletePost } from "./actions";
 
 export function useDeletePostMutation() {
   const { toast } = useToast();
-
   const queryClient = useQueryClient();
-
   const router = useRouter();
   const pathname = usePathname();
 
@@ -32,36 +30,30 @@ export function useDeletePostMutation() {
         },
         (oldData) => {
           if (!oldData) return oldData;
-          
-          const firstPage = oldData.pages[0];
-          if (!firstPage) return oldData;
 
           return {
             pageParams: oldData.pageParams,
-            pages: [
-              {
-                posts: [deletedPost, ...firstPage.posts],
-                nextCursor: firstPage.nextCursor,
-              },
-              ...oldData.pages.slice(1),
-            ],
+            pages: oldData.pages.map(page => ({
+              ...page,
+              posts: page.posts.filter(post => post.id !== deletedPost.id)
+            }))
           };
         }
       );
 
       toast({
-        description: "Post deleted",
+        title: "포스트가 삭제되었습니다.",
       });
 
-      if (pathname === `/posts/${deletedPost.id}`) {
-        router.push(`/users/${deletedPost.user.username}`);
+      if (pathname.startsWith(`/posts/${deletedPost.id}`)) {
+        router.push("/");
       }
     },
-    onError(error) {
-      console.error(error);
+    onError: (error) => {
       toast({
+        title: "포스트 삭제 중 오류가 발생했습니다.",
+        description: error.message,
         variant: "destructive",
-        description: "게시물 삭제에 실패했습니다. 다시 시도해 주세요.",
       });
     },
   });

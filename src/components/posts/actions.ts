@@ -11,6 +11,7 @@ export async function deletePost(id: string) {
 
   const post = await prisma.post.findUnique({
     where: { id },
+    include: getPostDataInclude(user.id),
   });
 
   if (!post) throw new Error("Post not found");
