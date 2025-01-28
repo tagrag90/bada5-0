@@ -8,14 +8,17 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="flex w-full min-w-0 gap-5">
+    <main className="flex w-full min-w-0 gap-5 ">
       <div className="w-full min-w-0 space-y-0">
-        <div className="rounded-2xl bg-card p-5 shadow-sm md:hidden">
-          <h1 className="text-center text-2xl font-bold"></h1>
-        </div>
+      <div className="rounded-2xl bg-card p-5 shadow-sm md:hidden">
+      <h1 className="text-center text-2xl font-bold">북마크</h1>
+      </div>
         <Bookmarks />
       </div>
       <TrendsSidebar />
     </main>
   );
+
+  
+  
 }

@@ -55,7 +55,7 @@ export default function Notifications() {
   const notifications = data?.pages.flatMap((page) => page.notifications) || [];
 
   if (status === "pending") {
-    return <PostsLoadingSkeleton />;
+    return <div className="rounded-t-[24px] bg-white p-4 drop-shadow"><PostsLoadingSkeleton /></div>;
   }
 
   if (status === "success" && !notifications.length && !hasNextPage) {
@@ -74,7 +74,7 @@ export default function Notifications() {
 
   return (
     <InfiniteScrollContainer
-      className="space-y-5"
+      className="rounded-t-[24px]  bg-white drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {notifications.map((notification) => (

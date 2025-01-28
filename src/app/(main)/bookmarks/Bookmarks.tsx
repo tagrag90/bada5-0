@@ -32,28 +32,28 @@ export default function Bookmarks() {
   const posts = data?.pages.flatMap((page) => page.posts) || [];
 
   if (status === "pending") {
-    return <PostsLoadingSkeleton />;
+    return <div className="rounded-t-[24px] bg-white p-4 drop-shadow"><PostsLoadingSkeleton /></div>;
   }
 
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
-      <p className="text-center text-muted-foreground">
+      <p className="rounded-t-[24px] bg-white p-4 drop-shadow">
         북마크한 게시물이 없어요.
       </p>
     );
   }
 
   if (status === "error") {
-    return (
-      <p className="text-center text-destructive">
-        북마크를 불러오는 중 오류가 발생했습니다.
-      </p>
-    );
+    <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
+        <p className="text-center text-destructive">
+          게시물을 불러오는 중 오류가 발생했습니다.
+        </p>
+      </div>
   }
 
   return (
     <InfiniteScrollContainer
-      className="space-y-5"
+      className="rounded-t-[24px] bg-white p-4 drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (

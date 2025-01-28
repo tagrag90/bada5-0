@@ -32,12 +32,12 @@ export default function ForYouFeed() {
   const posts = data?.pages.flatMap((page) => page.posts) || [];
 
   if (status === "pending") {
-    return <div className="rounded-t-2xl overflow-hidden border-[0.5px] border-[#000]/[0.3]"><PostsLoadingSkeleton /></div>;
+    return <div className="rounded-t-[24px] bg-white p-4 drop-shadow"><PostsLoadingSkeleton /></div>;
   }
 
   if (status === "success" && !posts.length && !hasNextPage) {
     return (
-      <div className="rounded-t-2xl overflow-hidden bg-white p-4 border-[0.5px] border-[#000]/[0.3]">
+      <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
         <p className="text-center text-muted-foreground">
           아직 게시물이 없습니다.
         </p>
@@ -47,7 +47,7 @@ export default function ForYouFeed() {
 
   if (status === "error") {
     return (
-      <div className="rounded-t-2xl overflow-hidden bg-white p-4 border-[0.5px] border-[#000]">
+      <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
         <p className="text-center text-destructive">
           게시물을 불러오는 중 오류가 발생했습니다.
         </p>
@@ -57,7 +57,7 @@ export default function ForYouFeed() {
 
   return (
     <InfiniteScrollContainer
-      className="rounded-t-xl overflow-hidden bg-white border-[0.5px] border-[#000]/[0.3]"
+      className="rounded-t-[24px] bg-white p-4 drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (

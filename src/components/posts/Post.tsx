@@ -85,14 +85,14 @@ export default function Post({ post }: PostProps) {
   };
 
   return (
-    <article className="group/post overflow-hidden border border-b-0 border-[#000]/0.3 bg-card p-4">
+    <article className="group/post overflow-hidden border-b border-dotted border-b-gray-300 bg-card p-4">
       <div className="flex items-start">
         <UserTooltip user={post.user}>
           <Link
             href={`/users/${post.user.username}`}
             className="mr-3 flex-shrink-0"
           >
-            <UserAvatar avatarUrl={post.user.avatarUrl} size={48} />
+            <UserAvatar avatarUrl={post.user.avatarUrl} size={40} />
           </Link>
         </UserTooltip>
         <div className="min-w-0 flex-grow">
