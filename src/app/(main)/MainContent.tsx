@@ -20,7 +20,7 @@ export default function MainContent() {
           무슨 생각을 하고 계신가요?
         </Button> */}
       </div>
-
+      <div>user</div>
       <PostEditorModal 
         isOpen={isEditorOpen} 
         onClose={() => setIsEditorOpen(false)} 

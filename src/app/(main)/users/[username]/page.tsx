@@ -102,7 +102,7 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
   return (
     <div className="w-full rounded-lg border bg-card p-4 shadow-sm">
       <div className="space-y-6">
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex items-start justify-between gap-6 py-3">
           <div>
             <h1 className="text-2xl font-bold">{user.displayName}</h1>
             <div className="text-muted-foreground">@{user.username}</div>
