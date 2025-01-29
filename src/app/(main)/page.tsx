@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="flex gap-6">
       <MainContent />
-      <aside className="sticky top-[5.25rem] hidden h-fit w-72 flex-none space-y-5 rounded-2xl md:block lg:w-80">
+      <aside className="sticky top-[5.25rem] hidden h-fit max-h-[calc(100vh-6rem)] overflow-y-auto w-72 flex-none space-y-5 rounded-2xl md:block lg:w-80">
         <NoticeCard 
           title="Divetobada is operating very well!"
           version="Gen 6"
