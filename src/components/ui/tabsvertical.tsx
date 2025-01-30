@@ -1,0 +1,58 @@
+"use client";
+
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as React from "react";
+
+import { cn } from "@/lib/utils";
+
+const TabsVertical = TabsPrimitive.Root;
+
+const TabsVerticalList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "flex flex-col w-20 items-stretch gap-0.5 rounded-md bg-card p-0.5 text-muted-foreground shadow-sm",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsVerticalList.displayName = TabsPrimitive.List.displayName;
+
+const TabsVerticalTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "flex items-center justify-center whitespace-nowrap rounded-sm px-2 py-1.5 text-xs font-medium ring-offset-background transition-all",
+      "hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "disabled:pointer-events-none disabled:opacity-50",
+      "data-[state=active]:bg-background data-[state=active]:font-bold data-[state=active]:text-foreground",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsVerticalTrigger.displayName = TabsPrimitive.Trigger.displayName;
+
+const TabsVerticalContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsVerticalContent.displayName = TabsPrimitive.Content.displayName;
+
+export { TabsVertical, TabsVerticalContent, TabsVerticalList, TabsVerticalTrigger };

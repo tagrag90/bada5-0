@@ -26,14 +26,14 @@ export function NoticeCard({ title, version, status }: NoticeCardProps) {
         {title}
       </h2>
 
-      <div className="mt-4 flex items-center gap-3 bg-[#00cc6d]/[0.3] rounded-lg p-2 justify-between">
+      {/* <div className="mt-4 flex items-center gap-3 bg-[#00cc6d]/[0.3] rounded-lg p-2 justify-between">
         <span className="rounded-lg bg-[#00dd89] px-3 py-1 text-white">
           {version}
         </span>
         <span className="text-[#000]">
           {status}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 } 
