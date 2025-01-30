@@ -17,6 +17,7 @@ export default function MainContent() {
 
   return (
     <main className="flex-1">
+      {/* 데스크톱 버전 */}
       <TabsVertical defaultValue="for-you" className="w-full hidden md:block">
         <div className="w-full flex justify-between px-4">
           <div className="w-1/3 items-center justify-start flex">
@@ -35,8 +36,8 @@ export default function MainContent() {
           </div>
           <div className="w-1/3 items-center justify-end flex">
             <TabsVerticalList>
-              <TabsVerticalTrigger value="for-you">추천</TabsVerticalTrigger>
-              <TabsVerticalTrigger value="following">팔로잉</TabsVerticalTrigger>
+              <TabsVerticalTrigger value="for-you" className="text-right">추천</TabsVerticalTrigger>
+              <TabsVerticalTrigger value="following" className="text-right">팔로잉</TabsVerticalTrigger>
             </TabsVerticalList>
           </div>
         </div>
@@ -50,7 +51,7 @@ export default function MainContent() {
           </TabsVerticalContent>
         </div>
       </TabsVertical>
-      
+      {/* 모바일 버전 */}
       <Tabs defaultValue="for-you" className="w-full md:hidden">
         <TabsList className="md:hidden">
           <TabsTrigger value="for-you" className="text-center">추천</TabsTrigger>
