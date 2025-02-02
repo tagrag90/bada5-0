@@ -58,6 +58,20 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
                 </div>
               </Linkify>
             )}
+            <div className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-bold">{user._count.posts}</span>
+                <span className="text-sm text-muted-foreground">Post</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-bold">{user._count.following}</span>
+                <span className="text-sm text-muted-foreground">Following</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-lg font-bold">{followerState.followers}</span>
+                <span className="text-sm text-muted-foreground">Followers</span>
+              </div>
+            </div>
             <FollowerCount userId={user.id} initialState={followerState} />
           </div>
         </TooltipContent>
