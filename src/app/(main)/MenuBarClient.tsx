@@ -11,7 +11,8 @@ import studioIcon from "@/assets/studio.png";
 import UserButton from "@/components/UserButton";
 import UserAvatar from "@/components/UserAvatar";
 import { useSession } from "@/app/(main)/SessionProvider";
-
+import homeIcon from "@/assets/feed.png";
+import writeIcon from "@/assets/write.png";
 interface MenuBarClientProps {
   className?: string;
   unreadNotificationsCount: number;
@@ -35,9 +36,10 @@ export function MenuBarClient({
         asChild
       >
         <Link href="/">
-          <Home />
+          <Image src={homeIcon} alt="Home" width={24} height={24} />
         </Link>
       </Button>
+      
       <NotificationsButton
         initialState={{ unreadCount: unreadNotificationsCount }}
       />
@@ -48,9 +50,9 @@ export function MenuBarClient({
         title="Write"
         onClick={() => setIsEditorOpen(true)}
       >
-        <SquarePlus />
+        <Image src={writeIcon} alt="Write" width={24} height={24} />
       </Button>
-      <Button
+      {/* <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
         title="Bookmarks"
@@ -59,7 +61,7 @@ export function MenuBarClient({
         <Link href="/bookmarks">
           <Bookmark />
         </Link>
-      </Button>
+      </Button> */}
       {/* <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
@@ -78,7 +80,7 @@ export function MenuBarClient({
         asChild
       >
         <Link href={`/users/${user?.username}`}>
-          <UserAvatar avatarUrl={user?.avatarUrl} size={28} className="border-2 border-stone-700 items-center justify-center" />
+          <UserAvatar avatarUrl={user?.avatarUrl} size={29} className="border-2 border-stone-700 items-center justify-center" />
         </Link>
       </Button>
       
@@ -89,7 +91,7 @@ export function MenuBarClient({
         asChild
       >
         <Link href="#">
-          <Image src={studioIcon} alt="Studio" width={28} height={28} />
+          <Image src={studioIcon} alt="Studio" width={29} height={29} />
         </Link>
       </Button>
       

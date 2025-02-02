@@ -6,6 +6,10 @@ import { NotificationCountInfo } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import bellIcon from "@/assets/like.png";
+
+
 
 interface NotificationsButtonProps {
   initialState: NotificationCountInfo;
@@ -33,7 +37,7 @@ export default function NotificationsButton({
     >
       <Link href="/notifications">
         <div className="relative">
-          <Bell />
+          <Image src={bellIcon} alt="Notifications" width={24} height={24} />
           {!!data.unreadCount && (
             <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-xs font-medium tabular-nums text-primary-foreground">
               {data.unreadCount}
