@@ -6,7 +6,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -67,6 +67,9 @@ model Post {
   likes               Like[]
   bookmarks           Bookmark[]
   comments            Comment[]
+  originalPost        Post?          @relation("Reposts", fields: [originalPostId], references: [id], onDelete: SetNull)
+  originalPostId      String?
+  reposts             Post[]         @relation("Reposts")
   linkedNotifications Notification[]
 
   createdAt DateTime @default(now())
