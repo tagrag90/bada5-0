@@ -31,7 +31,7 @@ export default function CommentInput({ post }: CommentInputProps) {
   }
 
   return (
-    <form className="flex w-full items-center gap-2" onSubmit={onSubmit}>
+    <form className="flex w-full items-center gap-2 ml-2" onSubmit={onSubmit}>
       <Input
         placeholder="아! 댓글 또 못참지"
         value={input}

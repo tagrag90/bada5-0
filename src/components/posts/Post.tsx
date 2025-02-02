@@ -124,13 +124,15 @@ export default function Post({ post }: PostProps) {
             )}
           </div>
           <Linkify>
-            <div className="mt-2 break-words text-base">{renderContent()}</div>
-          </Linkify>
-          {!!post.attachments.length && (
-            <div className="mt-3">
-              <MediaPreviews attachments={post.attachments} />
+            <div className="break-words text-base">
+              {!!post.attachments.length && (
+                <div className="mb-3">
+                  <MediaPreviews attachments={post.attachments} />
+                </div>
+              )}
+              {renderContent()}
             </div>
-          )}
+          </Linkify>
           <div className="mt-3 flex items-center space-x-4">
             <LikeButton
               postId={post.id}
