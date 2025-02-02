@@ -157,7 +157,14 @@ async function TrendingTopics() {
           </div>
         </div>
       </div>
+      
       <div className="flex flex-col gap-6">
+      <div className="w-full flex justify-end">
+        <div className="flex flex-col text-xs text-gray-400 gap-1 justify-end">
+          <div className="text-right">대표자 : 박 준 서</div>
+          <div className="text-right">사업자등록번호:602-13-77154</div>        
+        </div>
+      </div>
       <div className="w-full flex justify-end">
         <div className="flex flex-col text-xs text-gray-400 gap-1 justify-end">
           <div className="text-right">Email : teambada1206@gmail.com(only)</div>
