@@ -72,7 +72,7 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
                 <span className="text-sm text-muted-foreground">Followers</span>
               </div>
             </div>
-            <FollowerCount userId={user.id} initialState={followerState} />
+            {/* <FollowerCount userId={user.id} initialState={followerState} /> */}
           </div>
         </TooltipContent>
       </Tooltip>
