@@ -5,7 +5,7 @@ import Linkify from "@/components/Linkify";
 import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
 import prisma from "@/lib/prisma";
-import { FollowerInfo, getUserDataSelect, UserData } from "@/lib/types";
+import { FollowerInfo, FollowingInfo, getUserDataSelect, UserData } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { formatDate } from "date-fns";
 import { Metadata } from "next";
@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import FollowingCount from "@/components/FollowingCount";
 
 interface PageProps {
   params: { username: string };
@@ -99,6 +100,10 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
     ),
   };
 
+  const followingInfo: FollowingInfo = {
+    following: user._count.following || 0,
+  };
+
   return (
     <div className="w-full rounded-lg border bg-card p-4 shadow-sm">
       <div className="space-y-6">
@@ -128,7 +133,27 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
             </div>
           </Linkify>
         )} */}
-
+        <div className="flex items-center gap-8 text-sm">
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-bold">
+              {formatNumber(user._count.posts)}
+            </span>
+            <span className="text-muted-foreground">Post</span>
+          </div>
+          
+          <div className="flex flex-col items-center">
+            <FollowingCount 
+              userId={user.id} 
+              initialState={followingInfo}
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <FollowerCount 
+              userId={user.id} 
+              initialState={followerInfo}
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
             <TooltipProvider>
@@ -176,7 +201,7 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>
             게시물{" "}
             <span className="font-semibold text-foreground">
@@ -184,13 +209,16 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
             </span>
           </span>
           <FollowerCount userId={user.id} initialState={followerInfo} />
-          {/* <span>
+          <span>
+            <FollowingCount userId={user.id} initialState={followingInfo} />
+          </span>
+          <span>
             가입일{" "}
             <span className="font-semibold text-foreground">
               {formatDate(user.createdAt, "yyyy.MM.dd")}
             </span>
-          </span> */}
-        </div>
+          </span>
+        </div> */}
       </div>
     </div>
   );
