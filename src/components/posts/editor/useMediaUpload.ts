@@ -69,10 +69,10 @@ export default function useMediaUpload() {
       return;
     }
 
-    if (attachments.length + files.length > 5) {
+    if (attachments.length + files.length > 4) {
       toast({
         variant: "destructive",
-        description: "게시물당 최대 5개의 첨부 파일을 업로드할 수 있습니다.",
+        description: "게시물당 최대 4개의 첨부 파일을 업로드할 수 있습니다.",
       });
       return;
     }

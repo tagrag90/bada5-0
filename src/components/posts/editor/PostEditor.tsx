@@ -251,18 +251,16 @@ function AttachmentPreviews({
 }: AttachmentPreviewsProps) {
   return (
     <div
-      className={cn(
-        "flex flex-col gap-3",
-        attachments.length > 1 && "sm:grid sm:grid-cols-2",
-      )}
-    >
-      {attachments.map((attachment) => (
-        <AttachmentPreview
-          key={attachment.file.name}
-          attachment={attachment}
-          onRemoveClick={() => removeAttachment(attachment.file.name)}
-        />
-      ))}
+      className="relative w-full overflow-x-auto">
+      <div className="flex gap-2 pb-2">
+        {attachments.map((attachment) => (
+          <AttachmentPreview
+            key={attachment.file.name}
+            attachment={attachment}
+            onRemoveClick={() => removeAttachment(attachment.file.name)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -280,7 +278,10 @@ function AttachmentPreview({
 
   return (
     <div
-      className={cn("relative mx-auto size-fit", isUploading && "opacity-50")}
+      className={cn(
+        "relative flex-shrink-0",
+        isUploading && "opacity-50"
+      )}
     >
       {file.type.startsWith("image") ? (
         <Image
@@ -288,14 +289,14 @@ function AttachmentPreview({
           alt="Attachment preview"
           width={500}
           height={500}
-          className="size-fit max-h-[30rem] rounded-2xl"
+          className="h-[200px] w-[200px] rounded-xl object-cover"
         />
       ) : (
         <video 
           controls
           preload="metadata"
           playsInline
-          className="size-fit max-h-[30rem] rounded-2xl"
+          className="h-[200px] w-[200px] rounded-xl object-cover"
         >
           <source src={src} type={file.type} />
         </video>

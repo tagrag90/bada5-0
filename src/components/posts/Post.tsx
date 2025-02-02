@@ -172,13 +172,35 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
+  const getGridClass = () => {
+    switch (attachments.length) {
+      case 1:
+        return "grid-cols-1";
+      case 2:
+        return "grid-cols-2 gap-1";
+      case 3:
+        return "grid-cols-2 gap-1";
+      case 4:
+        return "grid-cols-2 grid-rows-2 gap-1";
+      default:
+        return "grid-cols-2 grid-rows-2 gap-1";
+    }
+  };
+
+  const getImageClass = (index: number) => {
+    if (attachments.length === 3 && index === 0) {
+      return "row-span-2";
+    }
+    return "";
+  };
+
   return (
-    <div className="relative w-full overflow-hidden">
-      <div className="flex snap-x snap-mandatory gap-1 overflow-x-auto scrollbar-hide">
-        {attachments.map((media) => (
+    <div className="relative w-full overflow-hidden rounded-xl">
+      <div className={`grid aspect-video ${getGridClass()}`}>
+        {attachments.map((media, index) => (
           <div
             key={media.id}
-            className="relative h-[400px] w-[60%] flex-shrink-0 snap-start last:mr-[40%]"
+            className={`relative ${getImageClass(index)} overflow-hidden`}
           >
             <MediaPreview media={media} attachments={attachments} />
           </div>
@@ -199,13 +221,13 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
   return (
     <>
       <div
-        className="relative h-full w-full"
+        className="relative h-full w-full aspect-square"
         onClick={() => setShowCarousel(true)}
       >
         {media.type === "VIDEO" ? (
           <video
             src={media.url}
-            className="absolute inset-0 h-full w-full cursor-pointer rounded-lg object-cover"
+            className="absolute inset-0 h-full w-full cursor-pointer object-cover"
             controls
             preload="metadata"
             playsInline
@@ -217,7 +239,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
               src={media.url}
               alt="Attachment"
               fill
-              className="cursor-pointer rounded-lg object-cover"
+              className="cursor-pointer object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
