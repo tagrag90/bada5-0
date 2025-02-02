@@ -6,20 +6,22 @@ export async function GET(request: Request) {
   const url = searchParams.get('url');
 
   if (!url) {
-    return NextResponse.json({ success: false, error: 'URL is required' });
+    return NextResponse.json({ success: false, error: 'URL이 필요합니다.' });
   }
 
   try {
     const { result } = await ogs({ url });
-    const ogData = {
-      title: result.ogTitle || '',
-      description: result.ogDescription || '',
-      image: result.ogImage?.[0]?.url || '',
-      url: result.requestUrl,
-      siteName: result.ogSiteName,
+    
+    const metadata = {
+      title: result.ogTitle,
+      description: result.ogDescription,
+      image: result.ogImage?.[0]?.url,
+      url: result.ogUrl || url,
     };
-    return NextResponse.json({ success: true, ogData });
+
+    return NextResponse.json({ success: true, metadata });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch OG data' });
+    console.error('OG 스크래핑 실패:', error);
+    return NextResponse.json({ success: false, error: '메타데이터를 가져올 수 없습니다.' });
   }
 } 

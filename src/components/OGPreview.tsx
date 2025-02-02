@@ -1,42 +1,50 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export interface OGData {
-  title: string;
-  description: string;
-  image: string;
+  title?: string;
+  description?: string;
+  image?: string;
   url: string;
-  siteName?: string;
 }
 
-interface OGPreviewProps {
-  ogData: OGData;
-}
+export default function OGPreview({ ogData }: { ogData: OGData }) {
+  if (!ogData.title && !ogData.description && !ogData.image) return null;
 
-export default function OGPreview({ ogData }: OGPreviewProps) {
   return (
-    <a 
-      href={ogData.url} 
-      target="_blank" 
+    <Link
+      href={ogData.url}
+      target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col overflow-hidden rounded-lg border border-gray-200 hover:bg-gray-50"
+      className="mt-2 block overflow-hidden rounded-lg border border-gray-200 hover:bg-gray-50"
     >
-      {ogData.image && (
-        <div className="relative h-40 w-full">
-          <Image
-            src={ogData.image}
-            alt={ogData.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-      )}
-      <div className="p-3">
-        <h3 className="font-semibold line-clamp-2">{ogData.title}</h3>
-        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{ogData.description}</p>
-        {ogData.siteName && (
-          <p className="mt-2 text-xs text-gray-400">{ogData.siteName}</p>
+      <div className="flex">
+        {ogData.image && (
+          <div className="relative h-[120px] w-[120px] flex-shrink-0">
+            <Image
+              src={ogData.image}
+              alt={ogData.title || ''}
+              fill
+              className="object-cover"
+            />
+          </div>
         )}
+        <div className="flex-1 p-3">
+          {ogData.title && (
+            <h3 className="mb-1 line-clamp-2 text-sm font-semibold">
+              {ogData.title}
+            </h3>
+          )}
+          {ogData.description && (
+            <p className="line-clamp-2 text-sm text-gray-600">
+              {ogData.description}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            {new URL(ogData.url).hostname}
+          </p>
+        </div>
       </div>
-    </a>
+    </Link>
   );
 } 

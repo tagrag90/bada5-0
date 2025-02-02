@@ -6,6 +6,11 @@ import { Bookmark, Compass, Home, SquarePlus } from "lucide-react";
 import NotificationsButton from "./NotificationsButton";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import { useState } from "react";
+import Image from "next/image";
+import studioIcon from "@/assets/studio.png";
+import UserButton from "@/components/UserButton";
+import UserAvatar from "@/components/UserAvatar";
+import { useSession } from "@/app/(main)/SessionProvider";
 
 interface MenuBarClientProps {
   className?: string;
@@ -18,6 +23,7 @@ export function MenuBarClient({
   unreadNotificationsCount,
   unreadMessagesCount
 }: MenuBarClientProps) {
+  const { user } = useSession();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   return (
@@ -39,6 +45,14 @@ export function MenuBarClient({
       <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
+        title="Write"
+        onClick={() => setIsEditorOpen(true)}
+      >
+        <SquarePlus />
+      </Button>
+      <Button
+        variant="ghost"
+        className="flex items-center justify-start gap-3"
         title="Bookmarks"
         asChild
       >
@@ -46,7 +60,7 @@ export function MenuBarClient({
           <Bookmark />
         </Link>
       </Button>
-      <Button
+      {/* <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
         title="Explore"
@@ -55,18 +69,32 @@ export function MenuBarClient({
         <Link href="/explore">
           <Compass />
         </Link>
-      </Button>
+      </Button> */}
       {/* Write button */}
       <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
-        title="Write"
-        onClick={() => setIsEditorOpen(true)}
+        title="Profile"
+        asChild
       >
-        <SquarePlus />
+        <Link href={`/users/${user?.username}`}>
+          <UserAvatar avatarUrl={user?.avatarUrl} size={28} className="border-2 border-stone-700 items-center justify-center" />
+        </Link>
       </Button>
+      
+      <Button
+        variant="ghost"
+        className="flex items-center justify-start gap-3"
+        title="Studio"
+        asChild
+      >
+        <Link href="#">
+          <Image src={studioIcon} alt="Studio" width={28} height={28} />
+        </Link>
+      </Button>
+      
       <PostEditorModal 
-        isOpen={isEditorOpen} 
+        isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)} 
       />
     </div>
