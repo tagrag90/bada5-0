@@ -149,7 +149,7 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
             <EditorContent
               editor={editor}
               className={cn(
-                "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-[#fff]",
+                "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-[#fff] pl-0 py-3",
                 isDragActive && "outline-dashed",
               )}
               onPaste={onPaste}
@@ -249,7 +249,7 @@ function AttachmentPreviews({
   return (
     <div
       className="relative w-full overflow-x-auto">
-      <div className="flex gap-2 pb-2 ml-6 pl-5">
+      <div className="flex gap-2 pb-2 ml-6">
         {attachments.map((attachment) => (
           <AttachmentPreview
             key={attachment.file.name}
