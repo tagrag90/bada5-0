@@ -11,12 +11,12 @@ interface PostEditorModalProps {
 export default function PostEditorModal({ isOpen, onClose }: PostEditorModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl gap-0 p-0 md:max-w-2xl">
+      <DialogContent className="max-w-2xl gap-0 p-0 md:max-w-2xl bg-[#fff] rounded-[24px]">
         <div className="flex items-center justify-between border-b p-4">
           <button onClick={onClose} className="text-sm font-medium">
             취소
           </button>
-          <span className="text-sm font-semibold">새 스레드</span>
+          <span className="text-sm font-semibold text-center">포스트 작성</span>
           <div className="w-8" /> {/* 우측 여백 맞추기 용 */}
         </div>
         <div className="p-4">

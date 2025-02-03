@@ -138,19 +138,24 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
+    <div className="flex flex-col gap-5 rounded-2xl bg-card">
       <div className="flex gap-5">
-        <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
-        <div {...rootProps} className="w-full">
-          <EditorContent
-            editor={editor}
-            className={cn(
-              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
-              isDragActive && "outline-dashed",
-            )}
-            onPaste={onPaste}
-          />
-          <input {...getInputProps()} />
+        <div className="flex flex-col items-center">
+          <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
+        </div>
+        <div className="w-full">
+          <div className="mb-2 text-sm font-medium">{user.username}</div>
+          <div {...rootProps} className="w-full">
+            <EditorContent
+              editor={editor}
+              className={cn(
+                "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-[#fff]",
+                isDragActive && "outline-dashed",
+              )}
+              onPaste={onPaste}
+            />
+            <input {...getInputProps()} />
+          </div>
         </div>
       </div>
       {!!attachments.length && (
@@ -159,18 +164,19 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
           removeAttachment={removeAttachment}
         />
       )}
-      <div className="flex items-center justify-end gap-3">
+      <div className="flex items-center">
+        <AddAttachmentsButton
+          onFilesSelected={startUpload}
+          disabled={isUploading || attachments.length >= 5}
+          onYoutubeEmbed={handleYoutubeEmbed}
+        />
         {isUploading && (
           <>
             <span className="text-sm">{uploadProgress ?? 0}%</span>
             <Loader2 className="size-5 animate-spin text-primary" />
           </>
         )}
-        <AddAttachmentsButton
-          onFilesSelected={startUpload}
-          disabled={isUploading || attachments.length >= 5}
-          onYoutubeEmbed={handleYoutubeEmbed}
-        />
+        <div className="flex-1" />
         <LoadingButton
           onClick={onSubmit}
           loading={mutation.isPending}
@@ -207,20 +213,11 @@ function AddAttachmentsButton({
       <Button
         variant="ghost"
         size="icon"
-        className="text-primary hover:text-primary"
+        className="text-primary hover:text-primary p-0"
         disabled={disabled}
         onClick={() => fileInputRef.current?.click()}
       >
-        <ImagesIcon size={20} />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-primary hover:text-primary"
-        disabled={disabled}
-        onClick={onYoutubeEmbed}
-      >
-        <_YoutubeIcon size={22} />
+        <ImagesIcon size={22} />
       </Button>
       <input
         type="file"
@@ -252,7 +249,7 @@ function AttachmentPreviews({
   return (
     <div
       className="relative w-full overflow-x-auto">
-      <div className="flex gap-2 pb-2">
+      <div className="flex gap-2 pb-2 ml-6 pl-5">
         {attachments.map((attachment) => (
           <AttachmentPreview
             key={attachment.file.name}
