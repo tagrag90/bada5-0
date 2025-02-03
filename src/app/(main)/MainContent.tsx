@@ -52,6 +52,17 @@ export default function MainContent() {
         </div>
       </TabsVertical>
       {/* 모바일 버전 */}
+      <div className="w-full items-center justify-center flex">
+          <Link href="/">
+          <Image
+            src={MainLogo}
+            alt="logo"
+            width={24}
+            height={24}
+            className="rounded-full md:block"
+          />
+        </Link>
+          </div>
       <Tabs defaultValue="for-you" className="w-full md:hidden">
         <TabsList className="md:hidden">
           <TabsTrigger value="for-you" className="text-center">추천</TabsTrigger>
