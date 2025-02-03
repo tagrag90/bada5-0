@@ -227,7 +227,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
         {media.type === "VIDEO" ? (
           <video
             src={media.url}
-            className="absolute inset-0 h-full w-full cursor-pointer object-cover rounded-md"
+            className="absolute inset-0 h-full w-full cursor-pointer object-cover rounded-lg"
             controls
             preload="metadata"
             playsInline
@@ -239,7 +239,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
               src={media.url}
               alt="Attachment"
               fill
-              className="cursor-pointer object-cover rounded-md"
+              className="cursor-pointer object-cover object-top rounded-lg"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
