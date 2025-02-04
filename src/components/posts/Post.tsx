@@ -239,7 +239,7 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
               src={media.url}
               alt="Attachment"
               fill
-              className="cursor-pointer object-cover object-top rounded-lg"
+              className="cursor-pointer object-cover object-top rounded-xl"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
