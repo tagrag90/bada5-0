@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import kyInstance from "@/lib/ky";
 import { MessageCountInfo } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { Mail, Send } from "lucide-react";
 import Link from "next/link";
 
 interface MessagesButtonProps {
@@ -29,14 +29,14 @@ export default function MessagesButton({ initialState }: MessagesButtonProps) {
     >
       <Link href="/messages">
         <div className="relative">
-          <Mail />
+          <Send />
           {!!data.unreadCount && (
             <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-xs font-medium tabular-nums text-primary-foreground">
               {data.unreadCount}
             </span>
           )}
         </div>
-        <span className="hidden lg:inline">메시지</span>
+        {/* <span className="hidden lg:inline">메시지</span> */}
       </Link>
     </Button>
   );

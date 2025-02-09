@@ -28,6 +28,7 @@ interface PostProps {
 export default function Post({ post }: PostProps) {
   const { user } = useSession();
   const [showComments, setShowComments] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -51,6 +52,10 @@ export default function Post({ post }: PostProps) {
 
   const renderContent = () => {
     const convertedContent = convertContent(post.content);
+    const shouldTruncate = post.content.length > 150 && !isExpanded;
+    const displayContent = shouldTruncate 
+      ? post.content.slice(0, 150) + "..." 
+      : post.content;
 
     // YouTube 임베드가 있는 경우
     if (post.content?.includes("youtube.com")) {
@@ -72,9 +77,21 @@ export default function Post({ post }: PostProps) {
     return (
       <div className="post-content">
         <div
-          className="whitespace-pre-line break-words text-sm"
-          dangerouslySetInnerHTML={{ __html: convertedContent }}
+          onClick={() => isExpanded && setIsExpanded(false)}
+          className={cn(
+            "whitespace-pre-line break-words text-sm",
+            isExpanded && "cursor-pointer"
+          )}
+          dangerouslySetInnerHTML={{ __html: convertContent(displayContent) }}
         />
+        {shouldTruncate && (
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="mt-1 text-sm text-gray-500 hover:text-gray-700"
+          >
+            더보기
+          </button>
+        )}
       </div>
     );
   };

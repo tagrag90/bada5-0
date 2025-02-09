@@ -13,6 +13,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { useSession } from "@/app/(main)/SessionProvider";
 import homeIcon from "@/assets/feed.png";
 import writeIcon from "@/assets/write.png";
+import MessagesButton from "./MessagesButton";
 interface MenuBarClientProps {
   className?: string;
   unreadNotificationsCount: number;
@@ -52,6 +53,7 @@ export function MenuBarClient({
       >
         <Image src={writeIcon} alt="Write" width={24} height={24} />
       </Button>
+      
       {/* <Button
         variant="ghost"
         className="flex items-center justify-start gap-3"
