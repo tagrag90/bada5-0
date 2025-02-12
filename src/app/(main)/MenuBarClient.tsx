@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Bookmark, Compass, Home, SquarePlus } from "lucide-react";
+import { Bookmark, Compass, Home, SquarePlus, PenLine } from "lucide-react";
 import NotificationsButton from "./NotificationsButton";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import { useState } from "react";
@@ -52,6 +52,7 @@ export function MenuBarClient({
         onClick={() => setIsEditorOpen(true)}
       >
         <Image src={writeIcon} alt="Write" width={24} height={24} />
+        {/* <PenLine className="w-7 h-7" /> */}
       </Button>
       
       {/* <Button
