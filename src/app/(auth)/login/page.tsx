@@ -1,4 +1,4 @@
-import loginImage from "@/assets/auth-image.png";
+import loginImage from "@/assets/login-image.png";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,15 +12,23 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <main className="flex h-screen items-center justify-center p-5">
-      <div className="flex h-full max-h-[40rem] w-full max-w-[32rem] overflow-hidden rounded-2xl">
-        <div className="w-full space-y-1 overflow-y-auto p-10">
+    <main className="flex h-screen">
+      <div className="hidden w-1/2 md:block">
+        <Image
+          src={loginImage}
+          alt=""
+          className="h-screen w-full object-fit"
+          priority
+        />
+      </div>
+      <div className="flex w-full items-center justify-center p-5 md:w-1/2">
+        <div className="w-full max-w-md space-y-1 overflow-y-auto p-10">
           <Image
             src={Logo} //
             alt="logo"
             width={45}
             height={45}
-            className="mb-5 rounded-full md:block"
+            className="mb-5 rounded-full md:hidden"
           />
           <h1 className="text-2xl font-bold">돌아오셨군요~</h1>
           <h1 className="text-2xl font-bold">로그인 하고 Bada를 둘러보세요.</h1>
@@ -43,11 +51,6 @@ export default function Page() {
             <GoogleSignInButton />
           </div>
         </div>
-        {/* <Image
-          src={loginImage}
-          alt=""
-          className="hidden w-1/2 object-fill md:block"
-        /> */}
       </div>
     </main>
   );
