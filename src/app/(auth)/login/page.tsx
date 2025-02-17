@@ -17,7 +17,7 @@ export default function Page() {
         <Image
           src={loginImage}
           alt=""
-          className="h-screen w-full object-fit"
+          className="h-screen w-full object-left-top object-cover"
           priority
         />
       </div>
