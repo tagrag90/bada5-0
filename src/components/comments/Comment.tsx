@@ -14,7 +14,7 @@ export default function Comment({ comment }: CommentProps) {
   const { user } = useSession();
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3 pt-3">
       <UserAvatar avatarUrl={comment.user.avatarUrl} size={24} />
       <div className="flex-1">
         <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ export default function Comment({ comment }: CommentProps) {
             {formatRelativeDate(comment.createdAt)}
           </span>
         </div>
-        <div className="whitespace-pre-line break-words text-sm">{comment.content}</div>
+        <div className="whitespace-pre-line break-words text-sm mb-3">{comment.content}</div>
       </div>
       {comment.user.id === user.id && (
         <CommentMoreButton
