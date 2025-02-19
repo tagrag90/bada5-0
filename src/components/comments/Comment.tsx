@@ -14,7 +14,7 @@ export default function Comment({ comment }: CommentProps) {
   const { user } = useSession();
 
   return (
-    <div className="flex items-start gap-3 pt-3">
+    <div className="flex items-start gap-3 pt-3 mr-5 ml-5 group/comment">
       <UserAvatar avatarUrl={comment.user.avatarUrl} size={24} />
       <div className="flex-1">
         <div className="flex items-center gap-3">
