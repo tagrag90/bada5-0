@@ -174,12 +174,17 @@ async function TrendingTopics() {
       </div>
       <div className="w-full flex justify-end">
         <div className="flex flex-col text-xs text-gray-400 gap-1 justify-end">
-          {/* <div className="text-right">Divetobada</div> */}
           <Link href="https://www.vessel.today" target="_blank" rel="noopener noreferrer">
           <div className="text-right">Vessel</div>
           </Link>
           <div className="text-right">OnBuniz</div>
           <div className="text-right">Baseball playlist</div>
+          <Link href="https://profuse-soil-41e.notion.site/GUEMSoNG-Digital-Magazine-1788bfe8131a80ecb20ed23cd21f2fdf?pvs=4" target="_blank" rel="noopener noreferrer">
+            <div className="text-right">Magazine 굄성;</div>
+          </Link>
+          <Link href="https://chartroom-coral.vercel.app/" target="_blank" rel="noopener noreferrer">
+            <div className="text-right">미니게임 : Chartroom</div>
+          </Link>
         </div>
       </div>
       </div>
