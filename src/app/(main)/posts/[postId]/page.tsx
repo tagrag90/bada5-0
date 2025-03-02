@@ -1,12 +1,15 @@
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
+import Comments from "@/components/comments/Comments";
 import Linkify from "@/components/Linkify";
 import Post from "@/components/posts/Post";
+import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
 import UserTooltip from "@/components/UserTooltip";
+import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude, UserData } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -55,12 +58,35 @@ export default async function Page({ params: { postId } }: PageProps) {
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
+        <div className="flex items-center mb-2">
+          <Button variant="ghost" size="icon" asChild className="mr-2">
+            <Link href="/">
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">뒤로 가기</span>
+            </Link>
+          </Button>
+          <h1 className="text-xl font-semibold">게시물</h1>
+        </div>
         <Post post={post} />
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">댓글</h2>
+          <div>
+            <Comments post={post} />
+          </div>
+        </div>
       </div>
-      <div className="sticky top-[5.25rem] hidden h-fit w-80 flex-none lg:block">
-        <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-          <UserInfoSidebar user={post.user} />
-        </Suspense>
+      <div className="hidden lg:flex lg:flex-col lg:space-y-5 lg:w-80">
+        <div className="sticky top-[5.25rem] space-y-5">
+          <div className="rounded-2xl bg-card p-5 shadow-sm">
+            <div className="text-xl font-bold">About this user</div>
+            <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
+              <UserInfoSidebar user={post.user} />
+            </Suspense>
+          </div>
+          <div className="w-full">
+            <TrendsSidebar className="!static w-full" />
+          </div>
+        </div>
       </div>
     </main>
   );
@@ -76,8 +102,7 @@ async function UserInfoSidebar({ user }: UserInfoSidebarProps) {
   if (!loggedInUser) return null;
 
   return (
-    <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <div className="text-xl font-bold">About this user</div>
+    <>
       <UserTooltip user={user}>
         <Link
           href={`/users/${user.username}`}
@@ -110,6 +135,6 @@ async function UserInfoSidebar({ user }: UserInfoSidebarProps) {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

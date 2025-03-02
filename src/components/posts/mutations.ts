@@ -45,7 +45,7 @@ export function useDeletePostMutation() {
         title: "포스트가 삭제되었습니다.",
       });
 
-      if (pathname.startsWith(`/posts/${deletedPost.id}`)) {
+      if (pathname && pathname.startsWith(`/posts/${deletedPost.id}`)) {
         router.push("/");
       }
     },

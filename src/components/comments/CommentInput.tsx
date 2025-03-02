@@ -1,3 +1,5 @@
+"use client";
+
 import { PostData } from "@/lib/types";
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useState } from "react";

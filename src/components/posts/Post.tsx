@@ -8,6 +8,7 @@ import { MessageSquare, MessageCircle, Heart, Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Comments from "../comments/Comments";
 import Linkify from "../Linkify";
 import UserAvatar from "../UserAvatar";
@@ -32,7 +33,10 @@ export default function Post({ post }: PostProps) {
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const pathname = usePathname();
   
+  // 상세 페이지인지 확인
+  const isDetailPage = pathname?.startsWith(`/posts/${post.id}`);
 
   const updateCommentCount = (newCount: number) => {
     setCommentCount(newCount);
@@ -102,7 +106,12 @@ export default function Post({ post }: PostProps) {
   };
 
   return (
-    <article className="group/post overflow-hidden border-b border-dotted border-b-gray-300 bg-card pt-4 pb-4">
+    <article className={cn(
+      "group/post overflow-hidden bg-card",
+      isDetailPage 
+        ? "rounded-xl p-4 shadow-sm" 
+        : "border-b border-dotted border-b-gray-300 pt-4 pb-4"
+    )}>
       <div className="flex items-start">
         <UserTooltip user={post.user}>
           <Link
@@ -162,7 +171,7 @@ export default function Post({ post }: PostProps) {
             />
             <CommentButton
               commentCount={commentCount}
-              onClick={() => setShowComments(!showComments)}
+              postId={post.id}
             />
             <BookmarkButton
               postId={post.id}
@@ -279,34 +288,35 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
 
 interface CommentButtonProps {
   commentCount: number;
-  onClick: () => void;
+  postId: string;
 }
 
-function CommentButton({ commentCount, onClick }: CommentButtonProps) {
+function CommentButton({ commentCount, postId }: CommentButtonProps) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-2 rounded-[10px] px-4 py-2",
-      )}
-    >
-      <MessageCircle
-        strokeWidth={1.5}
+    <Link href={`/posts/${postId}`}>
+      <div
         className={cn(
-          "size-5",
-          commentCount > 0
-            ? "fill-white text-black"
-            : "fill-white text-black"
-        )}
-      />
-      <span
-        className={cn(
-          "text-sm font-normal tabular-nums",
-          commentCount > 0 ? "text-black" : "text-black"
+          "flex items-center gap-2 rounded-[10px] px-4 py-2 cursor-pointer",
         )}
       >
-        {commentCount}
-      </span>
-    </button>
+        <MessageCircle
+          strokeWidth={1.5}
+          className={cn(
+            "size-5",
+            commentCount > 0
+              ? "fill-white text-black"
+              : "fill-white text-black"
+          )}
+        />
+        <span
+          className={cn(
+            "text-sm font-normal tabular-nums",
+            commentCount > 0 ? "text-black" : "text-black"
+          )}
+        >
+          {commentCount}
+        </span>
+      </div>
+    </Link>
   );
 }

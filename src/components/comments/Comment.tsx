@@ -1,3 +1,5 @@
+"use client";
+
 import { useSession } from "@/app/(main)/SessionProvider";
 import { CommentData } from "@/lib/types";
 import { formatRelativeDate } from "@/lib/utils";

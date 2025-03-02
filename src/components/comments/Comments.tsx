@@ -1,8 +1,10 @@
+"use client";
+
 import kyInstance from "@/lib/ky";
 import { CommentsPage, PostData } from "@/lib/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { Button } from "../ui/button";
+import { useEffect } from "react";
 import Comment from "./Comment";
 import CommentInput from "./CommentInput";
 
@@ -29,25 +31,25 @@ export default function Comments({ post }: CommentsProps) {
       }),
     });
 
+  // 컴포넌트가 마운트될 때 댓글을 자동으로 불러옵니다
+  useEffect(() => {
+    if (hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetching]);
+
   const comments = data?.pages.flatMap((page) => page.comments) || [];
+  const commentCount = comments.length;
 
   return (
     <div className="space-y-3">
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-sm text-muted-foreground">
+          {commentCount > 0 ? `총 ${commentCount}개의 댓글` : "아직 댓글이 없어요."}
+        </div>
+      </div>
       <CommentInput post={post} />
-      {hasNextPage && (
-        <Button
-          variant="link"
-          className="mx-auto block"
-          disabled={isFetching}
-          onClick={() => fetchNextPage()}
-        >
-          Load previous comments
-        </Button>
-      )}
       {status === "pending" && <Loader2 className="mx-auto animate-spin" />}
-      {status === "success" && !comments.length && (
-        <p className="text-center text-muted-foreground">아직 댓글이 없어요.</p>
-      )}
       {status === "error" && (
         <p className="text-center text-destructive">
           댓글을 불러오는 중 오류가 발생했습니다.
@@ -58,6 +60,15 @@ export default function Comments({ post }: CommentsProps) {
           <Comment key={comment.id} comment={comment} />
         ))}
       </div>
+      {hasNextPage && (
+        <button
+          onClick={() => fetchNextPage()}
+          disabled={isFetching}
+          className="w-full text-sm text-muted-foreground hover:text-foreground py-2 rounded-md"
+        >
+          {isFetching ? "댓글 불러오는 중..." : "이전 댓글 더 보기"}
+        </button>
+      )}
     </div>
   );
 }
