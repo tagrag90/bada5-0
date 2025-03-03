@@ -14,7 +14,7 @@ interface TrendsSidebarProps {
   className?: string;
 }
 
-export default function TrendsSidebar({ className }: TrendsSidebarProps = {}) {
+export default function TrendsSidebar({ className }: TrendsSidebarProps) {
   return (
     <div className={cn("sticky top-[5.25rem] hidden h-fit w-72 flex-none space-y-5 rounded-2xl md:block lg:w-80", className)}>
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
