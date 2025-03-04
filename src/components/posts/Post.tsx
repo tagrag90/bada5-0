@@ -83,7 +83,7 @@ export default function Post({ post }: PostProps) {
         <div
           onClick={() => isExpanded && setIsExpanded(false)}
           className={cn(
-            "whitespace-pre-line break-words text-sm",
+            "whitespace-pre-line break-words text-base",
             isExpanded && "cursor-pointer"
           )}
           dangerouslySetInnerHTML={{ __html: convertContent(displayContent) }}
@@ -109,7 +109,7 @@ export default function Post({ post }: PostProps) {
     <article className={cn(
       "group/post overflow-hidden bg-card",
       isDetailPage 
-        ? "rounded-xl p-4 shadow-sm" 
+        ? "rounded-xl p-4" 
         : "border-b border-dotted border-b-gray-300 pt-4 pb-4"
     )}>
       <div className="flex items-start">
@@ -198,40 +198,98 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
-  const getGridClass = () => {
-    switch (attachments.length) {
-      case 1:
-        return "grid-cols-1";
-      case 2:
-        return "grid-cols-2 gap-1";
-      case 3:
-        return "grid-cols-2 gap-1";
-      case 4:
-        return "grid-cols-2 grid-rows-2 gap-1";
-      default:
-        return "grid-cols-2 grid-rows-2 gap-1";
-    }
-  };
-
-  const getImageClass = (index: number) => {
-    if (attachments.length === 3 && index === 0) {
-      return "row-span-2";
-    }
-    return "";
-  };
+  if (attachments.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl">
-      <div className={`grid aspect-video ${getGridClass()}`}>
-        {attachments.map((media, index) => (
-          <div
-            key={media.id}
-            className={`relative ${getImageClass(index)} overflow-hidden`}
-          >
-            <MediaPreview media={media} attachments={attachments} />
+    <div className={cn(
+      "relative w-full overflow-hidden rounded-2xl",
+      attachments.length === 1 && "aspect-[16/9]"
+    )}>
+      {attachments.length === 1 ? (
+        <Image
+          src={attachments[0].url}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      ) : attachments.length === 2 ? (
+        <div className="grid grid-cols-2 gap-1 aspect-[2/1] w-full">
+          {attachments.map((attachment, index) => (
+            <div
+              key={attachment.id}
+              className={cn(
+                "relative aspect-square",
+                index === 0 && "rounded-l-2xl",
+                index === 1 && "rounded-r-2xl"
+              )}
+            >
+              <Image
+                src={attachment.url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              />
+            </div>
+          ))}
+        </div>
+      ) : attachments.length === 3 ? (
+        <div className="grid grid-cols-2 gap-1 aspect-[16/9] w-full">
+          <div className="relative rounded-l-2xl">
+            <Image
+              src={attachments[0].url}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            />
           </div>
-        ))}
-      </div>
+          <div className="grid grid-rows-2 gap-1">
+            {attachments.slice(1, 3).map((attachment, index) => (
+              <div
+                key={attachment.id}
+                className={cn(
+                  "relative aspect-[2/1]",
+                  index === 0 && "rounded-tr-2xl",
+                  index === 1 && "rounded-br-2xl"
+                )}
+              >
+                <Image
+                  src={attachment.url}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 25vw, (max-width: 1200px) 16vw, 12vw"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-1 aspect-[2/1.2] w-full">
+          {attachments.slice(0, 4).map((attachment, index) => (
+            <div
+              key={attachment.id}
+              className={cn(
+                "relative aspect-[1/0.6]",
+                index === 0 && "rounded-tl-2xl",
+                index === 1 && "rounded-tr-2xl",
+                index === 2 && "rounded-bl-2xl",
+                index === 3 && "rounded-br-2xl"
+              )}
+            >
+              <Image
+                src={attachment.url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

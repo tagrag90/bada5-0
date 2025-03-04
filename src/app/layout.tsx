@@ -8,6 +8,8 @@ import { fileRouter } from "./api/uploadthing/core";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/react";
+import { NoticePopup } from "@/components/NoticePopup";
+
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
   display: "swap",
@@ -96,10 +98,13 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster />
+            <NoticePopup 
+              title="챌린지 : 이번주 있었던 일을 8글자로 표현해보세요!✏️" 
+            />
             <Analytics />
           </ThemeProvider>
         </ReactQueryProvider>
-        <Toaster />
       </body>
     </html>
   );

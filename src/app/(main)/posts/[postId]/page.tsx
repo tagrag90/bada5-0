@@ -68,7 +68,7 @@ export default async function Page({ params: { postId } }: PageProps) {
           <h1 className="text-xl font-semibold">게시물</h1>
         </div>
         <Post post={post} />
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4">
           <h2 className="text-xl font-semibold mb-4">댓글</h2>
           <div>
             <Comments post={post} />
@@ -77,7 +77,7 @@ export default async function Page({ params: { postId } }: PageProps) {
       </div>
       <div className="hidden lg:flex lg:flex-col lg:space-y-5 lg:w-80">
         <div className="sticky top-[5.25rem] space-y-5">
-          <div className="rounded-2xl bg-card p-5 shadow-sm">
+          <div className="rounded-2xl bg-card p-5">
             <div className="text-xl font-bold">About this user</div>
             <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
               <UserInfoSidebar user={post.user} />
