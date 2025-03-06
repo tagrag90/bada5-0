@@ -93,7 +93,7 @@ export function MenuBarClient({
         title="Studio"
         asChild
       >
-        <Link href="#">
+        <Link href="/explore">
           <Image src={studioIcon} alt="Studio" width={29} height={29} />
         </Link>
       </Button>

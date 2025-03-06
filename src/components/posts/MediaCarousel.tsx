@@ -25,6 +25,13 @@ export function MediaCarousel({
     setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
   };
 
+  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
+  const roundedStyle = {
+    borderRadius: '8px',
+    WebkitBorderRadius: '8px',
+    overflow: 'hidden'
+  };
+
   const renderMedia = (item: (typeof media)[0]) => {
     if (item.type === "VIDEO") {
       return (
@@ -36,6 +43,7 @@ export function MediaCarousel({
             playsInline
             controlsList="nodownload"
             muted // 모바일에서 자동 재생 방지 test
+            style={roundedStyle}
           >
             <source src={item.url} type="video/mp4" />
             Your browser does not support the video tag.
@@ -44,14 +52,17 @@ export function MediaCarousel({
       );
     }
     return (
-      <Image
-        src={item.url}
-        alt="Carousel media"
-        fill
-        className="object-contain"
-        sizes="80vw"
-        priority
-      />
+      <div className="relative h-full w-full" style={roundedStyle}>
+        <Image
+          src={item.url}
+          alt="Carousel media"
+          fill
+          className="object-contain"
+          sizes="80vw"
+          priority
+          style={roundedStyle}
+        />
+      </div>
     );
   };
 

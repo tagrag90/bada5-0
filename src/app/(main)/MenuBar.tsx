@@ -1,7 +1,6 @@
 import { validateRequest } from "@/auth";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
-import streamServerClient from "@/lib/stream";
 import Link from "next/link";
 import NotificationsButton from "./NotificationsButton";
 import UserAvatar from "@/components/UserAvatar";
@@ -17,15 +16,15 @@ export default async function MenuBar({ className }: MenuBarProps) {
 
   if (!user) return null;
 
-  const [unreadNotificationsCount, unreadMessagesCount] = await Promise.all([
-    prisma.notification.count({
-      where: {
-        recipientId: user.id,
-        read: false,
-      },
-    }),
-    (await streamServerClient.getUnreadCount(user.id)).total_unread_count,
-  ]);
+  const unreadNotificationsCount = await prisma.notification.count({
+    where: {
+      recipientId: user.id,
+      read: false,
+    },
+  });
+  
+  // 메시지 기능이 제거되었으므로 0으로 설정
+  const unreadMessagesCount = 0;
 
   return (
     <MenuBarClient 

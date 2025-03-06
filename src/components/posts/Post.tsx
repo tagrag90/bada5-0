@@ -198,99 +198,185 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
+  const [showCarousel, setShowCarousel] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
   if (attachments.length === 0) return null;
 
+  const handleImageClick = (index: number) => {
+    setSelectedIndex(index);
+    setShowCarousel(true);
+  };
+
+  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
+  const roundedStyle = {
+    borderRadius: '16px',
+    WebkitBorderRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedLeftStyle = {
+    borderTopLeftRadius: '16px',
+    borderBottomLeftRadius: '16px',
+    WebkitBorderTopLeftRadius: '16px',
+    WebkitBorderBottomLeftRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedRightStyle = {
+    borderTopRightRadius: '16px',
+    borderBottomRightRadius: '16px',
+    WebkitBorderTopRightRadius: '16px',
+    WebkitBorderBottomRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedTopLeftStyle = {
+    borderTopLeftRadius: '16px',
+    WebkitBorderTopLeftRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedTopRightStyle = {
+    borderTopRightRadius: '16px',
+    WebkitBorderTopRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedBottomLeftStyle = {
+    borderBottomLeftRadius: '16px',
+    WebkitBorderBottomLeftRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedBottomRightStyle = {
+    borderBottomRightRadius: '16px',
+    WebkitBorderBottomRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
   return (
-    <div className={cn(
-      "relative w-full overflow-hidden rounded-2xl",
-      attachments.length === 1 && "aspect-[16/9]"
-    )}>
-      {attachments.length === 1 ? (
-        <Image
-          src={attachments[0].url}
-          alt=""
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-      ) : attachments.length === 2 ? (
-        <div className="grid grid-cols-2 gap-1 aspect-[2/1] w-full">
-          {attachments.map((attachment, index) => (
-            <div
-              key={attachment.id}
-              className={cn(
-                "relative aspect-square",
-                index === 0 && "rounded-l-2xl",
-                index === 1 && "rounded-r-2xl"
-              )}
-            >
-              <Image
-                src={attachment.url}
-                alt=""
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              />
-            </div>
-          ))}
-        </div>
-      ) : attachments.length === 3 ? (
-        <div className="grid grid-cols-2 gap-1 aspect-[16/9] w-full">
-          <div className="relative rounded-l-2xl">
+    <>
+      <div className={cn(
+        "relative w-full overflow-hidden",
+        attachments.length === 1 && "aspect-[16/9]"
+      )}
+      style={roundedStyle}>
+        {attachments.length === 1 ? (
+          <div 
+            className="relative w-full h-full cursor-pointer" 
+            onClick={() => handleImageClick(0)}
+            style={roundedStyle}
+          >
             <Image
               src={attachments[0].url}
               alt=""
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              style={roundedStyle}
             />
           </div>
-          <div className="grid grid-rows-2 gap-1">
-            {attachments.slice(1, 3).map((attachment, index) => (
+        ) : attachments.length === 2 ? (
+          <div className="grid grid-cols-2 gap-1 aspect-[2/1] w-full">
+            {attachments.map((attachment, index) => (
               <div
                 key={attachment.id}
-                className={cn(
-                  "relative aspect-[2/1]",
-                  index === 0 && "rounded-tr-2xl",
-                  index === 1 && "rounded-br-2xl"
-                )}
+                className="relative aspect-square cursor-pointer"
+                onClick={() => handleImageClick(index)}
+                style={index === 0 ? roundedLeftStyle : roundedRightStyle}
               >
                 <Image
                   src={attachment.url}
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 25vw, (max-width: 1200px) 16vw, 12vw"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  style={index === 0 ? roundedLeftStyle : roundedRightStyle}
                 />
               </div>
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-1 aspect-[2/1.2] w-full">
-          {attachments.slice(0, 4).map((attachment, index) => (
-            <div
-              key={attachment.id}
-              className={cn(
-                "relative aspect-[1/0.6]",
-                index === 0 && "rounded-tl-2xl",
-                index === 1 && "rounded-tr-2xl",
-                index === 2 && "rounded-bl-2xl",
-                index === 3 && "rounded-br-2xl"
-              )}
+        ) : attachments.length === 3 ? (
+          <div className="grid grid-cols-2 gap-1 aspect-[16/9] w-full">
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => handleImageClick(0)}
+              style={roundedLeftStyle}
             >
               <Image
-                src={attachment.url}
+                src={attachments[0].url}
                 alt=""
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                style={roundedLeftStyle}
               />
             </div>
-          ))}
-        </div>
+            <div className="grid grid-rows-2 gap-1">
+              {attachments.slice(1, 3).map((attachment, index) => (
+                <div
+                  key={attachment.id}
+                  className="relative aspect-[2/1] cursor-pointer"
+                  onClick={() => handleImageClick(index + 1)}
+                  style={index === 0 ? roundedTopRightStyle : roundedBottomRightStyle}
+                >
+                  <Image
+                    src={attachment.url}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 25vw, (max-width: 1200px) 16vw, 12vw"
+                    style={index === 0 ? roundedTopRightStyle : roundedBottomRightStyle}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-1 aspect-[2/1.2] w-full">
+            {attachments.slice(0, 4).map((attachment, index) => (
+              <div
+                key={attachment.id}
+                className="relative aspect-[1/0.6] cursor-pointer"
+                onClick={() => handleImageClick(index)}
+                style={
+                  index === 0 ? roundedTopLeftStyle :
+                  index === 1 ? roundedTopRightStyle :
+                  index === 2 ? roundedBottomLeftStyle :
+                  roundedBottomRightStyle
+                }
+              >
+                <Image
+                  src={attachment.url}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  style={
+                    index === 0 ? roundedTopLeftStyle :
+                    index === 1 ? roundedTopRightStyle :
+                    index === 2 ? roundedBottomLeftStyle :
+                    roundedBottomRightStyle
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {showCarousel && (
+        <MediaCarousel
+          media={attachments.map((a) => ({
+            id: a.id,
+            url: a.url,
+            type: a.type,
+          }))}
+          initialIndex={selectedIndex}
+          onClose={() => setShowCarousel(false)}
+        />
       )}
-    </div>
+    </>
   );
 }
 
@@ -302,29 +388,39 @@ interface MediaPreviewProps {
 function MediaPreview({ media, attachments }: MediaPreviewProps) {
   const [showCarousel, setShowCarousel] = useState(false);
 
+  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
+  const roundedStyle = {
+    borderRadius: '12px',
+    WebkitBorderRadius: '12px',
+    overflow: 'hidden'
+  };
+
   return (
     <>
       <div
         className="relative h-full w-full aspect-square"
         onClick={() => setShowCarousel(true)}
+        style={roundedStyle}
       >
         {media.type === "VIDEO" ? (
           <video
             src={media.url}
-            className="absolute inset-0 h-full w-full cursor-pointer object-cover rounded-lg"
+            className="absolute inset-0 h-full w-full cursor-pointer object-cover"
             controls
             preload="metadata"
             playsInline
             muted
+            style={roundedStyle}
           />
         ) : (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0" style={roundedStyle}>
             <Image
               src={media.url}
               alt="Attachment"
               fill
-              className="cursor-pointer object-cover object-top rounded-xl"
+              className="cursor-pointer object-cover object-top"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              style={roundedStyle}
             />
           </div>
         )}
