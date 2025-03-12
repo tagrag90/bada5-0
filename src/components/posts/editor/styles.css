@@ -1,5 +1,5 @@
 .tiptap p.is-editor-empty:first-child::before {
-  color: theme("colors.muted.foreground");
+  color: #6c757d;
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -8,6 +8,29 @@
 
 .tiptap.ProseMirror {
   outline: none;
+}
+
+/* 드래그 앤 드롭 활성화 시 스타일 */
+.drag-active .ProseMirror {
+  border: 2px dashed #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+/* 트위터 스타일 버튼 */
+.twitter-action-button {
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.twitter-action-button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* 커스텀 줄바꿈 스타일 */
+.my-custom-break {
+  margin-bottom: 0.5em;
 }
 
 .slash-command-menu {
