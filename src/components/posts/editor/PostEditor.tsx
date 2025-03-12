@@ -17,22 +17,25 @@ import {
   YoutubeIcon as _YoutubeIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { ClipboardEvent, useRef, useState } from "react";
+import { ClipboardEvent, useEffect, useRef, useState, MouseEvent } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
 import { YouTube } from "./extensions/YouTube";
+import { PostData } from "@/lib/types";
 
 interface PostEditorProps {
   onSuccess?: () => void;
+  post?: PostData;
 }
 
-export default function PostEditor({ onSuccess }: PostEditorProps) {
+export default function PostEditor({ onSuccess, post }: PostEditorProps) {
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
+  const isEditMode = !!post;
 
   const mutation = useSubmitPostMutation();
-
+  
   const {
     startUpload,
     attachments,
@@ -40,6 +43,7 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
     uploadProgress,
     removeAttachment,
     reset: resetMediaUploads,
+    setAttachments,
   } = useMediaUpload();
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -47,48 +51,72 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
   });
 
   const { onClick, ...rootProps } = getRootProps();
+  
+  // 이미지 버튼 클릭 핸들러
+  const handleImageClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (onClick) onClick(e as unknown as MouseEvent<HTMLDivElement>);
+  };
 
   const input = useRef("");
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bold: false,
-        italic: false,
-      }),
+      StarterKit,
       Placeholder.configure({
-        placeholder: "무슨 일이 있었나요??",
+        placeholder: "무슨 일이 일어나고 있나요?",
       }),
       YouTube.configure({
+        inline: false,
         HTMLAttributes: {
-          class: "w-full aspect-video",
+          class: "w-full aspect-video rounded-xl overflow-hidden",
         },
       }),
     ],
     content: "",
     onUpdate: ({ editor }) => {
       setEditorInput(editor.getHTML());
-      input.current = editor.getText();
     },
-    immediatelyRender: false
   });
 
-  const onSubmit = async () => {
-    console.log("Submitting content:", input);
-    console.log("Editor HTML:", editor?.getHTML());
+  useEffect(() => {
+    if (isEditMode && post && editor) {
+      editor.commands.setContent(post.content || "");
+      setEditorInput(post.content || "");
+      
+      if (post.attachments && post.attachments.length > 0) {
+        const initialAttachments: Attachment[] = post.attachments.map((attachment) => ({
+          id: attachment.id,
+          url: attachment.url,
+          type: attachment.type,
+          file: new File([], "placeholder.jpg"),
+          isUploading: false,
+        }));
+        setAttachments(initialAttachments);
+      }
+    }
+  }, [isEditMode, post, editor, setAttachments]);
 
-    mutation.mutate(
-      {
-        content: editor?.getHTML() || "",
-        mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
-      },
-      {
-        onSuccess: () => {
-          editor?.commands.clearContent();
-          resetMediaUploads();
-          onSuccess?.();
-        },
-      },
-    );
+  const handleSubmit = async () => {
+    try {
+      if (isEditMode && post) {
+        await mutation.mutateAsync({
+          id: post.id,
+          content: editorInput,
+          mediaIds: attachments.map((a) => a.id || a.mediaId).filter(Boolean) as string[],
+        });
+      } else {
+        await mutation.mutateAsync({
+          content: editorInput,
+          mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
+        });
+      }
+
+      editor?.commands.clearContent();
+      resetMediaUploads();
+      setEditorInput("");
+      onSuccess?.();
+    } catch (error) {
+      console.error("Failed to submit post:", error);
+    }
   };
 
   function onPaste(e: ClipboardEvent<HTMLInputElement>) {
@@ -110,202 +138,125 @@ export default function PostEditor({ onSuccess }: PostEditorProps) {
   }
 
   function handleYoutubeEmbed() {
-    const url = prompt("YouTube URL을 입력해주세요:");
-    if (!url) return;
-
-    try {
-      const videoId = extractYoutubeVideoId(url);
-      if (videoId) {
-        editor?.commands.insertContent({
-          type: "youtube",
-          attrs: {
-            src: `https://www.youtube.com/embed/${videoId}`,
-          },
-        });
-      } else {
-        alert("올바른 YouTube URL을 입력해주세요.");
-      }
-    } catch (e) {
-      alert("올바른 URL을 입력해주세요.");
+    const url = prompt("YouTube URL을 입력하세요");
+    if (url && editor) {
+      editor.commands.insertContent({
+        type: "youtube",
+        attrs: {
+          src: url,
+        },
+      });
     }
   }
 
-  function extractYoutubeVideoId(url: string) {
-    const regExp =
-      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[7].length === 11 ? match[7] : null;
-  }
-
   return (
-    <div className="flex flex-col gap-5 rounded-2xl bg-card">
-      <div className="flex gap-5">
-        <div className="flex flex-col items-center">
-          <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
-        </div>
-        <div className="w-full">
-          <div className="mb-2 text-sm font-medium">{user.username}</div>
-          <div {...rootProps} className="w-full">
-            <EditorContent
-              editor={editor}
-              className={cn(
-                "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-[#fff] pl-0 py-3",
-                isDragActive && "outline-dashed",
-              )}
-              onPaste={onPaste}
-            />
-            <input {...getInputProps()} />
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-3">
+        <UserAvatar avatarUrl={user?.avatarUrl} size={40} />
+        <div className="flex-1">
+          <EditorContent
+            editor={editor}
+            className={cn(
+              "prose prose-stone dark:prose-invert w-full max-w-full focus:outline-none min-h-[100px]",
+              isDragActive && "drag-active"
+            )}
+          />
+          <div
+            {...rootProps}
+            className={cn(
+              "border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 mt-2 transition-colors",
+              isDragActive && "border-primary/50 bg-primary/5"
+            )}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <input {...getInputProps()} />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={handleImageClick}
+              >
+                <ImageIcon className="h-4 w-4" />
+                <span>이미지</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={handleYoutubeEmbed}
+              >
+                <_YoutubeIcon className="h-4 w-4" />
+                <span>YouTube</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-      {!!attachments.length && (
-        <AttachmentPreviews
-          attachments={attachments}
-          removeAttachment={removeAttachment}
-        />
+
+      {attachments.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {attachments.map((attachment) => (
+            <div
+              key={attachment.id || attachment.file.name}
+              className="relative rounded-lg overflow-hidden aspect-square"
+            >
+              {(attachment.type === "IMAGE" || attachment.file.type.startsWith("image")) ? (
+                <Image
+                  src={attachment.url || URL.createObjectURL(attachment.file)}
+                  alt="Attachment"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <video
+                  src={attachment.url || URL.createObjectURL(attachment.file)}
+                  className="w-full h-full object-cover"
+                  controls
+                />
+              )}
+              <button
+                type="button"
+                className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
+                onClick={() => removeAttachment(attachment.id || attachment.file.name)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
       )}
-      <div className="flex items-center">
-        <AddAttachmentsButton
-          onFilesSelected={startUpload}
-          disabled={isUploading || attachments.length >= 5}
-          onYoutubeEmbed={handleYoutubeEmbed}
-        />
-        {isUploading && (
-          <>
-            <span className="text-sm">{uploadProgress ?? 0}%</span>
-            <Loader2 className="size-5 animate-spin text-primary" />
-          </>
-        )}
-        <div className="flex-1" />
+
+      {isUploading && (
+        <div className="mt-2">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">
+              업로드 중... {uploadProgress}%
+            </span>
+          </div>
+          <div className="w-full bg-muted h-1 mt-1 rounded-full overflow-hidden">
+            <div
+              className="bg-primary h-full transition-all duration-300 ease-in-out"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end">
         <LoadingButton
-          onClick={onSubmit}
           loading={mutation.isPending}
           disabled={
-            (!input.current?.trim() &&
-              attachments.length === 0 &&
-              !editor?.getHTML()?.includes("youtube.com/embed")) ||
-            isUploading
+            (!editorInput || editorInput === "<p></p>") &&
+            attachments.length === 0
           }
-          className="min-w-20"
+          onClick={handleSubmit}
         >
-          Post
+          {isEditMode ? "수정하기" : "게시하기"}
         </LoadingButton>
       </div>
-    </div>
-  );
-}
-
-interface AddAttachmentsButtonProps {
-  onFilesSelected: (files: File[]) => void;
-  disabled: boolean;
-  onYoutubeEmbed: () => void;
-}
-
-function AddAttachmentsButton({
-  onFilesSelected,
-  disabled,
-  onYoutubeEmbed,
-}: AddAttachmentsButtonProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="text-primary hover:text-primary p-0"
-        disabled={disabled}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <ImagesIcon size={22} />
-      </Button>
-      <input
-        type="file"
-        accept="image/*, video/*"
-        multiple
-        ref={fileInputRef}
-        className="sr-only hidden"
-        onChange={(e) => {
-          const files = Array.from(e.target.files || []);
-          if (files.length) {
-            onFilesSelected(files);
-            e.target.value = "";
-          }
-        }}
-      />
-    </>
-  );
-}
-
-interface AttachmentPreviewsProps {
-  attachments: Attachment[];
-  removeAttachment: (fileName: string) => void;
-}
-
-function AttachmentPreviews({
-  attachments,
-  removeAttachment,
-}: AttachmentPreviewsProps) {
-  return (
-    <div
-      className="relative w-full overflow-x-auto">
-      <div className="flex gap-2 pb-2 ml-6">
-        {attachments.map((attachment) => (
-          <AttachmentPreview
-            key={attachment.file.name}
-            attachment={attachment}
-            onRemoveClick={() => removeAttachment(attachment.file.name)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-interface AttachmentPreviewProps {
-  attachment: Attachment;
-  onRemoveClick: () => void;
-}
-
-function AttachmentPreview({
-  attachment: { file, mediaId, isUploading },
-  onRemoveClick,
-}: AttachmentPreviewProps) {
-  const src = URL.createObjectURL(file);
-
-  return (
-    <div
-      className={cn(
-        "relative flex-shrink-0",
-        isUploading && "opacity-50"
-      )}
-    >
-      {file.type.startsWith("image") ? (
-        <Image
-          src={src}
-          alt="Attachment preview"
-          width={500}
-          height={500}
-          className="h-[200px] w-[200px] rounded-xl object-cover"
-        />
-      ) : (
-        <video 
-          controls
-          preload="metadata"
-          playsInline
-          className="h-[200px] w-[200px] rounded-xl object-cover"
-        >
-          <source src={src} type={file.type} />
-        </video>
-      )}
-      {!isUploading && (
-        <button
-          onClick={onRemoveClick}
-          className="absolute right-3 top-3 rounded-full bg-foreground p-1.5 text-background transition-colors hover:bg-foreground/60"
-        >
-          <X size={20} />
-        </button>
-      )}
     </div>
   );
 }  

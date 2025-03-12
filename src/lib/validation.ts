@@ -25,6 +25,12 @@ export const createPostSchema = z.object({
   mediaIds: z.array(z.string()).max(5, "Cannot have more than 5 attachments"),
 });
 
+export const updatePostSchema = z.object({
+  id: z.string(),
+  content: requiredString,
+  mediaIds: z.array(z.string()).max(5, "Cannot have more than 5 attachments"),
+});
+
 export const updateUserProfileSchema = z.object({
   displayName: requiredString,
   bio: z.string().max(1000, "Must be at most 1000 characters"),

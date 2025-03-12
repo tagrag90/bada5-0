@@ -7,7 +7,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { submitPost } from "./actions";
+import { submitPost, updatePost } from "./actions";
 
 export function useSubmitPostMutation() {
   const { toast } = useToast();
@@ -68,6 +68,53 @@ export function useSubmitPostMutation() {
       toast({
         variant: "destructive",
         description: "게시물 작성에 실패했습니다. 다시 시도해 주세요.",
+      });
+    },
+  });
+
+  return mutation;
+}
+
+export function useUpdatePostMutation() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: updatePost,
+    onSuccess: async (updatedPost) => {
+      // 개별 게시물 쿼리 업데이트
+      queryClient.setQueryData(["post", updatedPost.id], updatedPost);
+
+      // 피드 쿼리 업데이트
+      queryClient.setQueriesData<InfiniteData<PostsPage>>(
+        {
+          queryKey: ["post-feed"],
+          exact: false,
+        },
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          return {
+            pageParams: oldData.pageParams,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              posts: page.posts.map((post) => 
+                post.id === updatedPost.id ? updatedPost : post
+              ),
+            })),
+          };
+        }
+      );
+
+      toast({
+        description: "게시물이 수정되었습니다.",
+      });
+    },
+    onError(error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        description: "게시물 수정에 실패했습니다. 다시 시도해 주세요.",
       });
     },
   });

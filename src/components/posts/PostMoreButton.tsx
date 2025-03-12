@@ -33,10 +33,10 @@ export default function PostMoreButton({ post, onEditClick }: PostMoreButtonProp
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          {/* <DropdownMenuItem onClick={onEditClick} className="cursor-pointer">
+          <DropdownMenuItem onClick={onEditClick} className="cursor-pointer">
             <Pencil className="mr-2 h-4 w-4" />
             수정
-          </DropdownMenuItem> */}
+          </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => setIsDeleteDialogOpen(true)} 
             className="cursor-pointer text-destructive focus:text-destructive"

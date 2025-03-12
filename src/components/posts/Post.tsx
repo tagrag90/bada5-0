@@ -101,7 +101,6 @@ export default function Post({ post }: PostProps) {
   };
 
   const handleEditClick = () => {
-    console.log("Edit clicked"); // 디버깅용
     setIsEditorOpen(true);
   };
 
@@ -145,6 +144,7 @@ export default function Post({ post }: PostProps) {
                 <PostEditorModal
                   isOpen={isEditorOpen}
                   onClose={() => setIsEditorOpen(false)}
+                  post={post}
                 />
               </>
             )}

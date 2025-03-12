@@ -6,6 +6,9 @@ export interface Attachment {
   file: File;
   mediaId?: string;
   isUploading: boolean;
+  id?: string;
+  url?: string;
+  type?: string;
 }
 
 export default function useMediaUpload() {
@@ -80,8 +83,15 @@ export default function useMediaUpload() {
     startUpload(files);
   }
 
-  function removeAttachment(fileName: string) {
-    setAttachments((prev) => prev.filter((a) => a.file.name !== fileName));
+  function removeAttachment(id: string) {
+    setAttachments((prev) => {
+      const fileNameMatch = prev.find(a => a.file?.name === id);
+      if (fileNameMatch) {
+        return prev.filter(a => a.file?.name !== id);
+      }
+      
+      return prev.filter(a => a.id !== id);
+    });
   }
 
   function reset() {
@@ -96,5 +106,6 @@ export default function useMediaUpload() {
     uploadProgress,
     removeAttachment,
     reset,
+    setAttachments,
   };
 }

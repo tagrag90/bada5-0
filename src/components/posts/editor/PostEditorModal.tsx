@@ -1,14 +1,18 @@
 "use client";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { PostData } from "@/lib/types";
 import PostEditor from "./PostEditor";
 
 interface PostEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  post?: PostData; // 수정 모드일 때 전달되는 게시물 데이터
 }
 
-export default function PostEditorModal({ isOpen, onClose }: PostEditorModalProps) {
+export default function PostEditorModal({ isOpen, onClose, post }: PostEditorModalProps) {
+  const isEditMode = !!post; // post가 있으면 수정 모드
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl gap-0 p-0 md:max-w-2xl bg-[#fff] rounded-[24px]">
@@ -16,11 +20,13 @@ export default function PostEditorModal({ isOpen, onClose }: PostEditorModalProp
           <button onClick={onClose} className="text-sm font-medium">
             취소
           </button>
-          <span className="text-sm font-semibold text-center">포스트 작성</span>
+          <span className="text-sm font-semibold text-center">
+            {isEditMode ? "포스트 수정" : "포스트 작성"}
+          </span>
           <div className="w-8" /> {/* 우측 여백 맞추기 용 */}
         </div>
         <div className="p-4">
-          <PostEditor onSuccess={onClose} />
+          <PostEditor onSuccess={onClose} post={post} />
         </div>
       </DialogContent>
     </Dialog>
