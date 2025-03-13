@@ -9,7 +9,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import HardBreak from "@tiptap/extension-hard-break";
-import { useDropzone } from "@uploadthing/react";
 import {
   ImageIcon,
   ImagesIcon,
@@ -46,15 +45,6 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     reset: resetMediaUploads,
     setAttachments,
   } = useMediaUpload();
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: startUpload,
-    multiple: true,
-    accept: {
-      'image/*': [],
-      'video/*': []
-    }
-  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -173,17 +163,13 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 드래그 앤 드롭 영역을 전체 에디터 영역으로 확장 */}
-      <div {...getRootProps()} className={cn("flex flex-col", isDragActive && "drag-active")}>
+      <div className="flex flex-col">
         <div className="flex gap-3">
           <UserAvatar avatarUrl={user?.avatarUrl} size={40} />
           <div className="flex-1">
             <EditorContent
               editor={editor}
-              className={cn(
-                "prose prose-stone dark:prose-invert w-full max-w-full focus:outline-none min-h-[150px]",
-                isDragActive && "bg-primary/5 border-primary/50"
-              )}
+              className="prose prose-stone dark:prose-invert w-full max-w-full focus:outline-none min-h-[150px]"
             />
           </div>
         </div>
@@ -255,7 +241,6 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
             }
           }}
         />
-        <input {...getInputProps()} />
       </div>
 
       {/* 하단 버튼 영역 - 트위터 스타일 */}

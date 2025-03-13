@@ -4,49 +4,67 @@
 
 import { Zap } from "lucide-react";
 import ServiceCard from "./ServiceCard";
+import Image from "next/image";
 
 const services = [
   {
-    icon: "/logo-bada.png",
-    name: "Bada",
+    name: "Divetobada",
     description: "문화예술을 사랑하는 당신을 위한 소셜 미디어",
     url: "https://www.divetobada.com"
   },
   {
-    icon: "/logo_vessel.png",
     name: "Vessel",
     description: "내가 좋아하는 것으로만 아카이빙 블로그",
     url: "https://www.vessel.today"
   },
   {
-    icon: "/newjeanslogo.jpg",
     name: "Onbuniz",
     description: "Jeanzforfree - 응원하는 팬들 모두 모여라👋",
-    // url: "/"
+    url: "#"
+  },
+  {
+    name: "매거진 [굄성]",
+    description: "문화예술을 즐겁고, 더 다양한 이야기들이 있어요!",
+    url: "https://profuse-soil-41e.notion.site/GUEMSoNG-Digital-Magazine-1788bfe8131a80ecb20ed23cd21f2fdf?pvs=4"
+  },
+  {
+    name: "Playlist_bada",
+    description: "Bada가 추천하는 무지 일상속의 음악 심상",
+    url: "#"
   }
 ];
 
 export default function Explore() {
   return (
-    <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <div className="flex items-center gap-2 pl-2">
-        <Zap className="fill-black" />
-        <div className="text-xl font-bold">탐험</div>
+    <div className="space-y-6 rounded-2xl bg-card p-6 shadow-sm -mx-2 sm:mx-0">
+      <div className="flex items-center gap-3 pl-2">
+        <div className="relative h-10 w-10 rounded-full overflow-hidden">
+          <Image
+            src="/logo-bada.png"
+            alt="Bada Logo"
+            fill
+            className="object-contain"
+          />
+        </div>
       </div>
-      <div className="text-lg text-black font-semibold">
-        Team_bada에서 만든 서비스들을 탐험해보세요!
+      
+      <div>
+        <h3 className="text-xl font-semibold text-black">
+          '박준서'님이 만나보실 수 있는<br />
+          Divetobada만의 다양한 서비스!
+        </h3>
+        <p className="text-base text-gray-500 mt-1">
+          대중문화예술을 한 손에 쥐어보세요
+        </p>
       </div>
-      <div className="text-base text-gray-400 font-light">
-      Let&apos;s Find all services and products that Team_bada made!
-      </div>
-      <div className="text-base text-gray-400">
+      
+      <div className="grid gap-4 mt-6 sm:grid-cols-2">
         {services.map((service) => (
           <ServiceCard 
             key={service.name}
-            icon={service.icon}
             name={service.name} 
             description={service.description}
-            url={service.url || '#'} // url이 없는 경우 기본값 설정
+            url={service.url}
           />
         ))}
       </div>

@@ -1,31 +1,35 @@
+import { cn } from '@/lib/utils';
+import { ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 
 interface ServiceCardProps {
-  icon: string;
   name: string;
   description: string;
   url: string;
 }
 
-export default function ServiceCard({ icon, name, description, url }: ServiceCardProps) {
+export default function ServiceCard({ 
+  name, 
+  description, 
+  url
+}: ServiceCardProps) {
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="block mb-4 last:mb-0">
-      <div className="rounded-[20px] border border-[#8B95A1] p-6 transition-all hover:shadow-md">
-        <div className="flex flex-col gap-4">
-          <div className="relative h-10 w-10">
-            <Image
-              src={icon}
-              alt={name}
-              fill
-              className="rounded-lg"
-              style={{ objectFit: 'cover' }}
-            />
+    <a 
+      href={url} 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="block transition-transform hover:scale-[1.02] duration-200"
+    >
+      <div className="rounded-xl p-5 shadow-sm hover:shadow-md border border-gray-100 h-full bg-[#f1f1f1]">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-black">{name}</h3>
+            <ExternalLink className="h-4 w-4 text-black" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-black">{name}</h3>
-            <p className="text-[#8B95A1]">{description}</p>
-            <p className="mt-1 text-sm text-[#8B95A1]">{url}</p>
-          </div>
+          <p className="text-gray-600 text-sm mt-1 line-clamp-2">{description}</p>
+          <p className="mt-2 text-xs text-gray-500">
+            {url.replace(/(^\w+:|^)\/\//, '').replace(/\/$/, '')}
+          </p>
         </div>
       </div>
     </a>
