@@ -50,7 +50,7 @@ export default function Explore() {
       
       <div>
         <h3 className="text-xl font-semibold text-black">
-          '박준서'님이 만나보실 수 있는<br />
+          &apos;박준서&apos;님이 만나보실 수 있는<br />
           Divetobada만의 다양한 서비스!
         </h3>
         <p className="text-base text-gray-500 mt-1">
