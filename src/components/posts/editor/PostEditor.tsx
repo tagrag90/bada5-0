@@ -250,6 +250,24 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
             type="button"
             variant="ghost"
             size="icon"
+            className={cn(
+              "rounded-full h-10 w-10 text-primary hover:bg-primary/10",
+              editor?.isActive('bold') && "bg-primary/10"
+            )}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            title="볼드체"
+            disabled={!editor?.can().chain().focus().toggleBold().run()}
+          >
+            <span className="font-bold text-lg" style={{ fontFamily: "'MaruBuri', serif" }}>B</span>
+          </Button>
+
+          {/* 세로 구분선 */}
+          <div className="h-6 w-px bg-gray-300" />
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             className="rounded-full h-9 w-9 text-primary hover:bg-primary/10"
             onClick={handleImageClick}
             title="이미지 추가"
