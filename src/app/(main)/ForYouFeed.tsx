@@ -66,11 +66,9 @@ export default function ForYouFeed() {
       {isFetchingNextPage && <Loader2 className="mx-auto my-3 animate-spin" />}
       {!hasNextPage && posts.length > 0 && (
         <p className="text-center text-muted-foreground py-4">
-        모든 게시물을 확인하셨습니다 ✨ NO MORE POSTS<br/>
-        How About making your own post? for more fun!
-      </p>
-        
-        
+          모든 게시물을 확인하셨습니다 ✨ NO MORE POSTS<br/>
+          How About making your own post? for more fun!
+        </p>
       )}
     </InfiniteScrollContainer>
   );
