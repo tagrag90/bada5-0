@@ -184,7 +184,6 @@ interface MediaPreviewsProps {
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
   const [showCarousel, setShowCarousel] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [items, setItems] = useState(attachments);
 
   if (attachments.length === 0) return null;
 
@@ -193,71 +192,157 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
     setShowCarousel(true);
   };
 
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
+  const roundedStyle = {
+    borderRadius: '16px',
+    WebkitBorderRadius: '16px',
+    overflow: 'hidden'
+  };
 
-    const newItems = Array.from(items);
-    const [reorderedItem] = newItems.splice(result.source.index, 1);
-    newItems.splice(result.destination.index, 0, reorderedItem);
+  const roundedLeftStyle = {
+    borderTopLeftRadius: '16px',
+    borderBottomLeftRadius: '16px',
+    WebkitBorderTopLeftRadius: '16px',
+    WebkitBorderBottomLeftRadius: '16px',
+    overflow: 'hidden'
+  };
 
-    setItems(newItems);
+  const roundedRightStyle = {
+    borderTopRightRadius: '16px',
+    borderBottomRightRadius: '16px',
+    WebkitBorderTopRightRadius: '16px',
+    WebkitBorderBottomRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedTopLeftStyle = {
+    borderTopLeftRadius: '16px',
+    WebkitBorderTopLeftRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedTopRightStyle = {
+    borderTopRightRadius: '16px',
+    WebkitBorderTopRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedBottomLeftStyle = {
+    borderBottomLeftRadius: '16px',
+    WebkitBorderBottomLeftRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const roundedBottomRightStyle = {
+    borderBottomRightRadius: '16px',
+    WebkitBorderBottomRightRadius: '16px',
+    overflow: 'hidden'
+  };
+
+  const renderMedia = (attachment: Media, style: any) => {
+    if (attachment.type === "VIDEO") {
+      return (
+        <video
+          src={attachment.url}
+          className="w-full h-full object-cover"
+          controls
+          preload="metadata"
+          playsInline
+          style={style}
+        />
+      );
+    }
+    return (
+      <Image
+        src={attachment.url}
+        alt=""
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        style={style}
+      />
+    );
   };
 
   return (
     <>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="media-grid" direction="horizontal">
-          {(provided) => (
-            <div
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              className="relative -mx-4"
-            >
-              <div className="flex gap-1 overflow-x-auto px-4 pb-2 scrollbar-hide">
-                {items.map((item, index) => (
-                  <Draggable
-                    key={item.id}
-                    draggableId={item.id}
-                    index={index}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className="relative cursor-move flex-shrink-0"
-                        style={{
-                          width: items.length === 1 ? '100%' : '85%',
-                          maxWidth: items.length === 1 ? '100%' : '500px',
-                          ...provided.draggableProps.style,
-                          opacity: snapshot.isDragging ? 0.8 : 1,
-                        }}
-                      >
-                        <div className="relative w-full aspect-[4/5]">
-                          <Image
-                            src={item.url}
-                            alt=""
-                            fill
-                            className="object-cover rounded-2xl"
-                            onClick={() => handleImageClick(index)}
-                            sizes="(max-width: 768px) 85vw, 500px"
-                            priority
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
+      <div className={cn(
+        "relative w-full overflow-hidden",
+        attachments.length === 1 && "aspect-[16/9]"
+      )}
+      style={roundedStyle}>
+        {attachments.length === 1 ? (
+          <div 
+            className="relative w-full h-full cursor-pointer" 
+            onClick={() => handleImageClick(0)}
+            style={roundedStyle}
+          >
+            {renderMedia(attachments[0], roundedStyle)}
+          </div>
+        ) : attachments.length === 2 ? (
+          <div className="grid grid-cols-2 gap-1 aspect-[2/1] w-full">
+            {attachments.map((attachment, index) => (
+              <div
+                key={attachment.id}
+                className="relative aspect-square cursor-pointer"
+                onClick={() => handleImageClick(index)}
+                style={index === 0 ? roundedLeftStyle : roundedRightStyle}
+              >
+                {renderMedia(attachment, index === 0 ? roundedLeftStyle : roundedRightStyle)}
               </div>
+            ))}
+          </div>
+        ) : attachments.length === 3 ? (
+          <div className="grid grid-cols-2 gap-1 aspect-[16/9] w-full">
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => handleImageClick(0)}
+              style={roundedLeftStyle}
+            >
+              {renderMedia(attachments[0], roundedLeftStyle)}
             </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+            <div className="grid grid-rows-2 gap-1">
+              {attachments.slice(1, 3).map((attachment, index) => (
+                <div
+                  key={attachment.id}
+                  className="relative aspect-[2/1] cursor-pointer"
+                  onClick={() => handleImageClick(index + 1)}
+                  style={index === 0 ? roundedTopRightStyle : roundedBottomRightStyle}
+                >
+                  {renderMedia(attachment, index === 0 ? roundedTopRightStyle : roundedBottomRightStyle)}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-1 aspect-[2/1.2] w-full">
+            {attachments.slice(0, 4).map((attachment, index) => (
+              <div
+                key={attachment.id}
+                className="relative aspect-[1/0.6] cursor-pointer"
+                onClick={() => handleImageClick(index)}
+                style={
+                  index === 0 ? roundedTopLeftStyle :
+                  index === 1 ? roundedTopRightStyle :
+                  index === 2 ? roundedBottomLeftStyle :
+                  roundedBottomRightStyle
+                }
+              >
+                {renderMedia(attachment, 
+                  index === 0 ? roundedTopLeftStyle :
+                  index === 1 ? roundedTopRightStyle :
+                  index === 2 ? roundedBottomLeftStyle :
+                  roundedBottomRightStyle
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {showCarousel && (
         <MediaCarousel
-          media={items.map((a) => ({
+          media={attachments.map((a) => ({
             id: a.id,
             url: a.url,
             type: a.type,
