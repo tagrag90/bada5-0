@@ -134,7 +134,7 @@ async function TrendingTopics() {
       <div className="flex w-full justify-end border-t border-dotted border-[#E0E0E0]">
         <div className="pt-4">
           <p className="w-full justify-end pb-2 text-right text-lg font-bold text-stone-600">
-            Studiobada
+            Studio_bada
           </p>
           <div className="flex items-center gap-4">
             <Link
