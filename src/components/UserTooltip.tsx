@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/app/(main)/SessionProvider";
+import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { FollowerInfo, UserData } from "@/lib/types";
 import Link from "next/link";
 import { PropsWithChildren } from "react";
@@ -20,13 +20,16 @@ interface UserTooltipProps extends PropsWithChildren {
 }
 
 export default function UserTooltip({ children, user }: UserTooltipProps) {
-  const { user: loggedInUser } = useSession();
+  const loggedInUser = useOptionalUser();
+  const isLoggedIn = !!loggedInUser;
 
   const followerState: FollowerInfo = {
     followers: user._count.followers,
-    isFollowedByUser: !!user.followers.some(
-      ({ followerId }) => followerId === loggedInUser.id,
-    ),
+    isFollowedByUser: isLoggedIn
+      ? !!user.followers.some(
+          ({ followerId }) => followerId === loggedInUser?.id,
+        )
+      : false,
   };
 
   return (
@@ -39,7 +42,7 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
               <Link href={`/users/${user.username}`}>
                 <UserAvatar size={70} avatarUrl={user.avatarUrl} />
               </Link>
-              {loggedInUser.id !== user.id && (
+              {isLoggedIn && loggedInUser?.id !== user.id && (
                 <FollowButton userId={user.id} initialState={followerState} />
               )}
             </div>
@@ -64,11 +67,15 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
                 <span className="text-sm text-muted-foreground">Post</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-lg font-bold">{user._count.following}</span>
+                <span className="text-lg font-bold">
+                  {user._count.following}
+                </span>
                 <span className="text-sm text-muted-foreground">Following</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-lg font-bold">{followerState.followers}</span>
+                <span className="text-lg font-bold">
+                  {followerState.followers}
+                </span>
                 <span className="text-sm text-muted-foreground">Followers</span>
               </div>
             </div>

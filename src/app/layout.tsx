@@ -99,9 +99,7 @@ export default function RootLayout({
           >
             {children}
             <Toaster />
-            <NoticePopup 
-              title="챌린지 : 이번주 있었던 일을 7글자로 표현해보세요!✏️" 
-            />
+            <NoticePopup title="챌린지 : 이번주 있었던 일을 7글자로 표현해보세요!✏️" />
             <Analytics />
           </ThemeProvider>
         </ReactQueryProvider>

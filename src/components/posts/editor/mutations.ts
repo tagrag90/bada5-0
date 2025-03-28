@@ -1,4 +1,4 @@
-import { useSession } from "@/app/(main)/SessionProvider";
+import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { PostsPage } from "@/lib/types";
 import {
@@ -12,7 +12,7 @@ import { submitPost, updatePost } from "./actions";
 export function useSubmitPostMutation() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useSession();
+  const user = useOptionalUser();
 
   const mutation = useMutation({
     mutationFn: submitPost,
@@ -50,6 +50,8 @@ export function useSubmitPostMutation() {
         queryKey: ["post-feed"],
         exact: false,
         predicate: (query) => {
+          if (!user) return false;
+          
           const isRelevantQuery = 
             query.queryKey.includes("for-you") ||
             (query.queryKey.includes("user-posts") && 

@@ -1,7 +1,7 @@
 "use client";
 
 import { logout } from "@/app/(auth)/actions";
-import { useSession } from "@/app/(main)/SessionProvider";
+import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, LogOutIcon, Monitor, Moon, Sun, UserIcon } from "lucide-react";
@@ -26,11 +26,12 @@ interface UserButtonProps {
 }
 
 export default function UserButton({ className }: UserButtonProps) {
-  const { user } = useSession();
-
+  const user = useOptionalUser();
+  const queryClient = useQueryClient();
   // const { theme, setTheme } = useTheme();
 
-  const queryClient = useQueryClient();
+  // 사용자가 로그인하지 않은 경우 null을 반환
+  if (!user) return null;
 
   return (
     <DropdownMenu>

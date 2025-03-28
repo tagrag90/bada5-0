@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/app/(main)/SessionProvider";
+import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
 import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
@@ -8,7 +8,7 @@ import { MessageSquare, MessageCircle, Heart, Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Comments from "../comments/Comments";
 import Linkify from "../Linkify";
 import UserAvatar from "../UserAvatar";
@@ -21,20 +21,23 @@ import { MediaCarousel } from "./MediaCarousel";
 import { Button } from "@/components/ui/button";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-
+import { useToast } from "@/components/ui/use-toast";
 
 interface PostProps {
   post: PostData;
 }
 
 export default function Post({ post }: PostProps) {
-  const { user } = useSession();
+  const user = useOptionalUser();
+  const isLoggedIn = !!user;
+  const router = useRouter();
+  const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const pathname = usePathname();
-  
+
   // 상세 페이지인지 확인
   const isDetailPage = pathname?.startsWith(`/posts/${post.id}`);
 
@@ -88,43 +91,69 @@ export default function Post({ post }: PostProps) {
     setIsEditorOpen(true);
   };
 
+  const handleRequireLogin = (action: string) => {
+    toast({
+      title: "로그인이 필요합니다",
+      description: `${action}하려면 로그인이 필요합니다.`,
+      duration: 3000,
+    });
+    router.push("/login");
+  };
+
   return (
-    <article className={cn(
-      "group/post overflow-hidden bg-card",
-      isDetailPage 
-        ? "rounded-xl p-4" 
-        : "border-b border-dotted border-b-gray-300 pt-4 pb-4"
-    )}>
+    <article
+      className={cn(
+        "group/post overflow-hidden bg-card",
+        isDetailPage
+          ? "rounded-xl p-4"
+          : "border-b border-dotted border-b-gray-300 pb-4 pt-4",
+      )}
+    >
       <div className="flex items-start">
-        <UserTooltip user={post.user}>
-          <Link
-            href={`/users/${post.user.username}`}
-            className="mr-3 flex-shrink-0"
+        {isLoggedIn ? (
+          <UserTooltip user={post.user}>
+            <Link
+              href={`/users/${post.user.username}`}
+              className="mr-3 flex-shrink-0"
+            >
+              <UserAvatar avatarUrl={post.user.avatarUrl} size={40} />
+            </Link>
+          </UserTooltip>
+        ) : (
+          <div
+            className="mr-3 flex-shrink-0 cursor-pointer"
+            onClick={() => handleRequireLogin("프로필 보기")}
           >
             <UserAvatar avatarUrl={post.user.avatarUrl} size={40} />
-          </Link>
-        </UserTooltip>
+          </div>
+        )}
         <div className="min-w-0 flex-grow">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center space-x-2">
-              <UserTooltip user={post.user}>
-                <Link
-                  href={`/users/${post.user.username}`}
-                  className="truncate font-semibold hover:underline"
+              {isLoggedIn ? (
+                <UserTooltip user={post.user}>
+                  <Link
+                    href={`/users/${post.user.username}`}
+                    className="truncate font-semibold hover:underline"
+                  >
+                    {post.user.displayName}
+                  </Link>
+                </UserTooltip>
+              ) : (
+                <span
+                  className="cursor-pointer truncate font-semibold hover:underline"
+                  onClick={() => handleRequireLogin("프로필 보기")}
                 >
                   {post.user.displayName}
-                </Link>
-              </UserTooltip>
+                </span>
+              )}
               <span className="text-sm text-gray-500" suppressHydrationWarning>
                 · {formatRelativeDate(post.createdAt)}
               </span>
             </div>
-            {post.user.id === user.id && (
+            {isLoggedIn && post.user.id === user?.id && (
               <>
-                <PostMoreButton 
-                  post={post} 
-                  onEditClick={handleEditClick} 
-                />
+                <PostMoreButton post={post} onEditClick={handleEditClick} />
                 <PostEditorModal
                   isOpen={isEditorOpen}
                   onClose={() => setIsEditorOpen(false)}
@@ -144,31 +173,62 @@ export default function Post({ post }: PostProps) {
             </div>
           </Linkify>
           <div className="mt-3 flex items-center space-x-4">
-            <LikeButton
-              postId={post.id}
-              initialState={{
-                likes: post._count.likes,
-                isLikedByUser: post.likes.some(
-                  (like) => like.userId === user.id,
-                ),
-              }}
-            />
-            <CommentButton
-              commentCount={commentCount}
-              postId={post.id}
-            />
-            <BookmarkButton
-              postId={post.id}
-              initialState={{
-                isBookmarkedByUser: post.bookmarks.some(
-                  (bookmark) => bookmark.userId === user.id,
-                ),
-              }}
-            />
+            {isLoggedIn ? (
+              <>
+                <LikeButton
+                  postId={post.id}
+                  initialState={{
+                    likes: post._count.likes,
+                    isLikedByUser: post.likes.some(
+                      (like) => like.userId === user?.id,
+                    ),
+                  }}
+                />
+                <CommentButton commentCount={commentCount} postId={post.id} />
+                <BookmarkButton
+                  postId={post.id}
+                  initialState={{
+                    isBookmarkedByUser: post.bookmarks.some(
+                      (bookmark) => bookmark.userId === user?.id,
+                    ),
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleRequireLogin("좋아요")}
+                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                >
+                  <Heart
+                    strokeWidth={1.5}
+                    className="size-5 fill-white text-[#000]"
+                  />
+                  <span className="text-sm font-normal tabular-nums">
+                    {post._count.likes}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleRequireLogin("댓글 작성")}
+                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                >
+                  <MessageCircle className="size-5 text-[#000]" />
+                  <span className="text-sm font-normal tabular-nums">
+                    {commentCount}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleRequireLogin("북마크")}
+                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                >
+                  <Bookmark className="size-5 text-[#000]" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
-      {showComments && (
+      {isLoggedIn && showComments && (
         <div className="mt-3">
           <Comments post={post} />
         </div>
@@ -194,49 +254,49 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
 
   // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
   const roundedStyle = {
-    borderRadius: '16px',
-    WebkitBorderRadius: '16px',
-    overflow: 'hidden'
+    borderRadius: "16px",
+    WebkitBorderRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedLeftStyle = {
-    borderTopLeftRadius: '16px',
-    borderBottomLeftRadius: '16px',
-    WebkitBorderTopLeftRadius: '16px',
-    WebkitBorderBottomLeftRadius: '16px',
-    overflow: 'hidden'
+    borderTopLeftRadius: "16px",
+    borderBottomLeftRadius: "16px",
+    WebkitBorderTopLeftRadius: "16px",
+    WebkitBorderBottomLeftRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedRightStyle = {
-    borderTopRightRadius: '16px',
-    borderBottomRightRadius: '16px',
-    WebkitBorderTopRightRadius: '16px',
-    WebkitBorderBottomRightRadius: '16px',
-    overflow: 'hidden'
+    borderTopRightRadius: "16px",
+    borderBottomRightRadius: "16px",
+    WebkitBorderTopRightRadius: "16px",
+    WebkitBorderBottomRightRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedTopLeftStyle = {
-    borderTopLeftRadius: '16px',
-    WebkitBorderTopLeftRadius: '16px',
-    overflow: 'hidden'
+    borderTopLeftRadius: "16px",
+    WebkitBorderTopLeftRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedTopRightStyle = {
-    borderTopRightRadius: '16px',
-    WebkitBorderTopRightRadius: '16px',
-    overflow: 'hidden'
+    borderTopRightRadius: "16px",
+    WebkitBorderTopRightRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedBottomLeftStyle = {
-    borderBottomLeftRadius: '16px',
-    WebkitBorderBottomLeftRadius: '16px',
-    overflow: 'hidden'
+    borderBottomLeftRadius: "16px",
+    WebkitBorderBottomLeftRadius: "16px",
+    overflow: "hidden",
   };
 
   const roundedBottomRightStyle = {
-    borderBottomRightRadius: '16px',
-    WebkitBorderBottomRightRadius: '16px',
-    overflow: 'hidden'
+    borderBottomRightRadius: "16px",
+    WebkitBorderBottomRightRadius: "16px",
+    overflow: "hidden",
   };
 
   const renderMedia = (attachment: Media, style: any) => {
@@ -244,7 +304,7 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
       return (
         <video
           src={attachment.url}
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
           controls
           preload="metadata"
           playsInline
@@ -266,21 +326,23 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
 
   return (
     <>
-      <div className={cn(
-        "relative w-full overflow-hidden",
-        attachments.length === 1 && "aspect-[16/9]"
-      )}
-      style={roundedStyle}>
+      <div
+        className={cn(
+          "relative w-full overflow-hidden",
+          attachments.length === 1 && "aspect-[16/9]",
+        )}
+        style={roundedStyle}
+      >
         {attachments.length === 1 ? (
-          <div 
-            className="relative w-full h-full cursor-pointer" 
+          <div
+            className="relative h-full w-full cursor-pointer"
             onClick={() => handleImageClick(0)}
             style={roundedStyle}
           >
             {renderMedia(attachments[0], roundedStyle)}
           </div>
         ) : attachments.length === 2 ? (
-          <div className="grid grid-cols-2 gap-1 aspect-[2/1] w-full">
+          <div className="grid aspect-[2/1] w-full grid-cols-2 gap-1">
             {attachments.map((attachment, index) => (
               <div
                 key={attachment.id}
@@ -288,13 +350,16 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
                 onClick={() => handleImageClick(index)}
                 style={index === 0 ? roundedLeftStyle : roundedRightStyle}
               >
-                {renderMedia(attachment, index === 0 ? roundedLeftStyle : roundedRightStyle)}
+                {renderMedia(
+                  attachment,
+                  index === 0 ? roundedLeftStyle : roundedRightStyle,
+                )}
               </div>
             ))}
           </div>
         ) : attachments.length === 3 ? (
-          <div className="grid grid-cols-2 gap-1 aspect-[16/9] w-full">
-            <div 
+          <div className="grid aspect-[16/9] w-full grid-cols-2 gap-1">
+            <div
               className="relative cursor-pointer"
               onClick={() => handleImageClick(0)}
               style={roundedLeftStyle}
@@ -307,32 +372,46 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
                   key={attachment.id}
                   className="relative aspect-[2/1] cursor-pointer"
                   onClick={() => handleImageClick(index + 1)}
-                  style={index === 0 ? roundedTopRightStyle : roundedBottomRightStyle}
+                  style={
+                    index === 0 ? roundedTopRightStyle : roundedBottomRightStyle
+                  }
                 >
-                  {renderMedia(attachment, index === 0 ? roundedTopRightStyle : roundedBottomRightStyle)}
+                  {renderMedia(
+                    attachment,
+                    index === 0
+                      ? roundedTopRightStyle
+                      : roundedBottomRightStyle,
+                  )}
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-1 aspect-[2/1.2] w-full">
+          <div className="grid aspect-[2/1.2] w-full grid-cols-2 gap-1">
             {attachments.slice(0, 4).map((attachment, index) => (
               <div
                 key={attachment.id}
                 className="relative aspect-[1/0.6] cursor-pointer"
                 onClick={() => handleImageClick(index)}
                 style={
-                  index === 0 ? roundedTopLeftStyle :
-                  index === 1 ? roundedTopRightStyle :
-                  index === 2 ? roundedBottomLeftStyle :
-                  roundedBottomRightStyle
+                  index === 0
+                    ? roundedTopLeftStyle
+                    : index === 1
+                      ? roundedTopRightStyle
+                      : index === 2
+                        ? roundedBottomLeftStyle
+                        : roundedBottomRightStyle
                 }
               >
-                {renderMedia(attachment, 
-                  index === 0 ? roundedTopLeftStyle :
-                  index === 1 ? roundedTopRightStyle :
-                  index === 2 ? roundedBottomLeftStyle :
-                  roundedBottomRightStyle
+                {renderMedia(
+                  attachment,
+                  index === 0
+                    ? roundedTopLeftStyle
+                    : index === 1
+                      ? roundedTopRightStyle
+                      : index === 2
+                        ? roundedBottomLeftStyle
+                        : roundedBottomRightStyle,
                 )}
               </div>
             ))}
@@ -365,15 +444,15 @@ function MediaPreview({ media, attachments }: MediaPreviewProps) {
 
   // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
   const roundedStyle = {
-    borderRadius: '12px',
-    WebkitBorderRadius: '12px',
-    overflow: 'hidden'
+    borderRadius: "12px",
+    WebkitBorderRadius: "12px",
+    overflow: "hidden",
   };
 
   return (
     <>
       <div
-        className="relative h-full w-full aspect-square"
+        className="relative aspect-square h-full w-full"
         onClick={() => setShowCarousel(true)}
         style={roundedStyle}
       >
@@ -425,7 +504,7 @@ function CommentButton({ commentCount, postId }: CommentButtonProps) {
     <Link href={`/posts/${postId}`}>
       <div
         className={cn(
-          "flex items-center gap-2 rounded-[10px] px-4 py-2 cursor-pointer",
+          "flex cursor-pointer items-center gap-2 rounded-[10px] px-4 py-2",
         )}
       >
         <MessageCircle
@@ -434,13 +513,13 @@ function CommentButton({ commentCount, postId }: CommentButtonProps) {
             "size-5",
             commentCount > 0
               ? "fill-white text-black"
-              : "fill-white text-black"
+              : "fill-white text-black",
           )}
         />
         <span
           className={cn(
             "text-sm font-normal tabular-nums",
-            commentCount > 0 ? "text-black" : "text-black"
+            commentCount > 0 ? "text-black" : "text-black",
           )}
         >
           {commentCount}
