@@ -27,12 +27,11 @@ const geistMono = localFont({
 });
 
 // 랜덤 이미지 배열 정의
-const ogImages = ["/og-images/og-1.png", "/og-images/og-2.png"];
+const ogImage = "/og-images/og-3.png";
 
-// 랜덤 이미지 선택 함수
-function getRandomOgImage() {
-  const randomIndex = Math.floor(Math.random() * ogImages.length);
-  return ogImages[randomIndex];
+// 이미지 선택 함수
+function getOgImage() {
+  return ogImage;
 }
 
 export const metadata: Metadata = {
@@ -50,7 +49,7 @@ export const metadata: Metadata = {
     siteName: "Dive to Bada",
     images: [
       {
-        url: getRandomOgImage(),
+        url: ogImage,
         width: 1200,
         height: 630,
         alt: "Dive to Bada",
@@ -63,7 +62,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Dive to Bada",
     description: "크리에이터와 아티스트들의 소셜 미디어 커뮤니티",
-    images: [getRandomOgImage()],
+    images: [ogImage],
   },
 };
 
