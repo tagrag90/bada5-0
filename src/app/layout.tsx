@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata, Viewport } from "next";
-import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import { extractRouterConfig } from "uploadthing/server";
 import { fileRouter } from "./api/uploadthing/core";
@@ -90,17 +89,10 @@ export default function RootLayout({
       >
         <NextSSRPlugin routerConfig={extractRouterConfig(fileRouter)} />
         <ReactQueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-            <Toaster />
-            <NoticePopup title="챌린지 : 이번주 있었던 일을 7글자로 표현해보세요!✏️" />
-            <Analytics />
-          </ThemeProvider>
+          {children}
+          <Toaster />
+          <NoticePopup title="챌린지 : 이번주 있었던 일을 7글자로 표현해보세요!✏️" />
+          <Analytics />
         </ReactQueryProvider>
       </body>
     </html>
