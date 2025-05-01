@@ -17,6 +17,7 @@ import Image from "next/image";
 import Link from "next/link";
 import MainLogo from "@/assets/mainlogo.png";
 import { useOptionalUser } from "./SessionProvider";
+import InlinePostEditor from "@/components/posts/editor/InlinePostEditor";
 
 export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -64,6 +65,15 @@ export default function MainContent() {
           </div>
         </div>
 
+        {/* 인라인 에디터 - 데스크톱 */}
+        {isLoggedIn && (
+          <div className="mt-4">
+            <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
+              <InlinePostEditor />
+            </div>
+          </div>
+        )}
+
         <div className="mt-4">
           <TabsVerticalContent value="for-you">
             <ForYouFeed />
@@ -96,6 +106,16 @@ export default function MainContent() {
         </Link>
         <div className="w-12"></div> {/* 빈 공간으로 중앙 정렬 유지 */}
       </div>
+
+      {/* 인라인 에디터 - 모바일 */}
+      {isLoggedIn && (
+        <div className="mb-4 md:hidden">
+          <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
+            <InlinePostEditor />
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="for-you" className="w-full md:hidden">
         <TabsList className="md:hidden">
           <TabsTrigger value="for-you" className="text-center">

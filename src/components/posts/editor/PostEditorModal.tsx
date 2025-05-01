@@ -15,8 +15,8 @@ export default function PostEditorModal({ isOpen, onClose, post }: PostEditorMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl gap-0 p-0 md:max-w-2xl bg-[#fff] rounded-[24px]">
-        <div className="flex items-center justify-between border-b p-4">
+      <DialogContent className="p-0 md:p-0 gap-0 max-w-2xl bg-[#fff] rounded-t-[24px] md:rounded-[24px]">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b p-4 bg-white">
           <button onClick={onClose} className="text-sm font-medium">
             취소
           </button>
@@ -25,7 +25,7 @@ export default function PostEditorModal({ isOpen, onClose, post }: PostEditorMod
           </span>
           <div className="w-8" /> {/* 우측 여백 맞추기 용 */}
         </div>
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto">
           <PostEditor onSuccess={onClose} post={post} />
         </div>
       </DialogContent>
