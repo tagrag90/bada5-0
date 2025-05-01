@@ -25,7 +25,7 @@ export default function Page() {
           <h1 className="text-2xl font-bold">빠르게 계정을 만들어 볼까요?</h1>
           <p className="py-5 text-base text-[#8b95a1]">
             아래 3개의 칸만 채우면
-            <br /> Bada의 모든것을 바로 즐길 수 있어요!
+            <br /> Bada의 모든것을 바로 즐길 수 있어요!!
           </p>
           <div className="space-y-5">
             {/* <GoogleSignInButton />
