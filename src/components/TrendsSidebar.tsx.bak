@@ -25,7 +25,10 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
       )}
     >
       <div className="relative group mb-4">
-        {/* 공지사항 */}
+        {/* 배경 발광 효과 - 블러 효과 강화 */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-[#ffb700] via-[#ff3c3c] to-[#b446dc] rounded-2xl blur-[12px] opacity-60 group-hover:opacity-100 transition-opacity duration-700 animate-tilt -z-10"></div>
+        
+        {/* 실제 컴포넌트 - 테두리 제거 */}
         <div 
           className="relative space-y-3 rounded-2xl bg-black p-4 shadow-md transition-all duration-500 group-hover:scale-[1.03]"
         >
@@ -42,7 +45,7 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
           </div>
           
           <h2 className="text-sm font-medium text-white">
-            Welcome to Divetobada!🌊 It's a social community for everyone who likes K-culture. 🇰🇷
+            챌린지 : 이번주 있었던 일을 7글자로 표현해보세요!✏️
           </h2>
         </div>
       </div>

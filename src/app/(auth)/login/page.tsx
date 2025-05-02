@@ -13,22 +13,22 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <main className="flex h-screen">
-      <div className="hidden w-1/2 md:block">
+      {/* <div className="hidden w-1/2 md:block">
         <Image
           src={loginImage}
           alt=""
           className="h-screen w-full object-left-top object-cover"
           priority
         />
-      </div>
-      <div className="flex w-full items-center justify-center p-5 md:w-1/2">
+      </div> */}
+      <div className="flex w-full items-center justify-center p-5">
         <div className="w-full max-w-md space-y-1 overflow-y-auto p-10">
           <Image
             src={Logo} //
             alt="logo"
             width={45}
             height={45}
-            className="mb-5 rounded-full md:hidden"
+            className="mb-5 rounded-full"
           />
           <h1 className="text-2xl font-bold">돌아오셨군요~</h1>
           <h1 className="text-2xl font-bold">로그인 하고 Bada를 둘러보세요.</h1>
