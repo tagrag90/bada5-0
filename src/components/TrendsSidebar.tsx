@@ -42,7 +42,7 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
           </div>
           
           <h2 className="text-sm font-medium text-white">
-            Welcome to Divetobada!🌊 It's a social community for everyone who likes K-culture. 🇰🇷
+            Welcome to Divetobada! It&apos;s a social community for everyone who likes K-culture.
           </h2>
         </div>
       </div>
