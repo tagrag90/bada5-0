@@ -4,13 +4,15 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude } from "@/lib/types";
 
-export async function deletePost(id: string) {
+export async function deletePost(postId: string) {
+  // console.log("Attempting to delete post with ID:", postId);
+
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");
 
   const post = await prisma.post.findUnique({
-    where: { id },
+    where: { id: postId },
     include: getPostDataInclude(user.id),
   });
 
@@ -19,7 +21,7 @@ export async function deletePost(id: string) {
   if (post.userId !== user.id) throw new Error("Unauthorized");
 
   const deletedPost = await prisma.post.delete({
-    where: { id },
+    where: { id: postId },
     include: getPostDataInclude(user.id),
   });
 

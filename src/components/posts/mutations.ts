@@ -17,7 +17,7 @@ export function useDeletePostMutation() {
 
   const mutation = useMutation({
     mutationFn: deletePost,
-    onSuccess: async (deletedPost) => {
+    onSuccess: async (_, postId) => {
       await queryClient.cancelQueries({
         queryKey: ["post-feed"],
         exact: false
@@ -35,7 +35,7 @@ export function useDeletePostMutation() {
             pageParams: oldData.pageParams,
             pages: oldData.pages.map(page => ({
               ...page,
-              posts: page.posts.filter(post => post.id !== deletedPost.id)
+              posts: page.posts.filter(post => post.id !== postId)
             }))
           };
         }
@@ -45,7 +45,7 @@ export function useDeletePostMutation() {
         title: "포스트가 삭제되었습니다.",
       });
 
-      if (pathname && pathname.startsWith(`/posts/${deletedPost.id}`)) {
+      if (pathname && pathname.startsWith(`/posts/${postId}`)) {
         router.push("/");
       }
     },

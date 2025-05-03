@@ -27,7 +27,7 @@ export default function useMediaUpload({ initialAttachments = [] }: UseMediaUplo
       const initialAtts = initialAttachments.map(att => ({
         file: new File([], 'placeholder.jpg', { type: 'image/jpeg' }),
         url: att.url,
-        id: att.id,
+        mediaId: att.id,
         isUploading: false,
         type: att.type || 'IMAGE',
       }));

@@ -4,10 +4,10 @@ import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
 import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
-import { MessageSquare, MessageCircle, Heart, Bookmark } from "lucide-react";
+import { MessageSquare, MessageCircle, Heart, Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Comments from "../comments/Comments";
 import Linkify from "../Linkify";
@@ -106,7 +106,7 @@ export default function Post({ post }: PostProps) {
         "group/post overflow-hidden bg-card",
         isDetailPage
           ? "rounded-xl p-4"
-          : "border-b border-dotted border-b-gray-300 pb-4 pt-4",
+          : "border-b border-dotted border-b-gray-300 p-4",
       )}
     >
       <div className="flex items-start">
@@ -165,14 +165,25 @@ export default function Post({ post }: PostProps) {
           <Linkify>
             <div className="break-words text-base">
               {renderContent()}
-              {!!post.attachments.length && (
-                <div className="mt-3">
-                  <MediaPreviews attachments={post.attachments} />
-                </div>
-              )}
             </div>
           </Linkify>
-          <div className="mt-3 flex items-center space-x-4">
+          {/* 액션 버튼 블록 시작 - 이 블록을 잘라냅니다 */}
+          {/* <div className="mt-3 flex items-center space-x-4 pl-[52px]">
+            ... (버튼 내용) ...
+          </div> */}
+          {/* 액션 버튼 블록 끝 */}
+        </div>
+      </div>
+
+      {/* 이미지(MediaPreviews) 블록 */}
+      {!!post.attachments.length && (
+        <div className={cn("mt-3", !isDetailPage && "mx-[-1rem]")}>
+          <MediaPreviews attachments={post.attachments} />
+        </div>
+      )}
+
+      {/* !!! 액션 버튼을 여기로 이동하고 왼쪽 패딩(pl-[52px]) 유지 !!! */}
+      <div className="mt-3 flex items-center space-x-4 pl-[52px]">
             {isLoggedIn ? (
               <>
                 <LikeButton
@@ -226,8 +237,8 @@ export default function Post({ post }: PostProps) {
               </>
             )}
           </div>
-        </div>
-      </div>
+
+      {/* 댓글 영역 */}
       {isLoggedIn && showComments && (
         <div className="mt-3">
           <Comments post={post} />
@@ -244,79 +255,159 @@ interface MediaPreviewsProps {
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
   const [showCarousel, setShowCarousel] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
 
   if (attachments.length === 0) return null;
 
-  const handleImageClick = (index: number) => {
-    setSelectedIndex(index);
+  const handlePreviewClick = () => {
+    if (Math.abs(startXRef.current - currentXRef.current) < 10) {
+      setSelectedIndex(currentImageIndex);
     setShowCarousel(true);
+    }
   };
 
-  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % attachments.length);
+  };
+
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + attachments.length) % attachments.length);
+  };
+
+  const handleDragStart = (clientX: number) => {
+    if (attachments.length <= 1) return;
+    setIsDragging(true);
+    startXRef.current = clientX;
+    currentXRef.current = clientX;
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging || attachments.length <= 1) return;
+    currentXRef.current = clientX;
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging || attachments.length <= 1) return;
+    setIsDragging(false);
+
+    const diff = startXRef.current - currentXRef.current;
+    const threshold = 50;
+
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        nextImage();
+      } else {
+        prevImage();
+      }
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => handleDragStart(e.touches[0].clientX);
+  const handleTouchMove = (e: React.TouchEvent) => handleDragMove(e.touches[0].clientX);
+  const handleTouchEnd = () => handleDragEnd();
+
+  const handleMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientX);
+  const handleMouseMove = (e: React.MouseEvent) => handleDragMove(e.clientX);
+  const handleMouseUp = () => handleDragEnd();
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      handleDragEnd();
+    }
+  };
+
   const roundedStyle = {
     borderRadius: "8px",
     WebkitBorderRadius: "8px",
     overflow: "hidden",
   };
 
-  // 이미지 렌더링 함수 (기존 renderMedia 활용)
-  const renderMedia = (
-    attachment: (typeof attachments)[0]
-    // style: React.CSSProperties, // Style prop 제거
-  ) => {
+  const renderMedia = (attachment: (typeof attachments)[0]) => {
     if (attachment.type === "VIDEO") {
-      // 비디오 로직은 일단 유지
-      const commonClasses =
-        "absolute inset-0 h-full w-full object-contain";
       return (
         <video
+          key={attachment.id}
           src={attachment.url}
-          className={commonClasses}
+          className="h-full w-full object-cover"
           preload="metadata"
           playsInline
           muted
-          // style={style} // 스타일은 부모 div에 적용
+          controls
         />
       );
     } else {
-      return (
-        <Image
-          src={attachment.url}
+    return (
+      <Image
+          key={attachment.id}
+        src={attachment.url}
           alt="Attachment preview"
-          height={360} // 높이 1.5배 증가 (240 * 1.5)
-          width={0} // 너비 0으로 설정하여 자동 계산 유도
-          sizes="(max-width: 640px) 288px, 360px" // sizes 속성 1.5배 증가
-          className="object-contain h-full w-auto" // contain, 높이 100%, 너비 auto
-          // style prop 제거
-        />
-      );
+        width={0}
+        height={0}
+        className="w-full h-auto object-contain"
+          sizes="100vw"
+      />
+    );
     }
   };
 
   return (
     <>
-      {/* 가로 스크롤 컨테이너 */}
-      <div className="relative flex cursor-default gap-1 overflow-x-auto pb-1">
-        {attachments.map((attachment, index) => (
-          <div
-            key={attachment.id}
-            // 높이 클래스 1.5배 증가 (h-48 -> h-72, sm:h-60 -> sm:h-[22.5rem])
-            className="relative h-72 flex-shrink-0 cursor-pointer overflow-hidden sm:h-[22.5rem] bg-black"
-            onClick={() => handleImageClick(index)}
-            style={roundedStyle} // 컨테이너에 둥근 모서리 적용
+      <div
+        className={cn(
+          "relative w-full overflow-hidden",
+          attachments.length > 1 ? "cursor-grab" : "cursor-pointer",
+          isDragging && "cursor-grabbing"
+        )}
+        onClick={handlePreviewClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
           >
-            {renderMedia(attachment)} {/* style prop 전달 제거 */}
-          </div>
-        ))}
+        {renderMedia(attachments[currentImageIndex])}
+
+        {attachments.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition hover:bg-black/75 focus:outline-none"
+              aria-label="이전 이미지"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition hover:bg-black/75 focus:outline-none"
+              aria-label="다음 이미지"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+              {attachments.map((_, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    index === currentImageIndex ? "bg-white" : "bg-white/50",
+                  )}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {showCarousel && (
         <MediaCarousel
-          media={attachments.map((a) => ({
-            id: a.id,
-            url: a.url,
-            type: a.type,
-          }))}
+          media={attachments.map((a) => ({ id: a.id, url: a.url, type: a.type }))}
           initialIndex={selectedIndex}
           onClose={() => setShowCarousel(false)}
         />
@@ -333,7 +424,6 @@ interface MediaPreviewProps {
 function MediaPreview({ media, attachments }: MediaPreviewProps) {
   const [showCarousel, setShowCarousel] = useState(false);
 
-  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
   const roundedStyle = {
     borderRadius: "12px",
     WebkitBorderRadius: "12px",

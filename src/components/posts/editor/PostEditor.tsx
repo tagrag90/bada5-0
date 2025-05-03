@@ -308,9 +308,14 @@ export default function PostEditor({ post, isEditMode = false, onSuccess }: Post
     }
 
     try {
+      // mediaId 배열만 추출하여 전달
+      const mediaIdsToSend = attachments
+        .map(att => att.mediaId)
+        .filter(id => id !== undefined) as string[]; // mediaId가 있는 것만 필터링
+
       await mutation.mutateAsync({
         content: editorInput,
-        attachments,
+        mediaIds: mediaIdsToSend, // <<< 변경 후: ID 배열 전달
         embeddedLinks,
         ...(isEditMode && post ? { postId: post.id } : {}),
       });

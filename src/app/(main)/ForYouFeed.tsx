@@ -100,7 +100,7 @@ export default function ForYouFeed() {
 
   return (
     <InfiniteScrollContainer
-      className="rounded-t-[24px] bg-white p-4 drop-shadow"
+      className="rounded-[24px] bg-white drop-shadow overflow-hidden"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {!isLoggedIn && posts.length > 0 && (
@@ -114,7 +114,9 @@ export default function ForYouFeed() {
         </div>
       )}
 
-      {posts.map((post) => (
+      {posts
+        .filter(post => !!post)
+        .map((post) => (
         <Post key={post.id} post={post} />
       ))}
 

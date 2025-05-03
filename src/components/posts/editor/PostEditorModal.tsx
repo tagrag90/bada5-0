@@ -26,7 +26,7 @@ export default function PostEditorModal({ isOpen, onClose, post }: PostEditorMod
           <div className="w-8" /> {/* 우측 여백 맞추기 용 */}
         </div>
         <div className="p-4 overflow-y-auto">
-          <PostEditor onSuccess={onClose} post={post} />
+          <PostEditor onSuccess={onClose} post={post} isEditMode={isEditMode} />
         </div>
       </DialogContent>
     </Dialog>
