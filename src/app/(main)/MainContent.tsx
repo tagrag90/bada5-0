@@ -18,6 +18,7 @@ import Link from "next/link";
 import MainLogo from "@/assets/mainlogo.png";
 import { useOptionalUser } from "./SessionProvider";
 import InlinePostEditor from "@/components/posts/editor/InlinePostEditor";
+import { cn } from "@/lib/utils";
 
 export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -25,7 +26,13 @@ export default function MainContent() {
   const isLoggedIn = !!user;
 
   return (
-    <main className="flex-1">
+    <main
+      className={cn(
+        "flex w-full flex-col items-center",
+        "md:flex-row md:items-start md:gap-5",
+        "max-w-2xl mx-auto",
+      )}
+    >
       {/* 데스크톱 버전 */}
       <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
         <div className="flex w-full justify-between px-4">

@@ -254,169 +254,60 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
 
   // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
   const roundedStyle = {
-    borderRadius: "16px",
-    WebkitBorderRadius: "16px",
+    borderRadius: "8px",
+    WebkitBorderRadius: "8px",
     overflow: "hidden",
   };
 
-  const roundedLeftStyle = {
-    borderTopLeftRadius: "16px",
-    borderBottomLeftRadius: "16px",
-    WebkitBorderTopLeftRadius: "16px",
-    WebkitBorderBottomLeftRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedRightStyle = {
-    borderTopRightRadius: "16px",
-    borderBottomRightRadius: "16px",
-    WebkitBorderTopRightRadius: "16px",
-    WebkitBorderBottomRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedTopLeftStyle = {
-    borderTopLeftRadius: "16px",
-    WebkitBorderTopLeftRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedTopRightStyle = {
-    borderTopRightRadius: "16px",
-    WebkitBorderTopRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedBottomLeftStyle = {
-    borderBottomLeftRadius: "16px",
-    WebkitBorderBottomLeftRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedBottomRightStyle = {
-    borderBottomRightRadius: "16px",
-    WebkitBorderBottomRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const renderMedia = (attachment: Media, style: any) => {
+  // 이미지 렌더링 함수 (기존 renderMedia 활용)
+  const renderMedia = (
+    attachment: (typeof attachments)[0]
+    // style: React.CSSProperties, // Style prop 제거
+  ) => {
     if (attachment.type === "VIDEO") {
+      // 비디오 로직은 일단 유지
+      const commonClasses =
+        "absolute inset-0 h-full w-full object-contain";
       return (
         <video
           src={attachment.url}
-          className="h-full w-full object-cover"
-          controls
+          className={commonClasses}
           preload="metadata"
           playsInline
-          style={style}
+          muted
+          // style={style} // 스타일은 부모 div에 적용
+        />
+      );
+    } else {
+      return (
+        <Image
+          src={attachment.url}
+          alt="Attachment preview"
+          height={360} // 높이 1.5배 증가 (240 * 1.5)
+          width={0} // 너비 0으로 설정하여 자동 계산 유도
+          sizes="(max-width: 640px) 288px, 360px" // sizes 속성 1.5배 증가
+          className="object-contain h-full w-auto" // contain, 높이 100%, 너비 auto
+          // style prop 제거
         />
       );
     }
-    return (
-      <Image
-        src={attachment.url}
-        alt=""
-        fill
-        className="object-cover"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        style={style}
-      />
-    );
   };
 
   return (
     <>
-      <div
-        className={cn(
-          "relative w-full overflow-hidden",
-          attachments.length === 1 && "aspect-[16/9]",
-        )}
-        style={roundedStyle}
-      >
-        {attachments.length === 1 ? (
+      {/* 가로 스크롤 컨테이너 */}
+      <div className="relative flex cursor-default gap-1 overflow-x-auto pb-1">
+        {attachments.map((attachment, index) => (
           <div
-            className="relative h-full w-full cursor-pointer"
-            onClick={() => handleImageClick(0)}
-            style={roundedStyle}
+            key={attachment.id}
+            // 높이 클래스 1.5배 증가 (h-48 -> h-72, sm:h-60 -> sm:h-[22.5rem])
+            className="relative h-72 flex-shrink-0 cursor-pointer overflow-hidden sm:h-[22.5rem] bg-black"
+            onClick={() => handleImageClick(index)}
+            style={roundedStyle} // 컨테이너에 둥근 모서리 적용
           >
-            {renderMedia(attachments[0], roundedStyle)}
+            {renderMedia(attachment)} {/* style prop 전달 제거 */}
           </div>
-        ) : attachments.length === 2 ? (
-          <div className="grid aspect-[2/1] w-full grid-cols-2 gap-1">
-            {attachments.map((attachment, index) => (
-              <div
-                key={attachment.id}
-                className="relative aspect-square cursor-pointer"
-                onClick={() => handleImageClick(index)}
-                style={index === 0 ? roundedLeftStyle : roundedRightStyle}
-              >
-                {renderMedia(
-                  attachment,
-                  index === 0 ? roundedLeftStyle : roundedRightStyle,
-                )}
-              </div>
-            ))}
-          </div>
-        ) : attachments.length === 3 ? (
-          <div className="grid aspect-[16/9] w-full grid-cols-2 gap-1">
-            <div
-              className="relative cursor-pointer"
-              onClick={() => handleImageClick(0)}
-              style={roundedLeftStyle}
-            >
-              {renderMedia(attachments[0], roundedLeftStyle)}
-            </div>
-            <div className="grid grid-rows-2 gap-1">
-              {attachments.slice(1, 3).map((attachment, index) => (
-                <div
-                  key={attachment.id}
-                  className="relative aspect-[2/1] cursor-pointer"
-                  onClick={() => handleImageClick(index + 1)}
-                  style={
-                    index === 0 ? roundedTopRightStyle : roundedBottomRightStyle
-                  }
-                >
-                  {renderMedia(
-                    attachment,
-                    index === 0
-                      ? roundedTopRightStyle
-                      : roundedBottomRightStyle,
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="grid aspect-[2/1.2] w-full grid-cols-2 gap-1">
-            {attachments.slice(0, 4).map((attachment, index) => (
-              <div
-                key={attachment.id}
-                className="relative aspect-[1/0.6] cursor-pointer"
-                onClick={() => handleImageClick(index)}
-                style={
-                  index === 0
-                    ? roundedTopLeftStyle
-                    : index === 1
-                      ? roundedTopRightStyle
-                      : index === 2
-                        ? roundedBottomLeftStyle
-                        : roundedBottomRightStyle
-                }
-              >
-                {renderMedia(
-                  attachment,
-                  index === 0
-                    ? roundedTopLeftStyle
-                    : index === 1
-                      ? roundedTopRightStyle
-                      : index === 2
-                        ? roundedBottomLeftStyle
-                        : roundedBottomRightStyle,
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        ))}
       </div>
 
       {showCarousel && (

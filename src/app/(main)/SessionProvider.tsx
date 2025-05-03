@@ -6,6 +6,10 @@ import React, { createContext, useContext } from "react";
 interface SessionContext {
   user: User | null;
   session: Session | null;
+  data?: {
+    user: User | null;
+    session: Session | null;
+  };
 }
 
 const SessionContext = createContext<SessionContext | null>(null);
@@ -14,8 +18,13 @@ export default function SessionProvider({
   children,
   value,
 }: React.PropsWithChildren<{ value: SessionContext }>) {
+  const enhancedValue = {
+    ...value,
+    data: value.data || { user: value.user, session: value.session },
+  };
+  
   return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={enhancedValue}>{children}</SessionContext.Provider>
   );
 }
 

@@ -1,20 +1,40 @@
 import { useToast } from "@/components/ui/use-toast";
 import { useUploadThing } from "@/lib/uploadthing";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface Attachment {
   file: File;
   mediaId?: string;
   isUploading: boolean;
   id?: string;
-  url?: string;
+  url: string;
   type?: string;
 }
 
-export default function useMediaUpload() {
+interface UseMediaUploadProps {
+  initialAttachments?: Array<{ id: string; url: string; type?: string }>;
+}
+
+export default function useMediaUpload({ initialAttachments = [] }: UseMediaUploadProps = {}) {
   const { toast } = useToast();
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+
+  // 초기 첨부파일 설정
+  useEffect(() => {
+    if (initialAttachments.length > 0) {
+      // File 객체가 필요하므로 더미 파일 생성
+      const initialAtts = initialAttachments.map(att => ({
+        file: new File([], 'placeholder.jpg', { type: 'image/jpeg' }),
+        url: att.url,
+        id: att.id,
+        isUploading: false,
+        type: att.type || 'IMAGE',
+      }));
+      
+      setAttachments(initialAtts);
+    }
+  }, [initialAttachments]);
 
   const [uploadProgress, setUploadProgress] = useState<number>();
 
@@ -33,7 +53,11 @@ export default function useMediaUpload() {
 
       setAttachments((prev) => [
         ...prev,
-        ...renamedFiles.map((file) => ({ file, isUploading: true })),
+        ...renamedFiles.map((file) => ({ 
+          file, 
+          isUploading: true, 
+          url: URL.createObjectURL(file) 
+        })),
       ]);
 
       return renamedFiles;
@@ -49,6 +73,7 @@ export default function useMediaUpload() {
           return {
             ...a,
             mediaId: uploadResult.serverData.mediaId,
+            url: uploadResult.url,
             isUploading: false,
           };
         }),
@@ -62,6 +87,14 @@ export default function useMediaUpload() {
       });
     },
   });
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (files.length) {
+      handleStartUpload(files);
+      e.target.value = '';
+    }
+  }
 
   function handleStartUpload(files: File[]) {
     if (isUploading) {
@@ -83,14 +116,11 @@ export default function useMediaUpload() {
     startUpload(files);
   }
 
-  function removeAttachment(id: string) {
-    setAttachments((prev) => {
-      const fileNameMatch = prev.find(a => a.file?.name === id);
-      if (fileNameMatch) {
-        return prev.filter(a => a.file?.name !== id);
-      }
-      
-      return prev.filter(a => a.id !== id);
+  function removeAttachment(idx: number) {
+    setAttachments(prev => {
+      const newAttachments = [...prev];
+      newAttachments.splice(idx, 1);
+      return newAttachments;
     });
   }
 
@@ -101,6 +131,7 @@ export default function useMediaUpload() {
 
   return {
     startUpload: handleStartUpload,
+    handleUpload,
     attachments,
     isUploading,
     uploadProgress,

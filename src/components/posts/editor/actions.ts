@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getPostDataInclude } from "@/lib/types";
 import { createPostSchema, updatePostSchema } from "@/lib/validation";
 import { z } from "zod";
+import { Attachment } from "./useMediaUpload";
 
 const PostSchema = z.object({
   content: z.string().optional(),
@@ -17,34 +18,57 @@ const UpdatePostSchema = z.object({
   mediaIds: z.array(z.string()).default([]),
 });
 
-export async function submitPost(input: {
+type LinkMetadata = {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+};
+
+type SubmitPostInput = {
   content: string;
-  mediaIds: string[];
-  id?: string; // 수정 모드일 때 사용
-}) {
+  attachments?: Attachment[];
+  embeddedLinks?: LinkMetadata[]; // 임베드된 링크 데이터
+  postId?: string; // 수정 모드일 때 사용
+};
+
+export async function submitPost(input: SubmitPostInput) {
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");
 
   // 수정 모드인 경우
-  if (input.id) {
+  if (input.postId) {
     return updatePost({
-      id: input.id,
+      id: input.postId,
       content: input.content,
-      mediaIds: input.mediaIds
+      attachments: input.attachments || [],
+      embeddedLinks: input.embeddedLinks || [],
     });
   }
 
   // 생성 모드
-  const { content, mediaIds } = PostSchema.parse(input);
+  // mediaIds 추출
+  const mediaIds = (input.attachments || [])
+    .map(att => att.mediaId)
+    .filter(id => id !== undefined) as string[];
+
+  // 임베드된 링크 정보가 있으면 컨텐츠에 메타 태그 추가
+  let enrichedContent = input.content || "";
+  
+  // 임베드된 링크 메타데이터를 JSON으로 저장 (표시용으로만 사용, 실제 저장 X)
+  const linkMetaJson = input.embeddedLinks && input.embeddedLinks.length > 0 
+    ? JSON.stringify(input.embeddedLinks) 
+    : "";
 
   const newPost = await prisma.post.create({
     data: {
-      content: content || "",
+      content: enrichedContent,
       userId: user.id,
       attachments: {
         connect: mediaIds.map((id) => ({ id })),
       },
+      // 메타데이터를 별도 필드로 저장하지 않고, 필요한 경우 여기서 추가 필드를 정의할 수 있음
     },
     include: getPostDataInclude(user.id),
   });
@@ -52,16 +76,24 @@ export async function submitPost(input: {
   return newPost;
 }
 
-export async function updatePost(input: {
+type UpdatePostInput = {
   id: string;
   content: string;
-  mediaIds: string[];
-}) {
+  attachments: Attachment[];
+  embeddedLinks?: LinkMetadata[]; // 임베드된 링크 데이터
+};
+
+export async function updatePost(input: UpdatePostInput) {
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");
 
-  const { id, content, mediaIds } = UpdatePostSchema.parse(input);
+  const { id, content, attachments, embeddedLinks } = input;
+
+  // mediaIds 추출
+  const mediaIds = attachments
+    .map(att => att.mediaId)
+    .filter(id => id !== undefined) as string[];
 
   // 게시물 소유권 확인
   const post = await prisma.post.findUnique({
