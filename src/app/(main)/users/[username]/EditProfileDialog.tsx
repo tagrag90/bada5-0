@@ -76,7 +76,7 @@ export default function EditProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-white p-6" style={{ borderRadius: '1.5rem' }}>
         <DialogHeader>
           <DialogTitle>프로필 수정</DialogTitle>
         </DialogHeader>

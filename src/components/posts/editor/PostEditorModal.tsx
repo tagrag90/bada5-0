@@ -15,7 +15,9 @@ export default function PostEditorModal({ isOpen, onClose, post }: PostEditorMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="p-0 md:p-0 gap-0 max-w-2xl bg-[#fff] rounded-t-[24px] md:rounded-[24px]">
+      <DialogContent 
+        className="p-0 md:p-0 gap-0 max-w-2xl bg-[#fff] rounded-t-[24px] md:rounded-[24px]" 
+      >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b p-4 bg-white">
           <button onClick={onClose} className="text-sm font-medium">
             취소

@@ -10,10 +10,7 @@
 
 @layer base {
   :root {
-    /* --background: 0 0% 97%; */
-    --background:216, 20%, 95%;
-  
-    /* --background: 216 2.04% 96.08%; */
+    --background: #444444; /* #ffffff 에서 #444444 로 변경 */
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -45,7 +42,9 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* @apply bg-background text-foreground; */ /* 기존 Tailwind 적용 방식 주석 처리 */
+    background-color: var(--background); /* 표준 CSS로 배경색 설정 */
+    @apply text-foreground; /* 전경색은 Tailwind 유지 */
   }
 }
 

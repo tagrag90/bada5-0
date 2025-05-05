@@ -33,8 +33,8 @@ export default function CropImageDialog({
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={!!src} onOpenChange={() => onClose()}>
+      <DialogContent className="bg-white p-6" style={{ borderRadius: '1.5rem' }}>
         <DialogHeader>
           <DialogTitle>이미지 자르기</DialogTitle>
         </DialogHeader>

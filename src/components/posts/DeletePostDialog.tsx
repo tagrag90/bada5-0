@@ -32,7 +32,7 @@ export default function DeletePostDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-white p-6" style={{ borderRadius: '1.5rem' }}>
         <DialogHeader>
           <DialogTitle>게시물을 삭제하시겠습니까?</DialogTitle>
           <DialogDescription>
