@@ -106,9 +106,9 @@ export default function ForYouFeed() {
       {!isLoggedIn && posts.length > 0 && (
         <div className="mb-4 rounded-lg border bg-muted/20 p-4">
           <p className="text-center text-sm font-medium">
-            로그인하면 더 많은 기능을 이용할 수 있습니다.
+            Log in to access more features.
             <Link href="/login" className="ml-1 text-primary hover:underline">
-              로그인하기
+              Log in
             </Link>
           </p>
         </div>

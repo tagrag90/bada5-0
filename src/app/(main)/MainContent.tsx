@@ -39,7 +39,7 @@ export default function MainContent() {
               <UserButton className="border-2 border-stone-700" />
             ) : (
               <Link href="/login">
-                <Button variant="outline" className="font-semibold">
+                <Button variant="outline" className="font-semibold text-white">
                   로그인
                 </Button>
               </Link>
@@ -100,7 +100,7 @@ export default function MainContent() {
           <div className="flex w-12 flex-shrink-0 justify-start">
             <Link href="/login">
               {!isLoggedIn && (
-                <Button variant="outline" size="sm" className="font-semibold">
+                <Button variant="outline" size="sm" className="font-semibold text-white">
                   로그인
                 </Button>
               )}

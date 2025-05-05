@@ -46,6 +46,7 @@ export default function EditProfileDialog({
   const form = useForm<UpdateUserProfileValues>({
     resolver: zodResolver(updateUserProfileSchema),
     defaultValues: {
+      username: user.username,
       displayName: user.displayName,
       bio: user.bio || "",
     },
@@ -60,9 +61,17 @@ export default function EditProfileDialog({
       ? new File([croppedAvatar], `avatar_${user.id}.webp`)
       : undefined;
 
+    // Prepare values for mutation
+    let mutationValues: Partial<UpdateUserProfileValues> = { ...values }; 
+
+    // If username hasn't changed, remove it from the values to avoid unnecessary checks/updates
+    if (mutationValues.username === user.username) {
+      delete mutationValues.username;
+    }
+
     mutation.mutate(
       {
-        values,
+        values: mutationValues, // Pass the potentially modified values
         avatar: newAvatarFile,
       },
       {
@@ -93,6 +102,19 @@ export default function EditProfileDialog({
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username (@아이디)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="displayName"

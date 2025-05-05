@@ -8,13 +8,14 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { updateUserProfile } from "./actions";
 
 export function useUpdateProfileMutation() {
   const { toast } = useToast();
 
   const router = useRouter();
+  const params = useParams<{ username: string }>();
 
   const queryClient = useQueryClient();
 
@@ -25,7 +26,7 @@ export function useUpdateProfileMutation() {
       values,
       avatar,
     }: {
-      values: UpdateUserProfileValues;
+      values: Partial<UpdateUserProfileValues>;
       avatar?: File;
     }) => {
       return Promise.all([
@@ -69,11 +70,17 @@ export function useUpdateProfileMutation() {
         }
       );
 
-      router.refresh();
-
-      toast({
-        description: "Profile updated",
-      });
+      if (params.username && updatedUser.username !== params.username) {
+        router.push(`/users/${updatedUser.username}`);
+        toast({
+          description: `Username 변경 완료: @${updatedUser.username}. 페이지를 이동합니다.`,
+        });
+      } else {
+        router.refresh();
+        toast({
+          description: "프로필이 업데이트되었습니다.",
+        });
+      }
     },
     onError(error) {
       console.error(error);
