@@ -53,7 +53,6 @@ export const fileRouter = {
       return {};
     })
     .onUploadComplete(async ({ file }) => {
-      try {
       const media = await prisma.media.create({
         data: {
           url: file.url.replace(
@@ -65,10 +64,6 @@ export const fileRouter = {
       });
 
       return { mediaId: media.id };
-      } catch (error) {
-        console.error("Failed to create media record in DB:", error);
-        throw new UploadThingError("Database operation failed after upload.");
-      }
     }),
 } satisfies FileRouter;
 

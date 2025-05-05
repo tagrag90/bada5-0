@@ -57,7 +57,7 @@ export default function UserPosts({ userId }: UserPostsProps) {
 
   return (
     <InfiniteScrollContainer
-      className="rounded-t-[24px] bg-white drop-shadow"
+      className="rounded-t-[24px] bg-white p-4 drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (

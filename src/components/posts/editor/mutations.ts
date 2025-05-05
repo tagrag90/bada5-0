@@ -17,8 +17,6 @@ export function useSubmitPostMutation() {
   const mutation = useMutation({
     mutationFn: submitPost,
     onSuccess: async (newPost) => {
-      // console.log("newPost received in onSuccess:", JSON.stringify(newPost, null, 2));
-
       await queryClient.cancelQueries({
         queryKey: ["post-feed"],
         exact: false

@@ -57,7 +57,7 @@ export default function FollowingFeed() {
 
   return (
     <InfiniteScrollContainer
-      className="rounded-[24px] bg-white drop-shadow overflow-hidden"
+      className="rounded-t-[24px] bg-white p-4 drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
       {posts.map((post) => (
