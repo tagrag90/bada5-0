@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <main className="flex h-screen items-center justify-center p-5">
       <div className="flex h-full max-h-[40rem] w-full max-w-[32rem] overflow-hidden rounded-2xl">
-        <div className="w-full space-y-1 overflow-y-auto p-10">
+        <div className="w-full space-y-1 overflow-y-auto p-8 bg-white rounded-2xl">
           <Image
             src={Logo} //
             alt="logo"
@@ -21,11 +21,10 @@ export default function Page() {
             height={45}
             className="mb-5 rounded-full md:block"
           />
-          <h1 className="text-2xl font-bold">환영해요!</h1>
-          <h1 className="text-2xl font-bold">빠르게 계정을 만들어 볼까요?</h1>
+          <h1 className="text-2xl font-bold">Welcome!</h1>
+          <h1 className="text-2xl font-bold">Let&apos;s create your account quickly.</h1>
           <p className="py-5 text-base text-[#8b95a1]">
-            아래 3개의 칸만 채우면
-            <br /> Bada의 모든것을 바로 즐길 수 있어요!!
+            Just fill in the 3 fields below<br /> to enjoy everything Bada has to offer!
           </p>
           <div className="space-y-5">
             {/* <GoogleSignInButton />
@@ -36,7 +35,7 @@ export default function Page() {
             </div> */}
             <SignUpForm />
             <Link href="/login" className="block text-center hover:underline">
-              우리가... 처음이 아닌가요?
+              Already have an account?
             </Link>
           </div>
         </div>

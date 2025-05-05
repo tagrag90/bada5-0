@@ -48,10 +48,10 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-md font-semibold text-black">
-                이메일
+                Email
               </FormLabel>
               <FormControl>
-                <Input placeholder="이메일 주소를 입력하세요" {...field} />
+                <Input placeholder="Enter your email address" {...field} className="border-2 border-black py-3" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,17 +63,17 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-md font-semibold text-black">
-                비밀번호
+                Password
               </FormLabel>
               <FormControl>
-                <PasswordInput placeholder="비밀번호" {...field} />
+                <PasswordInput placeholder="Password" {...field} className="border-2 border-black py-3" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <LoadingButton loading={isPending} type="submit" className="w-full">
-          로그인
+          Log In
         </LoadingButton>
       </form>
     </Form>

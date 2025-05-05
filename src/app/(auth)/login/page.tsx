@@ -22,7 +22,7 @@ export default function Page() {
         />
       </div> */}
       <div className="flex w-full items-center justify-center p-5">
-        <div className="w-full max-w-md space-y-1 overflow-y-auto p-10">
+        <div className="w-full max-w-md space-y-1 overflow-y-auto p-8 bg-white rounded-2xl">
           <Image
             src={Logo} //
             alt="logo"
@@ -30,8 +30,8 @@ export default function Page() {
             height={45}
             className="mb-5 rounded-full"
           />
-          <h1 className="text-2xl font-bold">돌아오셨군요~</h1>
-          <h1 className="text-2xl font-bold">로그인 하고 Bada를 둘러보세요.</h1>
+          <h1 className="text-2xl font-bold">Welcome back!</h1>
+          <h1 className="text-2xl font-bold">Log in to explore Bada.</h1>
           <div className="space-y-5">
             {/* <GoogleSignInButton />
             <div className="flex items-center gap-3">
@@ -41,7 +41,7 @@ export default function Page() {
             </div> */}
             <LoginForm />
             <Link href="/signup" className="block text-center hover:underline">
-              엇, Bada가 처음이신가요?
+              Don&apos;t have an account?
             </Link>
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-muted" />
