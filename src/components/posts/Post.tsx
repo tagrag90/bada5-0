@@ -58,33 +58,31 @@ export default function Post({ post }: PostProps) {
   };
 
   const renderContent = () => {
-    const convertedContent = convertContent(post.content);
+    const content = post.content || ""; // Ensure content is a string
 
-    // YouTube 임베드가 있는 경우
-    if (post.content?.includes("youtube.com")) {
+    // Check if content already contains an iframe tag
+    if (content.includes('<iframe')) {
+      // If it already has an iframe, render it directly
       return (
-        <div className="post-content sm:mb-15 -mt-1">
-          <div className="relative mb-4 w-full overflow-hidden rounded-lg pt-[75%] sm:pt-[72%]">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: convertedContent,
-              }}
-              className="absolute inset-0 [&>iframe]:rounded-lg"
-            />
-          </div>
+        <div className="post-content">
+          <div
+            className="whitespace-pre-line break-words text-base"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        </div>
+      );
+    } else {
+      // If it's plain text or other content, try to convert potential YouTube links
+      const convertedContent = convertContent(content);
+      return (
+        <div className="post-content">
+          <div
+            className="whitespace-pre-line break-words text-base"
+            dangerouslySetInnerHTML={{ __html: convertedContent }}
+          />
         </div>
       );
     }
-
-    // 일반 텍스트인 경우
-    return (
-      <div className="post-content">
-        <div
-          className="whitespace-pre-line break-words text-base"
-          dangerouslySetInnerHTML={{ __html: convertContent(post.content) }}
-        />
-      </div>
-    );
   };
 
   const handleEditClick = () => {

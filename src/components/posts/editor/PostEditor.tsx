@@ -151,13 +151,27 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
 
   function handleYoutubeEmbed() {
     const url = prompt("YouTube URL을 입력하세요");
+
     if (url && editor) {
-      editor.commands.insertContent({
-        type: "youtube",
-        attrs: {
-          src: url,
-        },
-      });
+      // Regex to extract video ID from various YouTube URL formats
+      const youtubeRegex =
+        /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/;
+      const match = url.match(youtubeRegex);
+
+      if (match && match[1]) {
+        const videoId = match[1];
+        const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+
+        editor.commands.insertContent({
+          type: "youtube",
+          attrs: {
+            src: embedUrl, // Use the converted embed URL
+          },
+        });
+      } else {
+        // Handle invalid YouTube URL case (optional: show an alert)
+        alert("유효하지 않은 YouTube URL입니다.");
+      }
     }
   }
 
