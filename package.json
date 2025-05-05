@@ -31,6 +31,7 @@
     "@uploadthing/react": "^7.1.5",
     "@vercel/analytics": "^1.4.1",
     "arctic": "^1.9.1",
+    "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
