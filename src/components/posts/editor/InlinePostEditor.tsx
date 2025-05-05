@@ -40,7 +40,7 @@ export default function InlinePostEditor() {
           onClick={handleOpenEditor}
           className="flex-1 cursor-pointer rounded-full bg-gray-100 px-4 py-3 text-gray-500 hover:bg-gray-200"
         >
-          What's on your mind, {user.displayName || user.username}?
+          What&apos;s on your mind, {user.displayName || user.username}?
         </div>
       </div>
       

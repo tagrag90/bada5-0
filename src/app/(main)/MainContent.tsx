@@ -11,7 +11,6 @@ import ForYouFeed from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import UserButton from "@/components/UserButton";
 import Image from "next/image";
 import Link from "next/link";
