@@ -1,7 +1,6 @@
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
 import FollowerCount from "@/components/FollowerCount";
-import Linkify from "@/components/Linkify";
 import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
 import prisma from "@/lib/prisma";
@@ -115,11 +114,9 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
             <h1 className="text-2xl font-bold">{user.displayName}</h1>
             <div className="text-muted-foreground">@{user.username}</div>
             {user.bio && (
-              <Linkify>
-                <div className="overflow-hidden whitespace-pre-line break-words">
-                  {user.bio}
-                </div>
-              </Linkify>
+              <div className="overflow-hidden whitespace-pre-line break-words">
+                {user.bio}
+              </div>
             )}
           </div>
           <UserAvatar

@@ -10,19 +10,30 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import HardBreak from "@tiptap/extension-hard-break";
 import {
-  ImageIcon,
+  Bold,
+  CodeIcon,
+  HighlighterIcon,
   ImagesIcon,
+  ItalicIcon,
   Loader2,
+  StrikethroughIcon,
+  UnderlineIcon,
   X,
   YoutubeIcon as _YoutubeIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { ClipboardEvent, useEffect, useRef, useState, MouseEvent } from "react";
+import { ClipboardEvent, useEffect, useRef, useState } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
 import { YouTube } from "./extensions/YouTube";
 import { PostData } from "@/lib/types";
+import Italic from "@tiptap/extension-italic";
+import Underline from "@tiptap/extension-underline";
+import Strike from "@tiptap/extension-strike";
+import Code from "@tiptap/extension-code";
+import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
 
 interface PostEditorProps {
   onSuccess?: () => void;
@@ -35,7 +46,7 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
   const isEditMode = !!post;
 
   const mutation = useSubmitPostMutation();
-  
+
   const {
     startUpload,
     attachments,
@@ -47,30 +58,26 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
   } = useMediaUpload();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // 이미지 버튼 클릭 핸들러
+
   const handleImageClick = () => {
     fileInputRef.current?.click();
   };
 
-  const input = useRef("");
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // 기본 하드 브레이크 비활성화 (Shift+Enter)
         hardBreak: false,
       }),
-      // 커스텀 하드 브레이크 설정 (Enter로 줄바꿈)
       HardBreak.extend({
         addKeyboardShortcuts() {
           return {
-            'Enter': () => this.editor.commands.setHardBreak(),
-          }
+            Enter: () => this.editor.commands.setHardBreak(),
+          };
         },
       }).configure({
         keepMarks: true,
         HTMLAttributes: {
-          class: 'my-custom-break',
+          class: "my-custom-break",
         },
       }),
       Placeholder.configure({
@@ -81,6 +88,15 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
         HTMLAttributes: {
           class: "w-full aspect-video rounded-xl overflow-hidden",
         },
+      }),
+      Italic,
+      Underline,
+      Strike,
+      Code,
+      Highlight.configure({ multicolor: true }),
+      Link.configure({
+        autolink: true,
+        openOnClick: false,
       }),
     ],
     content: "",
@@ -93,15 +109,17 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     if (isEditMode && post && editor) {
       editor.commands.setContent(post.content || "");
       setEditorInput(post.content || "");
-      
+
       if (post.attachments && post.attachments.length > 0) {
-        const initialAttachments: Attachment[] = post.attachments.map((attachment) => ({
-          id: attachment.id,
-          url: attachment.url,
-          type: attachment.type,
-          file: new File([], "placeholder.jpg"),
-          isUploading: false,
-        }));
+        const initialAttachments: Attachment[] = post.attachments.map(
+          (attachment) => ({
+            id: attachment.id,
+            url: attachment.url,
+            type: attachment.type,
+            file: new File([], "placeholder.jpg"),
+            isUploading: false,
+          }),
+        );
         setAttachments(initialAttachments);
       }
     }
@@ -113,12 +131,16 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
         await mutation.mutateAsync({
           id: post.id,
           content: editorInput,
-          mediaIds: attachments.map((a) => a.id || a.mediaId).filter(Boolean) as string[],
+          mediaIds: attachments
+            .map((a) => a.id || a.mediaId)
+            .filter(Boolean) as string[],
         });
       } else {
         await mutation.mutateAsync({
           content: editorInput,
-          mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
+          mediaIds: attachments
+            .map((a) => a.mediaId)
+            .filter(Boolean) as string[],
         });
       }
 
@@ -153,7 +175,6 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     const url = prompt("YouTube URL을 입력하세요");
 
     if (url && editor) {
-      // Regex to extract video ID from various YouTube URL formats
       const youtubeRegex =
         /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/;
       const match = url.match(youtubeRegex);
@@ -165,21 +186,27 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
         editor.commands.insertContent({
           type: "youtube",
           attrs: {
-            src: embedUrl, // Use the converted embed URL
+            src: embedUrl,
           },
         });
       } else {
-        // Handle invalid YouTube URL case (optional: show an alert)
         alert("유효하지 않은 YouTube URL입니다.");
       }
     }
+  }
+
+  const editorActiveStyle =
+    "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground";
+
+  if (!editor || !user) {
+    return null;
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col">
         <div className="flex gap-3">
-          <UserAvatar avatarUrl={user?.avatarUrl} size={40} />
+          <UserAvatar avatarUrl={user.avatarUrl} size={40} />
           <div className="flex-1">
             <EditorContent
               editor={editor}
@@ -188,7 +215,6 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           </div>
         </div>
 
-        {/* 첨부파일 미리보기 */}
         {attachments.length > 0 && (
           <div className="grid grid-cols-2 gap-2 mt-2">
             {attachments.map((attachment) => (
@@ -196,7 +222,8 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
                 key={attachment.id || attachment.file.name}
                 className="relative rounded-lg overflow-hidden aspect-square"
               >
-                {(attachment.type === "IMAGE" || attachment.file.type.startsWith("image")) ? (
+                {attachment.type === "IMAGE" ||
+                attachment.file.type.startsWith("image") ? (
                   <Image
                     src={attachment.url || URL.createObjectURL(attachment.file)}
                     alt="Attachment"
@@ -213,7 +240,9 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
                 <button
                   type="button"
                   className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
-                  onClick={() => removeAttachment(attachment.id || attachment.file.name)}
+                  onClick={() =>
+                    removeAttachment(attachment.id || attachment.file.name)
+                  }
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -222,7 +251,6 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           </div>
         )}
 
-        {/* 업로드 진행 상태 */}
         {isUploading && (
           <div className="mt-2">
             <div className="flex items-center gap-2">
@@ -240,7 +268,97 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           </div>
         )}
 
-        {/* 숨겨진 파일 입력 */}
+        <div className="mt-2 flex items-center gap-1 border-y p-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            disabled={!editor.can().chain().focus().toggleBold().run()}
+            data-active={editor.isActive("bold")}
+            title="굵게"
+          >
+            <Bold className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            disabled={!editor.can().chain().focus().toggleItalic().run()}
+            data-active={editor.isActive("italic")}
+            title="기울임꼴"
+          >
+            <ItalicIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            disabled={!editor.can().chain().focus().toggleUnderline().run()}
+            data-active={editor.isActive("underline")}
+            title="밑줄"
+          >
+            <UnderlineIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            disabled={!editor.can().chain().focus().toggleStrike().run()}
+            data-active={editor.isActive("strike")}
+            title="취소선"
+          >
+            <StrikethroughIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            disabled={!editor.can().chain().focus().toggleCode().run()}
+            data-active={editor.isActive("code")}
+            title="코드"
+          >
+            <CodeIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn("rounded-full", editorActiveStyle)}
+            onClick={() =>
+              editor.chain().focus().toggleHighlight({ color: "#B2FF85" }).run()
+            }
+            disabled={!editor.can().chain().focus().toggleHighlight().run()}
+            data-active={editor.isActive("highlight", { color: "#B2FF85" })}
+            title="하이라이트"
+          >
+            <HighlighterIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={handleImageClick}
+            disabled={isUploading}
+            title="미디어"
+          >
+            <ImagesIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={handleYoutubeEmbed}
+            disabled={!editor}
+            title="유튜브"
+          >
+            <_YoutubeIcon className="h-5 w-5" />
+          </Button>
+        </div>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -248,69 +366,22 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           accept="image/*,video/*"
           multiple
           onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            if (files.length) {
-              startUpload(files);
-              e.target.value = '';
+            if (e.target.files) {
+              startUpload(Array.from(e.target.files));
+              e.target.value = "";
             }
           }}
         />
-      </div>
-
-      {/* 하단 버튼 영역 - 트위터 스타일 */}
-      <div className="flex items-center justify-between border-t pt-3">
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "rounded-full h-10 w-10 text-primary hover:bg-primary/10",
-              editor?.isActive('bold') && "bg-primary/10"
-            )}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            title="볼드체"
-            disabled={!editor?.can().chain().focus().toggleBold().run()}
+        <div className="mt-2 flex justify-end">
+          <LoadingButton
+            onClick={handleSubmit}
+            loading={mutation.isPending}
+            disabled={!editorInput.trim() && attachments.length === 0}
+            className="min-w-20"
           >
-            <span className="font-bold text-lg" style={{ fontFamily: "'MaruBuri', serif" }}>B</span>
-          </Button>
-
-          {/* 세로 구분선 */}
-          <div className="h-6 w-px bg-gray-300" />
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-9 w-9 text-primary hover:bg-primary/10"
-            onClick={handleImageClick}
-            title="이미지 추가"
-          >
-            <ImageIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-9 w-9 text-primary hover:bg-primary/10"
-            onClick={handleYoutubeEmbed}
-            title="YouTube 영상 추가"
-          >
-            <_YoutubeIcon className="h-5 w-5" />
-          </Button>
+            {isEditMode ? "수정" : "게시"}
+          </LoadingButton>
         </div>
-        
-        <LoadingButton
-          loading={mutation.isPending}
-          disabled={
-            (!editorInput || editorInput === "<p></p>") &&
-            attachments.length === 0
-          }
-          onClick={handleSubmit}
-          className="rounded-full px-4"
-        >
-          {isEditMode ? "수정하기" : "게시하기"}
-        </LoadingButton>
       </div>
     </div>
   );

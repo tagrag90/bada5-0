@@ -1,7 +1,6 @@
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
 import Comments from "@/components/comments/Comments";
-import Linkify from "@/components/Linkify";
 import Post from "@/components/posts/Post";
 import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
@@ -119,11 +118,9 @@ async function UserInfoSidebar({ user }: UserInfoSidebarProps) {
           </div>
         </Link>
       </UserTooltip>
-      <Linkify>
-        <div className="line-clamp-6 whitespace-pre-line break-words text-muted-foreground">
-          {user.bio}
-        </div>
-      </Linkify>
+      <div className="line-clamp-6 whitespace-pre-line break-words text-muted-foreground">
+        {user.bio}
+      </div>
       {user.id !== loggedInUser.id && (
         <FollowButton
           userId={user.id}

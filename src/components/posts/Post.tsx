@@ -17,7 +17,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Comments from "../comments/Comments";
-import Linkify from "../Linkify";
 import UserAvatar from "../UserAvatar";
 import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
@@ -25,8 +24,8 @@ import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import PostEditorModal from "@/components/posts/editor/PostEditorModal";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import ReactHtmlParser from "react-html-parser";
+import PostEditorModal from "./editor/PostEditorModal";
 
 interface PostProps {
   post: PostData;
@@ -37,9 +36,9 @@ export default function Post({ post }: PostProps) {
   const isLoggedIn = !!user;
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const pathname = usePathname();
 
   // 상세 페이지인지 확인
@@ -54,43 +53,6 @@ export default function Post({ post }: PostProps) {
         comments: newCount,
       },
     }));
-  };
-
-  const convertContent = (content: string) => {
-    // YouTube 임베드 처리는 여기서만 하고
-    return convertYouTubeLinks(content);
-  };
-
-  const renderContent = () => {
-    const content = post.content || ""; // Ensure content is a string
-
-    // Check if content already contains an iframe tag
-    if (content.includes("<iframe")) {
-      // If it already has an iframe, render it directly
-      return (
-        <div className="post-content">
-          <div
-            className="whitespace-pre-line break-words text-base"
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-        </div>
-      );
-    } else {
-      // If it's plain text or other content, try to convert potential YouTube links
-      const convertedContent = convertContent(content);
-      return (
-        <div className="post-content">
-          <div
-            className="whitespace-pre-line break-words text-base"
-            dangerouslySetInnerHTML={{ __html: convertedContent }}
-          />
-        </div>
-      );
-    }
-  };
-
-  const handleEditClick = () => {
-    setIsEditorOpen(true);
   };
 
   const handleRequireLogin = (action: string) => {
@@ -150,26 +112,22 @@ export default function Post({ post }: PostProps) {
               </span>
             </div>
             {isLoggedIn && post.user.id === user?.id && (
-              <>
-                <PostMoreButton post={post} onEditClick={handleEditClick} />
-                <PostEditorModal
-                  isOpen={isEditorOpen}
-                  onClose={() => setIsEditorOpen(false)}
-                  post={post}
-                />
-              </>
+              <PostMoreButton
+                post={post}
+                onEditClick={() => {
+                  setShowEditModal(true);
+                }}
+              />
             )}
           </div>
-          <Linkify>
-            <div className="break-words text-base">
-              {renderContent()}
-              {!!post.attachments.length && (
-                <div className="mt-3">
-                  <MediaSlider attachments={post.attachments} />
-                </div>
-              )}
+          <div className="post-content break-words text-base">
+            <ContentRenderer content={post.content} />
+          </div>
+          {!!post.attachments.length && (
+            <div className="mt-3">
+              <MediaSlider attachments={post.attachments} />
             </div>
-          </Linkify>
+          )}
           <div className="mt-3 flex items-center space-x-4">
             {isLoggedIn ? (
               <>
@@ -231,8 +189,80 @@ export default function Post({ post }: PostProps) {
           <Comments post={post} />
         </div>
       )}
+      {showEditModal && (
+        <PostEditorModal
+          post={post}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </article>
   );
+}
+
+function ContentRenderer({ content }: { content: string }) {
+  const transform = (node: any) => {
+    if (node.type === "text") {
+      const text = node.data;
+      const hashtagRegex = /(#[a-zA-Z0-9가-힣]+)/g;
+      const parts = text.split(hashtagRegex);
+
+      return parts.map((part: any, index: number) => {
+        if (part.match(hashtagRegex)) {
+          return (
+            <Link
+              key={index}
+              href={`/hashtag/${part.slice(1)}`}
+              className="hashtag"
+            >
+              {part}
+            </Link>
+          );
+        }
+        return part;
+      });
+    }
+
+    if (node.name === "a" && node.attribs.href) {
+      if (!node.attribs.class?.includes("hashtag")) {
+        node.attribs.class = `${node.attribs.class || ""} text-primary hover:underline`;
+      }
+    }
+
+    // 유튜브 임베드 처리
+    if (
+      node.type === "tag" &&
+      node.name === "div" &&
+      node.attribs.class?.includes("youtube-embed")
+    ) {
+      const iframe = node.children.find((child: any) => child.name === "iframe");
+      if (iframe) {
+        return (
+          <div className="youtube-embed w-full">
+            <iframe
+              width="100%"
+              src={iframe.attribs.src}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        );
+      }
+    }
+
+    return undefined; // 기본 변환 사용
+  };
+
+  const options = {
+    decodeEntities: true,
+    transform,
+  };
+
+  // 먼저 YouTube 링크를 HTML 태그로 변환
+  const contentWithYoutubeLinks = convertYouTubeLinks(content);
+
+  return <>{ReactHtmlParser(contentWithYoutubeLinks, options)}</>;
 }
 
 interface MediaSliderProps {

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { PropsWithChildren } from "react";
 import FollowButton from "./FollowButton";
 import FollowerCount from "./FollowerCount";
-import Linkify from "./Linkify";
 import {
   Tooltip,
   TooltipContent,
@@ -55,11 +54,7 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
               </Link>
             </div>
             {user.bio && (
-              <Linkify>
-                <div className="line-clamp-4 whitespace-pre-line">
-                  {user.bio}
-                </div>
-              </Linkify>
+              <div className="line-clamp-4 whitespace-pre-line">{user.bio}</div>
             )}
             <div className="flex gap-4">
               <div className="flex flex-col items-center">
