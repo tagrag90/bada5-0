@@ -17,7 +17,7 @@ export default async function Layout({
         {/* <Navbar /> */}
         <div className="mx-auto flex w-full max-w-7xl grow gap-5 px-0 py-5 md:p-5">
           {isLoggedIn && (
-            <MenuBar className="xl:w-75 sticky top-[5.25rem] hidden h-fit flex-none space-y-3 rounded-2xl px-3 py-5 sm:block lg:px-5 bg-card border" />
+            <MenuBar className="sticky top-[5.25rem] hidden h-fit flex-none space-y-3 rounded-2xl bg-card px-3 py-5 sm:block lg:px-5" />
           )}
           <div className="w-full max-w-5xl">{children}</div>
         </div>

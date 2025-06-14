@@ -11,6 +11,7 @@ import UserAvatar from "./UserAvatar";
 import UserTooltip from "./UserTooltip";
 import Image from "next/image";
 import Logo from "@/assets/logo.png";
+import LatestYoutubeVideo from "./LatestYoutubeVideo";
 
 interface TrendsSidebarProps {
   className?: string;
@@ -46,7 +47,7 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
           </h2>
         </div>
       </div>
-
+      <LatestYoutubeVideo channelId="UC9uSl4n2Zmz__HciYpWyASw" />
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         <WhoToFollow />
         <TrendingTopics />
