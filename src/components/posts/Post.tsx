@@ -4,7 +4,14 @@ import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
 import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
 import { Media } from "@prisma/client";
-import { MessageSquare, MessageCircle, Heart, Bookmark } from "lucide-react";
+import {
+  MessageSquare,
+  MessageCircle,
+  Heart,
+  Bookmark,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -17,11 +24,9 @@ import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
 import { useQueryClient } from "@tanstack/react-query";
-import { MediaCarousel } from "./MediaCarousel";
 import { Button } from "@/components/ui/button";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { useToast } from "@/components/ui/use-toast";
 
 interface PostProps {
   post: PostData;
@@ -31,7 +36,6 @@ export default function Post({ post }: PostProps) {
   const user = useOptionalUser();
   const isLoggedIn = !!user;
   const router = useRouter();
-  const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
@@ -61,7 +65,7 @@ export default function Post({ post }: PostProps) {
     const content = post.content || ""; // Ensure content is a string
 
     // Check if content already contains an iframe tag
-    if (content.includes('<iframe')) {
+    if (content.includes("<iframe")) {
       // If it already has an iframe, render it directly
       return (
         <div className="post-content">
@@ -90,11 +94,7 @@ export default function Post({ post }: PostProps) {
   };
 
   const handleRequireLogin = (action: string) => {
-    toast({
-      title: "로그인이 필요합니다",
-      description: `${action}하려면 로그인이 필요합니다.`,
-      duration: 3000,
-    });
+    alert(`${action}하려면 로그인이 필요합니다.`);
     router.push("/login");
   };
 
@@ -165,7 +165,7 @@ export default function Post({ post }: PostProps) {
               {renderContent()}
               {!!post.attachments.length && (
                 <div className="mt-3">
-                  <MediaPreviews attachments={post.attachments} />
+                  <MediaSlider attachments={post.attachments} />
                 </div>
               )}
             </div>
@@ -235,69 +235,32 @@ export default function Post({ post }: PostProps) {
   );
 }
 
-interface MediaPreviewsProps {
+interface MediaSliderProps {
   attachments: Media[];
 }
 
-function MediaPreviews({ attachments }: MediaPreviewsProps) {
-  const [showCarousel, setShowCarousel] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+function MediaSlider({ attachments }: MediaSliderProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   if (attachments.length === 0) return null;
 
-  const handleImageClick = (index: number) => {
-    setSelectedIndex(index);
-    setShowCarousel(true);
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
   };
 
-  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
-  const roundedStyle = {
-    borderRadius: "16px",
-    WebkitBorderRadius: "16px",
-    overflow: "hidden",
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) =>
+      prev < attachments.length - 1 ? prev + 1 : prev,
+    );
   };
 
-  const roundedLeftStyle = {
-    borderTopLeftRadius: "16px",
-    borderBottomLeftRadius: "16px",
-    WebkitBorderTopLeftRadius: "16px",
-    WebkitBorderBottomLeftRadius: "16px",
-    overflow: "hidden",
+  const handleIndicatorClick = (index: number) => {
+    setCurrentIndex(index);
   };
 
-  const roundedRightStyle = {
-    borderTopRightRadius: "16px",
-    borderBottomRightRadius: "16px",
-    WebkitBorderTopRightRadius: "16px",
-    WebkitBorderBottomRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedTopLeftStyle = {
-    borderTopLeftRadius: "16px",
-    WebkitBorderTopLeftRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedTopRightStyle = {
-    borderTopRightRadius: "16px",
-    WebkitBorderTopRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedBottomLeftStyle = {
-    borderBottomLeftRadius: "16px",
-    WebkitBorderBottomLeftRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const roundedBottomRightStyle = {
-    borderBottomRightRadius: "16px",
-    WebkitBorderBottomRightRadius: "16px",
-    overflow: "hidden",
-  };
-
-  const renderMedia = (attachment: Media, style: any) => {
+  const renderMedia = (attachment: Media) => {
     if (attachment.type === "VIDEO") {
       return (
         <video
@@ -306,7 +269,6 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
           controls
           preload="metadata"
           playsInline
-          style={style}
         />
       );
     }
@@ -317,178 +279,58 @@ function MediaPreviews({ attachments }: MediaPreviewsProps) {
         fill
         className="object-cover"
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        style={style}
       />
     );
   };
 
   return (
-    <>
+    <div className="relative w-full overflow-hidden rounded-xl">
       <div
-        className={cn(
-          "relative w-full overflow-hidden",
-          attachments.length === 1 && "aspect-[16/9]",
-        )}
-        style={roundedStyle}
+        className="flex transition-transform duration-300 ease-in-out"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {attachments.length === 1 ? (
+        {attachments.map((attachment) => (
           <div
-            className="relative h-full w-full cursor-pointer"
-            onClick={() => handleImageClick(0)}
-            style={roundedStyle}
+            key={attachment.id}
+            className="relative aspect-[4/3] w-full flex-shrink-0"
           >
-            {renderMedia(attachments[0], roundedStyle)}
+            {renderMedia(attachment)}
           </div>
-        ) : attachments.length === 2 ? (
-          <div className="grid aspect-[2/1] w-full grid-cols-2 gap-1">
-            {attachments.map((attachment, index) => (
-              <div
-                key={attachment.id}
-                className="relative aspect-square cursor-pointer"
-                onClick={() => handleImageClick(index)}
-                style={index === 0 ? roundedLeftStyle : roundedRightStyle}
-              >
-                {renderMedia(
-                  attachment,
-                  index === 0 ? roundedLeftStyle : roundedRightStyle,
-                )}
-              </div>
-            ))}
-          </div>
-        ) : attachments.length === 3 ? (
-          <div className="grid aspect-[16/9] w-full grid-cols-2 gap-1">
-            <div
-              className="relative cursor-pointer"
-              onClick={() => handleImageClick(0)}
-              style={roundedLeftStyle}
-            >
-              {renderMedia(attachments[0], roundedLeftStyle)}
-            </div>
-            <div className="grid grid-rows-2 gap-1">
-              {attachments.slice(1, 3).map((attachment, index) => (
-                <div
-                  key={attachment.id}
-                  className="relative aspect-[2/1] cursor-pointer"
-                  onClick={() => handleImageClick(index + 1)}
-                  style={
-                    index === 0 ? roundedTopRightStyle : roundedBottomRightStyle
-                  }
-                >
-                  {renderMedia(
-                    attachment,
-                    index === 0
-                      ? roundedTopRightStyle
-                      : roundedBottomRightStyle,
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="grid aspect-[2/1.2] w-full grid-cols-2 gap-1">
-            {attachments.slice(0, 4).map((attachment, index) => (
-              <div
-                key={attachment.id}
-                className="relative aspect-[1/0.6] cursor-pointer"
-                onClick={() => handleImageClick(index)}
-                style={
-                  index === 0
-                    ? roundedTopLeftStyle
-                    : index === 1
-                      ? roundedTopRightStyle
-                      : index === 2
-                        ? roundedBottomLeftStyle
-                        : roundedBottomRightStyle
-                }
-              >
-                {renderMedia(
-                  attachment,
-                  index === 0
-                    ? roundedTopLeftStyle
-                    : index === 1
-                      ? roundedTopRightStyle
-                      : index === 2
-                        ? roundedBottomLeftStyle
-                        : roundedBottomRightStyle,
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        ))}
       </div>
 
-      {showCarousel && (
-        <MediaCarousel
-          media={attachments.map((a) => ({
-            id: a.id,
-            url: a.url,
-            type: a.type,
-          }))}
-          initialIndex={selectedIndex}
-          onClose={() => setShowCarousel(false)}
-        />
+      {currentIndex > 0 && (
+        <button
+          onClick={handlePrev}
+          className="absolute left-2 top-1/2 -translate-y-1/2 transform rounded-full bg-black bg-opacity-50 p-1 text-white hover:bg-opacity-75"
+        >
+          <ChevronLeft size={24} />
+        </button>
       )}
-    </>
-  );
-}
 
-interface MediaPreviewProps {
-  media: Media;
-  attachments: Media[];
-}
-
-function MediaPreview({ media, attachments }: MediaPreviewProps) {
-  const [showCarousel, setShowCarousel] = useState(false);
-
-  // Safari에서 border-radius가 제대로 적용되도록 명시적인 스타일 정의
-  const roundedStyle = {
-    borderRadius: "12px",
-    WebkitBorderRadius: "12px",
-    overflow: "hidden",
-  };
-
-  return (
-    <>
-      <div
-        className="relative aspect-square h-full w-full"
-        onClick={() => setShowCarousel(true)}
-        style={roundedStyle}
-      >
-        {media.type === "VIDEO" ? (
-          <video
-            src={media.url}
-            className="absolute inset-0 h-full w-full cursor-pointer object-cover"
-            controls
-            preload="metadata"
-            playsInline
-            muted
-            style={roundedStyle}
-          />
-        ) : (
-          <div className="absolute inset-0" style={roundedStyle}>
-            <Image
-              src={media.url}
-              alt="Attachment"
-              fill
-              className="cursor-pointer object-cover object-top"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={roundedStyle}
-            />
-          </div>
-        )}
-      </div>
-      {showCarousel && (
-        <MediaCarousel
-          media={attachments.map((a) => ({
-            id: a.id,
-            url: a.url,
-            type: a.type,
-          }))}
-          initialIndex={attachments.findIndex((a) => a.id === media.id)}
-          onClose={() => setShowCarousel(false)}
-        />
+      {currentIndex < attachments.length - 1 && (
+        <button
+          onClick={handleNext}
+          className="absolute right-2 top-1/2 -translate-y-1/2 transform rounded-full bg-black bg-opacity-50 p-1 text-white hover:bg-opacity-75"
+        >
+          <ChevronRight size={24} />
+        </button>
       )}
-    </>
+
+      {attachments.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 transform items-center space-x-2">
+          {attachments.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleIndicatorClick(index)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                currentIndex === index ? "w-5 bg-white" : "w-2.5 bg-gray-500"
+              }`}
+            ></button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -525,4 +367,4 @@ function CommentButton({ commentCount, postId }: CommentButtonProps) {
       </div>
     </Link>
   );
-}
+} 
