@@ -25,7 +25,6 @@ import PostMoreButton from "./PostMoreButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import ReactHtmlParser from "react-html-parser";
-import PostEditorModal from "./editor/PostEditorModal";
 
 interface PostProps {
   post: PostData;
@@ -36,7 +35,6 @@ export default function Post({ post }: PostProps) {
   const isLoggedIn = !!user;
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
   const pathname = usePathname();
@@ -115,7 +113,7 @@ export default function Post({ post }: PostProps) {
               <PostMoreButton
                 post={post}
                 onEditClick={() => {
-                  setShowEditModal(true);
+                  alert("수정 기능이 현재 비활성화되어 있습니다.");
                 }}
               />
             )}
@@ -188,13 +186,6 @@ export default function Post({ post }: PostProps) {
         <div className="mt-3">
           <Comments post={post} />
         </div>
-      )}
-      {showEditModal && (
-        <PostEditorModal
-          post={post}
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-        />
       )}
     </article>
   );

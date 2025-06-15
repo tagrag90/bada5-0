@@ -6,6 +6,7 @@ import NotificationsButton from "./NotificationsButton";
 import UserAvatar from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
 import { MenuBarClient } from "./MenuBarClient";
+import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
 interface MenuBarProps {
   className?: string;

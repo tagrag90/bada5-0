@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
+import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
 export default async function Layout({
   children,
@@ -17,7 +18,10 @@ export default async function Layout({
         {/* <Navbar /> */}
         <div className="mx-auto flex w-full max-w-7xl grow gap-5 px-0 py-5 md:p-5">
           {isLoggedIn && (
-            <MenuBar className="sticky top-[5.25rem] hidden h-fit flex-none space-y-3 rounded-2xl bg-card px-3 py-5 sm:block lg:px-5" />
+            <div className="sticky top-[5.25rem] hidden h-fit flex-none flex-col space-y-3 sm:block">
+              <MenuBar className="rounded-2xl bg-card px-3 py-5 lg:px-5" />
+              <ThemeSwitcher />
+            </div>
           )}
           <div className="w-full max-w-5xl">{children}</div>
         </div>
