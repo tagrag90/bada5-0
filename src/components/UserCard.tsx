@@ -10,19 +10,26 @@ import FollowingCount from "./FollowingCount";
 import UserPostsSlider from "./UserPostsSlider";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
 import { formatNumber } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface UserCardProps {
   user: UserData;
 }
 
 export default function UserCard({ user }: UserCardProps) {
+  const [isClient, setIsClient] = useState(false);
   const loggedInUser = useOptionalUser();
-  const isLoggedIn = !!loggedInUser;
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const isLoggedIn = isClient && !!loggedInUser;
 
   const followerInfo = {
     followers: user._count.followers,
-    isFollowedByUser: isLoggedIn
-      ? !!user.followers.some(({ followerId }) => followerId === loggedInUser?.id)
+    isFollowedByUser: isLoggedIn && loggedInUser
+      ? !!user.followers.some(({ followerId }) => followerId === loggedInUser.id)
       : false,
   };
 
@@ -83,11 +90,11 @@ export default function UserCard({ user }: UserCardProps) {
           </div>
         </div>
 
-        {/* 최근 게시물 슬라이더 */}
-        <UserPostsSlider userId={user.id} />
+        {/* 최근 게시물 슬라이더 - 클라이언트에서만 렌더링 */}
+        {isClient && <UserPostsSlider userId={user.id} />}
 
         <div className="flex items-center justify-end">
-          {isLoggedIn && loggedInUser?.id !== user.id && (
+          {isClient && isLoggedIn && loggedInUser?.id !== user.id && (
             <FollowButton
               userId={user.id}
               initialState={followerInfo}

@@ -1,14 +1,12 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { getPostDataInclude, PostsPage } from "@/lib/types";
+import { getPostDataInclude, PostsPage, getUserDataSelect } from "@/lib/types";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
     const q = req.nextUrl.searchParams.get("q") || "";
     const cursor = req.nextUrl.searchParams.get("cursor") || undefined;
-
-    const searchQuery = q.split(" ").join(" & ");
 
     const pageSize = 10;
 
@@ -18,25 +16,38 @@ export async function GET(req: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // 검색어가 비어있으면 빈 결과 반환
+    if (!q.trim()) {
+      return Response.json({
+        posts: [],
+        users: [],
+        nextCursor: null,
+      });
+    }
+
+    // 게시물 검색
     const posts = await prisma.post.findMany({
       where: {
         OR: [
           {
             content: {
-              search: searchQuery,
+              contains: q,
+              mode: "insensitive",
             },
           },
           {
             user: {
               displayName: {
-                search: searchQuery,
+                contains: q,
+                mode: "insensitive",
               },
             },
           },
           {
             user: {
               username: {
-                search: searchQuery,
+                contains: q,
+                mode: "insensitive",
               },
             },
           },
@@ -48,10 +59,33 @@ export async function GET(req: NextRequest) {
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    // 사용자 검색 (첫 페이지에서만)
+    const users = !cursor ? await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            displayName: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+          {
+            username: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      select: getUserDataSelect(user.id),
+      take: 5, // 사용자는 최대 5개만 표시
+    }) : [];
+
     const nextCursor = posts.length > pageSize ? posts[pageSize].id : null;
 
-    const data: PostsPage = {
+    const data = {
       posts: posts.slice(0, pageSize),
+      users: users,
       nextCursor,
     };
 

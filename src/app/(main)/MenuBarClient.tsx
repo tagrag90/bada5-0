@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Bookmark, Compass, Home, SquarePlus, PenLine } from "lucide-react";
+import { Bookmark, Compass, Home, SquarePlus, PenLine, Search } from "lucide-react";
 import NotificationsButton from "./NotificationsButton";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
 import { useState } from "react";
@@ -32,6 +32,7 @@ export function MenuBarClient({
   return (
     <>
       <div className={className}>
+        {/* 1. 홈 */}
         <Button
           variant="ghost"
           className="flex items-center justify-start gap-3"
@@ -43,10 +44,19 @@ export function MenuBarClient({
           </Link>
         </Button>
 
-        <NotificationsButton
-          initialState={{ unreadCount: unreadNotificationsCount }}
-        />
-        {/* <MessagesButton initialState={{ unreadCount: unreadMessagesCount }} /> */}
+        {/* 2. 검색 */}
+        <Button
+          variant="ghost"
+          className="flex items-center justify-start gap-3"
+          title="Search"
+          asChild
+        >
+          <Link href="/search">
+            <Search className="w-6 h-6" />
+          </Link>
+        </Button>
+
+        {/* 3. 글 작성 */}
         <Button
           variant="ghost"
           className="flex items-center justify-start gap-3"
@@ -55,6 +65,29 @@ export function MenuBarClient({
         >
           <Image src={writeIcon} alt="Write" width={24} height={24} />
           {/* <PenLine className="w-7 h-7" /> */}
+        </Button>
+
+        {/* 4. 노티피케이션 */}
+        <NotificationsButton
+          initialState={{ unreadCount: unreadNotificationsCount }}
+        />
+        {/* <MessagesButton initialState={{ unreadCount: unreadMessagesCount }} /> */}
+
+        {/* 5. 유저 */}
+        <Button
+          variant="ghost"
+          className="flex items-center justify-start gap-3"
+          title="Profile"
+          asChild
+        >
+          <Link href={`/users/${user?.username}`}>
+            <UserAvatar
+              avatarUrl={user?.avatarUrl}
+              userId={user?.id}
+              size={29}
+              className="border-2 border-stone-700 items-center justify-center"
+            />
+          </Link>
         </Button>
 
         {/* <Button
@@ -77,24 +110,8 @@ export function MenuBarClient({
           <Compass />
         </Link>
       </Button> */}
-        {/* Write button */}
-        <Button
-          variant="ghost"
-          className="flex items-center justify-start gap-3"
-          title="Profile"
-          asChild
-        >
-          <Link href={`/users/${user?.username}`}>
-            <UserAvatar
-              avatarUrl={user?.avatarUrl}
-              userId={user?.id}
-              size={29}
-              className="border-2 border-stone-700 items-center justify-center"
-            />
-          </Link>
-        </Button>
 
-        <Button
+        {/* <Button
           variant="ghost"
           className="flex items-center justify-start gap-3"
           title="Studio"
@@ -103,7 +120,7 @@ export function MenuBarClient({
           <Link href="/explore">
             <Image src={studioIcon} alt="Studio" width={29} height={29} />
           </Link>
-        </Button>
+        </Button> */}
       </div>
 
       <PostEditorModal
