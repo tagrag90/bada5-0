@@ -52,6 +52,7 @@ export default function UserCard({ user }: UserCardProps) {
             <Link href={`/users/${user.username}`}>
               <UserAvatar
                 avatarUrl={user.avatarUrl}
+                userId={user.id}
                 size={80}
                 className="rounded-full flex-none"
               />

@@ -188,7 +188,7 @@ export default function InstagramStylePost({ post }: InstagramStylePostProps) {
             href={`/users/${post.user.username}`}
             className="mr-3 flex-shrink-0"
           >
-            <UserAvatar avatarUrl={post.user.avatarUrl} size={32} />
+                          <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={32} />
           </Link>
         </UserTooltip>
         <div className="min-w-0 flex-grow">

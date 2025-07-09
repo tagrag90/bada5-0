@@ -36,7 +36,7 @@ export default function UserButton({ className }: UserButtonProps) {
             className,
           )}
         >
-          <UserAvatar avatarUrl={user.avatarUrl} size={40} />
+          <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

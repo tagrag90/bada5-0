@@ -18,7 +18,7 @@ export default function Comment({ comment }: CommentProps) {
 
   return (
     <div className="group/comment ml-5 mr-5 flex items-start gap-3 pt-3">
-      <UserAvatar avatarUrl={comment.user.avatarUrl} size={24} />
+      <UserAvatar avatarUrl={comment.user.avatarUrl} userId={comment.user.id} size={24} />
       <div className="flex-1">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">{comment.user.username}</span>

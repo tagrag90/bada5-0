@@ -30,6 +30,18 @@ export function formatNumber(n: number): string {
   }).format(n);
 }
 
+export function getDefaultAvatar(userId: string): string {
+  // 사용자 ID를 기반으로 일관된 해시 값 생성
+  const hash = userId.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  // 7개의 이미지 중 하나를 선택 (1~7)
+  const imageIndex = Math.abs(hash) % 7 + 1;
+  return `/avatars/default-${imageIndex}.png`;
+}
+
 export function slugify(input: string): string {
   return input
     .toLowerCase()

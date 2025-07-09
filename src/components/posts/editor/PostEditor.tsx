@@ -206,7 +206,7 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col">
         <div className="flex gap-3">
-          <UserAvatar avatarUrl={user.avatarUrl} size={40} />
+          <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
           <div className="flex-1">
             <EditorContent
               editor={editor}

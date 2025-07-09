@@ -74,7 +74,7 @@ export default function Post({ post }: PostProps) {
               href={`/users/${post.user.username}`}
               className="mr-3 flex-shrink-0"
             >
-              <UserAvatar avatarUrl={post.user.avatarUrl} size={40} />
+              <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
             </Link>
           </UserTooltip>
         ) : (
@@ -82,7 +82,7 @@ export default function Post({ post }: PostProps) {
             className="mr-3 flex-shrink-0 cursor-pointer"
             onClick={() => handleRequireLogin("프로필 보기")}
           >
-            <UserAvatar avatarUrl={post.user.avatarUrl} size={40} />
+            <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
           </div>
         )}
         <div className="min-w-0 flex-grow">

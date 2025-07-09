@@ -77,14 +77,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themeScript = `
-    (function() {
-      const theme = localStorage.getItem('theme-color');
-      if (theme) {
-        document.documentElement.style.setProperty('--background', theme);
-      }
-    })()
-  `;
+  // const themeScript = `
+  //   (function() {
+  //     const theme = localStorage.getItem('theme-color');
+  //     if (theme) {
+  //       document.documentElement.style.setProperty('--background', theme);
+  //     }
+  //   })()
+  // `;
 
   return (
     <html lang="ko">
@@ -96,7 +96,7 @@ export default function RootLayout({
       <body
         className={`${pretendard.variable} ${geistSans.variable} ${geistMono.variable}`}
       >
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* 테마 스크립트 비활성화 */}
         <NextSSRPlugin routerConfig={extractRouterConfig(fileRouter)} />
         <ReactQueryProvider>
           {children}

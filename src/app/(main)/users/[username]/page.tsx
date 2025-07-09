@@ -121,6 +121,7 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
           <UserAvatar
             avatarUrl={user.avatarUrl}
+            userId={user.id}
             size={80}
             className="rounded-full"
           />

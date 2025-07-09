@@ -35,7 +35,7 @@ export default function InlinePostEditor() {
   return (
     <>
       <div className="flex items-start gap-3">
-        <UserAvatar avatarUrl={user.avatarUrl} size={40} />
+        <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
         <div 
           onClick={handleOpenEditor}
           className="flex-1 cursor-pointer rounded-full bg-gray-100 px-4 py-3 text-gray-500 hover:bg-gray-200"

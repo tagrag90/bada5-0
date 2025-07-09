@@ -87,6 +87,7 @@ export function MenuBarClient({
           <Link href={`/users/${user?.username}`}>
             <UserAvatar
               avatarUrl={user?.avatarUrl}
+              userId={user?.id}
               size={29}
               className="border-2 border-stone-700 items-center justify-center"
             />

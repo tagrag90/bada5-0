@@ -2,7 +2,7 @@ import { validateRequest } from "@/auth";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
-import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
+// import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
 export default async function Layout({
   children,
@@ -20,7 +20,7 @@ export default async function Layout({
           {isLoggedIn && (
             <div className="sticky top-[5.25rem] hidden h-fit flex-none flex-col space-y-3 sm:block">
               <MenuBar className="rounded-2xl bg-card px-3 py-5 lg:px-5" />
-              <ThemeSwitcher />
+              {/* 테마 스위처 비활성화 */}
             </div>
           )}
           <div className="w-full max-w-5xl">{children}</div>
