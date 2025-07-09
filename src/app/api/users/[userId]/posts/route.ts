@@ -9,8 +9,11 @@ export async function GET(
 ) {
   try {
     const cursor = req.nextUrl.searchParams.get("cursor") || undefined;
+    const limit = req.nextUrl.searchParams.get("limit");
 
-    const pageSize = 10;
+    // limit 파라미터가 있으면 미리보기 모드 (페이지네이션 없음)
+    const isPreviewMode = !!limit;
+    const pageSize = isPreviewMode ? parseInt(limit) : 10;
 
     const { user } = await validateRequest();
 
@@ -22,10 +25,16 @@ export async function GET(
       where: { userId },
       include: getPostDataInclude(user.id),
       orderBy: { createdAt: "desc" },
-      take: pageSize + 1,
+      take: isPreviewMode ? pageSize : pageSize + 1,
       cursor: cursor ? { id: cursor } : undefined,
     });
 
+    if (isPreviewMode) {
+      // 미리보기 모드: 단순히 posts만 반환
+      return Response.json({ posts });
+    }
+
+    // 기존 페이지네이션 모드
     const nextCursor = posts.length > pageSize ? posts[pageSize].id : null;
 
     const data: PostsPage = {

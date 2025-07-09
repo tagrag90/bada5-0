@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tabsvertical";
 import ForYouFeed from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
+import UsersFeed from "./UsersFeed";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import UserButton from "@/components/UserButton";
@@ -24,12 +25,12 @@ export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const user = useOptionalUser();
   const isLoggedIn = !!user;
-  const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following'>('for-you');
+  const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('users');
 
   return (
     <main className="flex-1">
       {/* 데스크톱 버전 */}
-      <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
+      <TabsVertical defaultValue="users" className="hidden w-full md:block">
         <div
           className="flex w-full justify-between px-4 py-4"
           style={{ borderRadius: '1.5rem', backgroundColor: '#000000' }}
@@ -58,36 +59,42 @@ export default function MainContent() {
           </div>
           <div className="flex w-1/3 items-center justify-end">
             <TabsVerticalList>
-              <TabsVerticalTrigger value="for-you" className="text-right">
-                추천
+              <TabsVerticalTrigger value="users" className="text-right">
+                사용자
               </TabsVerticalTrigger>
               {isLoggedIn && (
                 <TabsVerticalTrigger value="following" className="text-right">
                   팔로잉
                 </TabsVerticalTrigger>
               )}
+              {/* <TabsVerticalTrigger value="for-you" className="text-right">
+                추천
+              </TabsVerticalTrigger> */}
             </TabsVerticalList>
           </div>
         </div>
 
         {/* 인라인 에디터 - 데스크톱 */}
-        {isLoggedIn && (
+        {/* {isLoggedIn && (
           <div className="mt-4">
             <div className="rounded-[24px] bg-white p-4 drop-shadow overflow-hidden">
               <InlinePostEditor />
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="mt-4">
-          <TabsVerticalContent value="for-you">
-            <ForYouFeed />
+          <TabsVerticalContent value="users">
+            <UsersFeed />
           </TabsVerticalContent>
           {isLoggedIn && (
             <TabsVerticalContent value="following">
               <FollowingFeed />
             </TabsVerticalContent>
           )}
+          {/* <TabsVerticalContent value="for-you">
+            <ForYouFeed />
+          </TabsVerticalContent> */}
         </div>
       </TabsVertical>
 
@@ -119,15 +126,15 @@ export default function MainContent() {
 
         <div className="mt-4 flex justify-center gap-4">
           <button
-            onClick={() => setActiveMobileTab('for-you')}
+            onClick={() => setActiveMobileTab('users')}
             className={cn(
               "text-sm font-medium transition-colors",
-              activeMobileTab === 'for-you'
+              activeMobileTab === 'users'
                 ? 'text-white font-semibold'
                 : 'text-gray-400 hover:text-gray-300'
             )}
           >
-            추천
+            사용자
           </button>
           {isLoggedIn && (
             <button
@@ -142,20 +149,32 @@ export default function MainContent() {
               팔로잉
             </button>
           )}
+          {/* <button
+            onClick={() => setActiveMobileTab('for-you')}
+            className={cn(
+              "text-sm font-medium transition-colors",
+              activeMobileTab === 'for-you'
+                ? 'text-white font-semibold'
+                : 'text-gray-400 hover:text-gray-300'
+            )}
+          >
+            추천
+          </button> */}
         </div>
       </div>
 
-      {isLoggedIn && (
+      {/* {isLoggedIn && (
         <div className="mb-4 md:hidden">
           <div className="rounded-[24px] bg-white p-4 drop-shadow overflow-hidden">
             <InlinePostEditor />
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="w-full md:hidden">
-        {activeMobileTab === 'for-you' && <ForYouFeed />}
+        {activeMobileTab === 'users' && <UsersFeed />}
         {isLoggedIn && activeMobileTab === 'following' && <FollowingFeed />}
+        {/* {activeMobileTab === 'for-you' && <ForYouFeed />} */}
       </div>
     </main>
   );
