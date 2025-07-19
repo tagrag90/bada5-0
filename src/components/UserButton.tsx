@@ -4,7 +4,7 @@ import { logout } from "@/app/(auth)/actions";
 import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOutIcon, UserIcon } from "lucide-react";
+import { LogOutIcon, UserIcon, Settings } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -48,6 +48,17 @@ export default function UserButton({ className }: UserButtonProps) {
             Profile
           </DropdownMenuItem>
         </Link>
+        {user.username === 'qkrwnstj0401' && (
+          <>
+            <DropdownMenuSeparator />
+            <Link href="/admin">
+              <DropdownMenuItem>
+                <Settings className="mr-2 size-4" />
+                Admin
+              </DropdownMenuItem>
+            </Link>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {

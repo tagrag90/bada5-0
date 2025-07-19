@@ -20,6 +20,7 @@ import MainLogoBlack from "@/assets/logobalck.png";
 import { useOptionalUser } from "./SessionProvider";
 import InlinePostEditor from "@/components/posts/editor/InlinePostEditor";
 import { cn } from "@/lib/utils";
+import NonLoggedInContent from "@/components/NonLoggedInContent";
 
 export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -84,17 +85,21 @@ export default function MainContent() {
         )} */}
 
         <div className="mt-4">
-          <TabsVerticalContent value="users">
-            <UsersFeed />
-          </TabsVerticalContent>
-          {isLoggedIn && (
-            <TabsVerticalContent value="following">
-              <FollowingFeed />
-            </TabsVerticalContent>
+          {!isLoggedIn ? (
+            <NonLoggedInContent />
+          ) : (
+            <>
+              <TabsVerticalContent value="users">
+                <UsersFeed />
+              </TabsVerticalContent>
+              <TabsVerticalContent value="following">
+                <FollowingFeed />
+              </TabsVerticalContent>
+              {/* <TabsVerticalContent value="for-you">
+                <ForYouFeed />
+              </TabsVerticalContent> */}
+            </>
           )}
-          {/* <TabsVerticalContent value="for-you">
-            <ForYouFeed />
-          </TabsVerticalContent> */}
         </div>
       </TabsVertical>
 
@@ -172,9 +177,15 @@ export default function MainContent() {
       )} */}
 
       <div className="w-full md:hidden">
-        {activeMobileTab === 'users' && <UsersFeed />}
-        {isLoggedIn && activeMobileTab === 'following' && <FollowingFeed />}
-        {/* {activeMobileTab === 'for-you' && <ForYouFeed />} */}
+        {!isLoggedIn ? (
+          <NonLoggedInContent />
+        ) : (
+          <>
+            {activeMobileTab === 'users' && <UsersFeed />}
+            {activeMobileTab === 'following' && <FollowingFeed />}
+            {/* {activeMobileTab === 'for-you' && <ForYouFeed />} */}
+          </>
+        )}
       </div>
     </main>
   );
