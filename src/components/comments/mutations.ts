@@ -1,4 +1,5 @@
 import { CommentsPage } from "@/lib/types";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 import {
   InfiniteData,
   QueryKey,
@@ -55,7 +56,7 @@ export function useSubmitCommentMutation(postId: string) {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "댓글 작성에 실패했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'comment'),
       });
     },
   });
@@ -98,7 +99,7 @@ export function useDeleteCommentMutation() {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "댓글 삭제에 실패했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'comment'),
       });
     },
   });

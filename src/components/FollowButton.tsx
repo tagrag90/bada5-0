@@ -6,6 +6,7 @@ import { FollowerInfo } from "@/lib/types";
 import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 
 interface FollowButtonProps {
   userId: string;
@@ -48,7 +49,7 @@ export default function FollowButton({
       console.error(error);
       toast({
         variant: "destructive",
-        description: "문제가 발생했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'follow'),
       });
     },
   });

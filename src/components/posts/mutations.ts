@@ -1,4 +1,5 @@
 import { PostsPage } from "@/lib/types";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 import {
   InfiniteData,
   QueryFilters,
@@ -51,8 +52,8 @@ export function useDeletePostMutation() {
     },
     onError: (error) => {
       toast({
-        title: "포스트 삭제 중 오류가 발생했습니다.",
-        description: error.message,
+        title: "게시물을 삭제하지 못했어요",
+        description: getUserFriendlyMessage(error.message, 'post'),
         variant: "destructive",
       });
     },

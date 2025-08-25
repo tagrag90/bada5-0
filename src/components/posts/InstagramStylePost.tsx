@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn, formatRelativeDate } from "@/lib/utils";
+import { cn, formatRelativeDate, getCompressedImageUrl } from "@/lib/utils";
 import UserAvatar from "@/components/UserAvatar";
 import UserTooltip from "@/components/UserTooltip";
 import { ChevronLeft, ChevronRight, Heart, MessageCircle, Repeat2, Share } from "lucide-react";
@@ -223,7 +223,7 @@ export default function InstagramStylePost({ post }: InstagramStylePostProps) {
         >
           {/* 현재 이미지 */}
           <Image
-            src={post.attachments[currentImageIndex].url}
+            src={getCompressedImageUrl(post.attachments[currentImageIndex].url, 80, 1000)}
             alt=""
             fill
             className={cn(

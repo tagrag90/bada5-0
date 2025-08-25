@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { Flashlight, Heart, Zap } from "lucide-react";
 import { useToast } from "../ui/use-toast";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 
 interface LikeButtonProps {
   postId: string;
@@ -53,7 +54,7 @@ export default function LikeButton({ postId, initialState }: LikeButtonProps) {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "문제가 발생했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'like'),
       });
     },
   });

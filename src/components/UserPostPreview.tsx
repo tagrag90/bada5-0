@@ -2,7 +2,7 @@
 
 import { PostData } from "@/lib/types";
 import Link from "next/link";
-import { cn, formatRelativeDate } from "@/lib/utils";
+import { cn, formatRelativeDate, getCompressedImageUrl } from "@/lib/utils";
 import UserAvatar from "./UserAvatar";
 import UserTooltip from "./UserTooltip";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
@@ -232,6 +232,8 @@ function MediaSlider({ attachments }: MediaSliderProps) {
     setCurrentIndex(index);
   };
 
+
+
   const renderMedia = (attachment: any) => {
     if (attachment.type === "VIDEO") {
       return (
@@ -243,9 +245,13 @@ function MediaSlider({ attachments }: MediaSliderProps) {
         />
       );
     }
+    
+    // 프리뷰에서는 더 작은 압축본 사용 (품질 70%, 최대 600px)
+    const previewUrl = getCompressedImageUrl(attachment.url, 70, 600);
+    
     return (
       <img
-        src={attachment.url}
+        src={previewUrl}
         alt=""
         className="w-full h-full object-cover"
       />

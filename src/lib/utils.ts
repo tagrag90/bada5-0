@@ -49,6 +49,26 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
+// 이미지 URL 압축 함수 (UploadThing 전용)
+export function getCompressedImageUrl(url: string, quality: number = 75, width?: number): string {
+  if (!url.includes('utfs.io') && !url.includes('ufs.sh')) return url;
+  
+  const params = new URLSearchParams();
+  params.append('q', quality.toString());
+  if (width) params.append('w', width.toString());
+  
+  return `${url}?${params.toString()}`;
+}
+
+// 파일 크기 포맷팅 함수
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 export function convertYouTubeLinks(content: string): string {
   if (content.includes("youtube.com/embed")) {
     return content; // 이미 임베드된 경우 그대로 반환

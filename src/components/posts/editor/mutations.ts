@@ -1,5 +1,6 @@
 import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 import { PostsPage } from "@/lib/types";
 import {
   InfiniteData,
@@ -69,7 +70,7 @@ export function useSubmitPostMutation() {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "게시물 작성에 실패했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'post'),
       });
     },
   });
@@ -116,7 +117,7 @@ export function useUpdatePostMutation() {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "게시물 수정에 실패했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'post'),
       });
     },
   });

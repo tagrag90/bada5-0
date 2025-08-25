@@ -1,8 +1,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Eye } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, getCompressedImageUrl } from "@/lib/utils";
 
 interface MediaCarouselProps {
   media: { id: string; url: string; type: "IMAGE" | "VIDEO" }[];
@@ -16,6 +16,7 @@ export function MediaCarousel({
   onClose,
 }: MediaCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [showOriginal, setShowOriginal] = useState(false);
 
   const showNext = () => {
     setCurrentIndex((prev) => (prev + 1) % media.length);
@@ -31,6 +32,8 @@ export function MediaCarousel({
     WebkitBorderRadius: '8px',
     overflow: 'hidden'
   };
+
+
 
   const renderMedia = (item: (typeof media)[0]) => {
     if (item.type === "VIDEO") {
@@ -51,10 +54,14 @@ export function MediaCarousel({
         </div>
       );
     }
+
+    // 이미지의 경우 원본/압축본 선택
+    const displayUrl = showOriginal ? item.url : getCompressedImageUrl(item.url, 85, 1200);
+
     return (
       <div className="relative h-full w-full" style={roundedStyle}>
         <Image
-          src={item.url}
+          src={displayUrl}
           alt="Carousel media"
           fill
           className="object-contain"
@@ -62,6 +69,18 @@ export function MediaCarousel({
           priority
           style={roundedStyle}
         />
+        
+        {/* 원본 보기 버튼 */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowOriginal(!showOriginal);
+          }}
+          className="absolute top-4 right-12 flex items-center gap-2 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-black/80 transition-colors"
+        >
+          <Eye className="h-4 w-4" />
+          {showOriginal ? "압축본" : "원본 보기"}
+        </button>
       </div>
     );
   };

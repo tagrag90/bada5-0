@@ -1,4 +1,5 @@
 import { useToast } from "@/components/ui/use-toast";
+import { getUserFriendlyMessage } from "@/lib/error-messages";
 import { PostsPage } from "@/lib/types";
 import { useUploadThing } from "@/lib/uploadthing";
 import { UpdateUserProfileValues } from "@/lib/validation";
@@ -86,7 +87,7 @@ export function useUpdateProfileMutation() {
       console.error(error);
       toast({
         variant: "destructive",
-        description: "프로필 업데이트에 실패했습니다. 다시 시도해 주세요.",
+        description: getUserFriendlyMessage(error.message, 'user'),
       });
     },
   });

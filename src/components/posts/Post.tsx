@@ -2,7 +2,7 @@
 
 import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { PostData } from "@/lib/types";
-import { cn, formatRelativeDate, convertYouTubeLinks } from "@/lib/utils";
+import { cn, formatRelativeDate, convertYouTubeLinks, getCompressedImageUrl } from "@/lib/utils";
 import { Media } from "@prisma/client";
 import {
   MessageSquare,
@@ -281,6 +281,8 @@ function MediaSlider({ attachments }: MediaSliderProps) {
     setCurrentIndex(index);
   };
 
+
+
   const renderMedia = (attachment: Media) => {
     if (attachment.type === "VIDEO") {
       return (
@@ -293,9 +295,13 @@ function MediaSlider({ attachments }: MediaSliderProps) {
         />
       );
     }
+    
+    // 피드에서는 압축본 사용 (품질 75%, 최대 800px)
+    const feedUrl = getCompressedImageUrl(attachment.url, 75, 800);
+    
     return (
       <Image
-        src={attachment.url}
+        src={feedUrl}
         alt=""
         fill
         className="object-cover"
