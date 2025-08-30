@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
+
 // import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
 export default async function Layout({

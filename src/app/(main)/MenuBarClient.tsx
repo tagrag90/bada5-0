@@ -14,6 +14,7 @@ import { useSession } from "@/app/(main)/SessionProvider";
 import homeIcon from "@/assets/feed.png";
 import writeIcon from "@/assets/write.png";
 import MessagesButton from "./MessagesButton";
+import AIToggleButton from "@/components/ai/AIToggleButton";
 
 interface MenuBarClientProps {
   className?: string;
@@ -73,7 +74,10 @@ export function MenuBarClient({
         />
         {/* <MessagesButton initialState={{ unreadCount: unreadMessagesCount }} /> */}
 
-        {/* 5. 유저 */}
+        {/* 5. AI Assistant */}
+        <AIToggleButton />
+
+        {/* 6. 유저 */}
         <Button
           variant="ghost"
           className="flex items-center justify-start gap-3"

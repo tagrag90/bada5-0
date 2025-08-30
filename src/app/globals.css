@@ -46,6 +46,45 @@
     background-color: var(--background); /* 표준 CSS로 배경색 설정 */
     @apply text-foreground; /* 전경색은 Tailwind 유지 */
   }
+
+  /* 페이지별 배경색 클래스 */
+  .page-bg-white {
+    background-color: #ffffff !important;
+  }
+
+  .page-bg-light-gray {
+    background-color: #f8f9fa !important;
+  }
+
+  .page-bg-dark {
+    background-color: #1a1a1a !important;
+    color: #ffffff;
+  }
+
+  .page-bg-blue {
+    background-color: #f0f8ff !important;
+  }
+
+  .page-bg-cream {
+    background-color: #faf7f2 !important;
+  }
+
+  /* 개인정보처리방침 페이지 전용 스타일 */
+  .privacy-page-container {
+    background-color: #ffffff !important;
+    min-height: 100vh !important;
+  }
+
+  .privacy-page-container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ffffff;
+    z-index: -1;
+  }
 }
 
 .str-chat {
