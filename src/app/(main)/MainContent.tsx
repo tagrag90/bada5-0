@@ -26,12 +26,12 @@ export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const user = useOptionalUser();
   const isLoggedIn = !!user;
-  const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('users');
+  const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('for-you');
 
   return (
     <main className="flex-1">
       {/* 데스크톱 버전 */}
-      <TabsVertical defaultValue="users" className="hidden w-full md:block">
+      <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
         <div
           className="flex w-full justify-between px-4 py-4"
           style={{ borderRadius: '1.5rem', backgroundColor: '#000000' }}
@@ -60,16 +60,16 @@ export default function MainContent() {
           </div>
           <div className="flex w-1/3 items-center justify-end">
             <TabsVerticalList>
-              <TabsVerticalTrigger value="users" className="text-right">
-                사용자
+              <TabsVerticalTrigger value="for-you" className="text-right">
+                전체
               </TabsVerticalTrigger>
               {isLoggedIn && (
                 <TabsVerticalTrigger value="following" className="text-right">
                   팔로잉
                 </TabsVerticalTrigger>
               )}
-              {/* <TabsVerticalTrigger value="for-you" className="text-right">
-                추천
+              {/* <TabsVerticalTrigger value="users" className="text-right">
+                사용자
               </TabsVerticalTrigger> */}
             </TabsVerticalList>
           </div>
@@ -89,14 +89,14 @@ export default function MainContent() {
             <NonLoggedInContent />
           ) : (
             <>
-              <TabsVerticalContent value="users">
-                <UsersFeed />
+              <TabsVerticalContent value="for-you">
+                <ForYouFeed />
               </TabsVerticalContent>
               <TabsVerticalContent value="following">
                 <FollowingFeed />
               </TabsVerticalContent>
-              {/* <TabsVerticalContent value="for-you">
-                <ForYouFeed />
+              {/* <TabsVerticalContent value="users">
+                <UsersFeed />
               </TabsVerticalContent> */}
             </>
           )}
@@ -131,15 +131,15 @@ export default function MainContent() {
 
         <div className="mt-4 flex justify-center gap-4">
           <button
-            onClick={() => setActiveMobileTab('users')}
+            onClick={() => setActiveMobileTab('for-you')}
             className={cn(
               "text-sm font-medium transition-colors",
-              activeMobileTab === 'users'
+              activeMobileTab === 'for-you'
                 ? 'text-white font-semibold'
                 : 'text-gray-400 hover:text-gray-300'
             )}
           >
-            사용자
+            전체
           </button>
           {isLoggedIn && (
             <button
@@ -155,15 +155,15 @@ export default function MainContent() {
             </button>
           )}
           {/* <button
-            onClick={() => setActiveMobileTab('for-you')}
+            onClick={() => setActiveMobileTab('users')}
             className={cn(
               "text-sm font-medium transition-colors",
-              activeMobileTab === 'for-you'
+              activeMobileTab === 'users'
                 ? 'text-white font-semibold'
                 : 'text-gray-400 hover:text-gray-300'
             )}
           >
-            추천
+            사용자
           </button> */}
         </div>
       </div>
@@ -181,9 +181,9 @@ export default function MainContent() {
           <NonLoggedInContent />
         ) : (
           <>
-            {activeMobileTab === 'users' && <UsersFeed />}
+            {activeMobileTab === 'for-you' && <ForYouFeed />}
             {activeMobileTab === 'following' && <FollowingFeed />}
-            {/* {activeMobileTab === 'for-you' && <ForYouFeed />} */}
+            {/* {activeMobileTab === 'users' && <UsersFeed />} */}
           </>
         )}
       </div>
