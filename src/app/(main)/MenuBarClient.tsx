@@ -74,8 +74,10 @@ export function MenuBarClient({
         />
         {/* <MessagesButton initialState={{ unreadCount: unreadMessagesCount }} /> */}
 
-        {/* 5. AI Assistant */}
-        <AIToggleButton />
+        {/* 5. AI Assistant - 데스크톱에서만 표시 */}
+        <div className="hidden sm:block">
+          <AIToggleButton />
+        </div>
 
         {/* 6. 유저 */}
         <Button
