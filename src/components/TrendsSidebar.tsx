@@ -51,7 +51,7 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
       {/* <LatestYoutubeVideo channelId="UC9uSl4n2Zmz__HciYpWyASw" /> */}
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         <WhoToFollow />
-        <TrendingTopics />
+        <TrendingTopicsWithBrand />
       </Suspense>
     </div>
   );
@@ -113,100 +113,64 @@ async function WhoToFollow() {
   );
 }
 
-const getTrendingTopics = unstable_cache(
-  async () => {
-    const result = await prisma.$queryRaw<{ hashtag: string; count: bigint }[]>`
-            SELECT LOWER(unnest(regexp_matches(content, '#[[:alnum:]_]+', 'g'))) AS hashtag, COUNT(*) AS count
-            FROM posts
-            GROUP BY (hashtag)
-            ORDER BY count DESC, hashtag ASC
-            LIMIT 5
-        `;
+import TrendingTopics from "./TrendingTopics";
 
-    return result.map((row) => ({
-      hashtag: row.hashtag,
-      count: Number(row.count),
-    }));
-  },
-  ["trending_topics"],
-  {
-    revalidate: 3 * 60 * 60,
-  },
-);
-
-async function TrendingTopics() {
-  const trendingTopics = await getTrendingTopics();
-
+async function TrendingTopicsWithBrand() {
   return (
-    <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <div className="text-xl font-bold">요즘 이런게 유행이래요</div>
-      {trendingTopics.map(({ hashtag, count }) => {
-        const title = hashtag.split("#")[1];
-
-        return (
-          <Link key={title} href={`/hashtag/${title}`} className="block">
-            <p
-              className="line-clamp-1 break-all font-semibold hover:underline"
-              title={hashtag}
-            >
-              {hashtag}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {formatNumber(count)} {count === 1 ? "post" : "posts"}
-            </p>
-          </Link>
-        );
-      })}
-
+    <>
+      <TrendingTopics />
+      
       {/* 브랜드 사이드바 */}
-      <BrandSidebar />
+      <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
+        <BrandSidebar />
 
-      <div className="flex flex-col gap-6">
-        {/* <div className="flex w-full justify-end">
-          <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
-            <div className="text-right">대표자:박준서</div>
-            <div className="text-right">사업자등록번호:602-13-77154</div>
-          </div>
-        </div> */}
-        <div className="flex w-full justify-end">
-          <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
-            <div className="text-right">
-              Email : teambada1206@gmail.com(only)
+        <div className="flex flex-col gap-6">
+          {/* <div className="flex w-full justify-end">
+            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+              <div className="text-right">대표자:박준서</div>
+              <div className="text-right">사업자등록번호:602-13-77154</div>
             </div>
-            <div className="text-right">서비스이용약관</div>
-            <Link href="/privacy">
-              <div className="text-right hover:text-foreground transition-colors cursor-pointer">개인정보처리방침</div>
-            </Link>
+          </div> */}
+          <div className="flex w-full justify-end">
+            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+              <div className="text-right">
+                Email : teambada1206@gmail.com(only)
+              </div>
+              <div className="text-right">서비스이용약관</div>
+              <Link href="/privacy">
+                <div className="text-right hover:text-foreground transition-colors cursor-pointer">개인정보처리방침</div>
+              </Link>
+            </div>
           </div>
-        </div>
-        <div className="flex w-full justify-end">
-          <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
-            <Link
-              href="https://www.vessel.today"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className="text-right">Vessel</div>
-            </Link>
+          <div className="flex w-full justify-end">
+            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+              <Link
+                href="https://www.vessel.today"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="text-right">Vessel</div>
+              </Link>
 
-            <Link
-              href="https://www.instagram.com/team_masanbaseball/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className="text-right">Baseball playlist</div>
-            </Link>
-            <Link
-              href="https://profuse-soil-41e.notion.site/GUEMSoNG-Digital-Magazine-1788bfe8131a80ecb20ed23cd21f2fdf?pvs=4"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className="text-right">Magazine 굄성;</div>
-            </Link>
+              <Link
+                href="https://www.instagram.com/team_masanbaseball/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="text-right">Baseball playlist</div>
+              </Link>
+              <Link
+                href="https://profuse-soil-41e.notion.site/GUEMSoNG-Digital-Magazine-1788bfe8131a80ecb20ed23cd21f2fdf?pvs=4"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="text-right">Magazine 굄성;</div>
+              </Link>
 
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

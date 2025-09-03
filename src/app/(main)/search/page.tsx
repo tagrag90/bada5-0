@@ -1,6 +1,9 @@
 import TrendsSidebar from "@/components/TrendsSidebar";
+import TrendingTopics from "@/components/TrendingTopics";
 import SearchField from "@/components/SearchField";
 import { Metadata } from "next";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import SearchResults from "./SearchResults";
 
 interface PageProps {
@@ -39,12 +42,21 @@ export default function Page({ searchParams: { q } }: PageProps) {
             </div>
           )}
           
-          {/* 검색어 없을 때 안내 */}
+          {/* 모바일 트렌드 섹션 - 검색어가 없을 때만 표시 */}
           {!q && (
-            <div className="border-t border-border pt-6 text-center">
-              <p className="text-muted-foreground">
-                검색어를 입력해주세요.
-              </p>
+            <div className="border-t border-border pt-6">
+              <div className="text-center mb-6">
+                <p className="text-muted-foreground">
+                  검색어를 입력해주세요.
+                </p>
+              </div>
+              
+              {/* 모바일에서만 보이는 트렌드 */}
+              <div className="block md:hidden">
+                <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
+                  <TrendingTopics className="mt-6" />
+                </Suspense>
+              </div>
             </div>
           )}
         </div>

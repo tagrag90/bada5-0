@@ -53,7 +53,7 @@ export function MenuBarClient({
           asChild
         >
           <Link href="/search">
-            <Search className="w-6 h-6" />
+            <Search className="h-6 w-6" />
           </Link>
         </Button>
 
@@ -88,7 +88,7 @@ export function MenuBarClient({
             <UserAvatar
               avatarUrl={user?.avatarUrl}
               userId={user?.id}
-              size={29}
+              size={24}
               className="border-2 border-stone-700 items-center justify-center"
             />
           </Link>
