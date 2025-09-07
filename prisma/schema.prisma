@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch"]
@@ -11,30 +5,32 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model User {
-  id                    String         @id
-  username              String         @unique
+  id                    String          @id
+  username              String          @unique
   displayName           String
-  email                 String?        @unique
+  email                 String?         @unique
   passwordHash          String?
-  googleId              String?        @unique
+  googleId              String?         @unique
   avatarUrl             String?
   bio                   String?
-  sessions              Session[]
-  posts                 Post[]
-  following             Follow[]       @relation("Following")
-  followers             Follow[]       @relation("Followers")
-  likes                 Like[]
+  createdAt             DateTime        @default(now())
+  board_members         board_members[]
+  boards                boards[]
   bookmarks             Bookmark[]
+  cards                 cards[]
   comments              Comment[]
-  receivedNotifications Notification[] @relation("Recipient")
-  issuedNotifications   Notification[] @relation("Issuer")
-
-  createdAt DateTime @default(now())
+  following             Follow[]        @relation("Following")
+  followers             Follow[]        @relation("Followers")
+  likes                 Like[]
+  issuedNotifications   Notification[]  @relation("Issuer")
+  receivedNotifications Notification[]  @relation("Recipient")
+  posts                 Post[]
+  sessions              Session[]
 
   @@map("users")
 }
@@ -50,8 +46,8 @@ model Session {
 
 model Follow {
   followerId  String
-  follower    User   @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
   followingId String
+  follower    User   @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
   following   User   @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
@@ -60,68 +56,60 @@ model Follow {
 
 model Post {
   id                  String         @id @default(cuid())
+  title               String?
   content             String
   userId              String
-  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  attachments         Media[]
-  likes               Like[]
+  createdAt           DateTime       @default(now())
   bookmarks           Bookmark[]
   comments            Comment[]
+  likes               Like[]
   linkedNotifications Notification[]
-
-  createdAt DateTime @default(now())
+  attachments         Media[]
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("posts")
 }
 
 model Media {
-  id     String    @id @default(cuid())
-  postId String?
-  post   Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
-  type   MediaType
-  url    String
-
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  postId    String?
+  type      MediaType
+  url       String
+  createdAt DateTime  @default(now())
+  post      Post?     @relation(fields: [postId], references: [id])
 
   @@map("post_media")
 }
 
-enum MediaType {
-  IMAGE
-  VIDEO
-}
-
 model Comment {
-  id      String @id @default(cuid())
-  content String
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId  String
-  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  postId    String
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("comments")
 }
 
 model Like {
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   postId String
   post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@map("likes")
 }
 
 model Bookmark {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  postId String
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@map("bookmarks")
@@ -130,21 +118,82 @@ model Bookmark {
 model Notification {
   id          String           @id @default(cuid())
   recipientId String
-  recipient   User             @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
   issuerId    String
-  issuer      User             @relation("Issuer", fields: [issuerId], references: [id], onDelete: Cascade)
   postId      String?
-  post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
   type        NotificationType
   read        Boolean          @default(false)
-
-  createdAt DateTime @default(now())
+  createdAt   DateTime         @default(now())
+  issuer      User             @relation("Issuer", fields: [issuerId], references: [id], onDelete: Cascade)
+  post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model board_members {
+  id       String    @id
+  boardId  String
+  userId   String
+  role     BoardRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+  boards   boards    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  users    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+}
+
+model boards {
+  id            String          @id
+  title         String
+  description   String?
+  ownerId       String
+  isPublic      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  board_members board_members[]
+  users         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  lists         lists[]
+}
+
+model cards {
+  id          String    @id
+  title       String
+  description String?
+  position    Int
+  listId      String
+  assigneeId  String?
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  users       User?     @relation(fields: [assigneeId], references: [id])
+  lists       lists     @relation(fields: [listId], references: [id], onDelete: Cascade)
+}
+
+model lists {
+  id        String   @id
+  title     String
+  position  Int
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  cards     cards[]
+  boards    boards   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
 }
 
 enum NotificationType {
   LIKE
   FOLLOW
   COMMENT
+}
+
+enum BoardRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
 }

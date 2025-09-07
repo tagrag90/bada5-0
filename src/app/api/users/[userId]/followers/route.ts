@@ -82,6 +82,28 @@ export async function POST(
       }),
     ]);
 
+    // 푸시 알림 발송
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'Dive to Bada',
+          body: `${loggedInUser.displayName}님이 회원님을 팔로우했습니다`,
+          userIds: [userId],
+          data: {
+            type: 'follow',
+            followerId: loggedInUser.id
+          }
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to send push notification for follow:', error);
+      // 푸시 알림 실패해도 팔로우 기능은 정상 작동
+    }
+
     return new Response();
   } catch (error) {
     console.error(error);

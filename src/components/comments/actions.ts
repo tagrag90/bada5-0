@@ -41,6 +41,32 @@ export async function submitComment({
       : []),
   ]);
 
+  // 푸시 알림 발송 (자신의 게시물이 아닐 때만)
+  if (post.user.id !== user.id) {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'Dive to Bada',
+          body: `${user.displayName}님이 회원님의 게시물에 댓글을 남겼습니다`,
+          userIds: [post.user.id],
+          data: {
+            type: 'comment',
+            postId: post.id,
+            commentId: newComment.id,
+            issuerId: user.id
+          }
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to send push notification for comment:', error);
+      // 푸시 알림 실패해도 댓글 기능은 정상 작동
+    }
+  }
+
   return newComment;
 }
 
