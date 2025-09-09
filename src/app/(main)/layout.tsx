@@ -26,7 +26,7 @@ export default async function Layout({
               {/* 테마 스위처 비활성화 */}
             </div>
           )}
-          <div className="w-full max-w-5xl">{children}</div>
+          <div className="w-full max-w-5xl mobile-page-container md:pt-0">{children}</div>
         </div>
         {isLoggedIn && (
           <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 mobile-navbar sm:hidden flex-shrink-0" />

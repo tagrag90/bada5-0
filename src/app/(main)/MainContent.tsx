@@ -29,7 +29,7 @@ export default function MainContent() {
   const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('for-you');
 
   return (
-    <main className="flex-1">
+    <main className="flex-1 -mt-4 md:mt-0">
       {/* 데스크톱 버전 */}
       <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
         <div
@@ -105,7 +105,7 @@ export default function MainContent() {
 
       {/* 모바일 버전 */}
       <div
-        className="w-full px-4 pt-8 pb-5 md:hidden"
+        className="w-full px-4 pb-5 md:hidden mobile-header"
         style={{ backgroundColor: '#ffffff' }}
       >
         <div className="flex w-full items-center justify-between">

@@ -47,15 +47,21 @@
   padding-top: env(safe-area-inset-top);
 }
 
-/* 모바일 하단 네비게이션 바 추가 여백 */
+/* 모바일 전역 Safe Area 적용 */
 @media (max-width: 640px) {
+  /* 모바일 하단 네비게이션 바 추가 여백 */
   .mobile-navbar {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
   
-  /* 모바일 상단 네비게이션 바 Safe Area */
-  .mobile-top-navbar {
+  /* 모바일 상단 헤더 전용 Safe Area */
+  .mobile-header {
     padding-top: max(1.25rem, env(safe-area-inset-top));
+  }
+  
+  /* 모바일 페이지 컨테이너 Safe Area */
+  .mobile-page-container {
+    padding-top: max(1rem, env(safe-area-inset-top));
   }
 }
 
