@@ -37,11 +37,13 @@ export default function RefreshIndicator() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+    <div 
+      className="fixed left-0 right-0 z-50 flex justify-center pointer-events-none refresh-indicator-container"
+    >
       <div 
         className={`
           bg-white border border-gray-200 rounded-b-2xl px-6 py-4 shadow-xl
-          transition-all duration-300 ease-out mt-0
+          transition-all duration-300 ease-out
         `}
         style={{
           animation: isRefreshing || showComplete 

@@ -29,7 +29,7 @@ export default function MainContent() {
   const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('for-you');
 
   return (
-    <main className="flex-1 -mt-4 md:mt-0">
+    <main className="flex-1">
       {/* 데스크톱 버전 */}
       <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
         <div
@@ -105,14 +105,14 @@ export default function MainContent() {
 
       {/* 모바일 버전 */}
       <div
-        className="w-full px-4 pb-5 md:hidden mobile-header"
-        style={{ backgroundColor: '#ffffff' }}
+        className="w-full px-4 pt-5 pb-5 md:hidden"
+        style={{ backgroundColor: '#000000' }}
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex w-12 flex-shrink-0 justify-start">
             <Link href="/login">
               {!isLoggedIn && (
-                <Button variant="outline" size="sm" className="font-semibold text-black border-black">
+                <Button variant="outline" size="sm" className="font-semibold text-white">
                   로그인
                 </Button>
               )}
@@ -120,7 +120,7 @@ export default function MainContent() {
           </div>
           <Link href="/">
             <Image
-              src={MainLogoBlack}
+              src={MainLogoWhite}
               alt="logo"
               width={18}
               height={18}
@@ -135,8 +135,8 @@ export default function MainContent() {
             className={cn(
               "text-sm font-medium transition-colors",
               activeMobileTab === 'for-you'
-                ? 'text-black font-semibold'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-white font-semibold'
+                : 'text-gray-400 hover:text-gray-300'
             )}
           >
             전체
@@ -147,8 +147,8 @@ export default function MainContent() {
               className={cn(
                 "text-sm font-medium transition-colors",
                 activeMobileTab === 'following'
-                  ? 'text-black font-semibold'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-white font-semibold'
+                  : 'text-gray-400 hover:text-gray-300'
               )}
             >
               팔로잉

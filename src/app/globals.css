@@ -63,6 +63,18 @@
   .mobile-page-container {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
+  
+  /* 새로고침 인디케이터 Safe Area */
+  .refresh-indicator-container {
+    top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* 데스크톱에서는 새로고침 인디케이터를 상단에 고정 */
+@media (min-width: 641px) {
+  .refresh-indicator-container {
+    top: 1rem;
+  }
 }
 
 
