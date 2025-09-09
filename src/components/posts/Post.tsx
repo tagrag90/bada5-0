@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Comments from "../comments/Comments";
 import UserAvatar from "../UserAvatar";
@@ -22,6 +22,7 @@ import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
+import PostEditorModal from "./editor/PostEditorModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import ReactHtmlParser from "react-html-parser";
@@ -35,12 +36,14 @@ export default function Post({ post }: PostProps) {
   const isLoggedIn = !!user;
   const router = useRouter();
   const [showComments, setShowComments] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const [commentCount, setCommentCount] = useState(post._count.comments);
   const pathname = usePathname();
 
   // 상세 페이지인지 확인
   const isDetailPage = pathname?.startsWith(`/posts/${post.id}`);
+  
 
   const updateCommentCount = (newCount: number) => {
     setCommentCount(newCount);
@@ -58,7 +61,11 @@ export default function Post({ post }: PostProps) {
     router.push("/login");
   };
 
+
+
+
   return (
+    <>
     <article
       className={cn(
         "group/post overflow-hidden bg-card",
@@ -113,7 +120,7 @@ export default function Post({ post }: PostProps) {
               <PostMoreButton
                 post={post}
                 onEditClick={() => {
-                  alert("수정 기능이 현재 비활성화되어 있습니다.");
+                  setIsEditModalOpen(true);
                 }}
               />
             )}
@@ -188,6 +195,22 @@ export default function Post({ post }: PostProps) {
         </div>
       )}
     </article>
+    
+    {/* 수정 모달 */}
+    {isEditModalOpen && (
+      <PostEditorModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          // 게시물 데이터 새로고침
+          queryClient.invalidateQueries({
+            queryKey: ["post-feed"],
+          });
+        }}
+        post={post}
+      />
+    )}
+  </>
   );
 }
 
@@ -262,6 +285,11 @@ interface MediaSliderProps {
 
 function MediaSlider({ attachments }: MediaSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  // 터치 슬라이드 상태 관리
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
 
   if (attachments.length === 0) return null;
 
@@ -279,6 +307,90 @@ function MediaSlider({ attachments }: MediaSliderProps) {
 
   const handleIndicatorClick = (index: number) => {
     setCurrentIndex(index);
+  };
+
+  // 터치 이벤트 핸들러
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (attachments.length <= 1) return;
+    
+    startXRef.current = e.touches[0].clientX;
+    currentXRef.current = e.touches[0].clientX;
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || attachments.length <= 1) return;
+    
+    currentXRef.current = e.touches[0].clientX;
+    const diff = currentXRef.current - startXRef.current;
+    setDragOffset(diff);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging || attachments.length <= 1) return;
+    
+    const diff = startXRef.current - currentXRef.current;
+    const threshold = 100; // 슬라이드를 넘기기 위한 최소 드래그 거리
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        // 왼쪽으로 드래그하면 다음 이미지
+        setCurrentIndex((prev) =>
+          prev < attachments.length - 1 ? prev + 1 : prev,
+        );
+      } else {
+        // 오른쪽으로 드래그하면 이전 이미지
+        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
+      }
+    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+  };
+
+  // 마우스 이벤트 핸들러 (데스크톱 드래그 지원)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (attachments.length <= 1) return;
+    
+    e.preventDefault();
+    startXRef.current = e.clientX;
+    currentXRef.current = e.clientX;
+    setIsDragging(true);
+
+    // 전역 마우스 이벤트 리스너 추가
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      currentXRef.current = e.clientX;
+      const diff = currentXRef.current - startXRef.current;
+      setDragOffset(diff);
+    };
+
+    const handleGlobalMouseUp = () => {
+      const diff = startXRef.current - currentXRef.current;
+      const threshold = 100; // 슬라이드를 넘기기 위한 최소 드래그 거리
+      
+      if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+          // 왼쪽으로 드래그하면 다음 이미지
+          setCurrentIndex((prev) =>
+            prev < attachments.length - 1 ? prev + 1 : prev,
+          );
+        } else {
+          // 오른쪽으로 드래그하면 이전 이미지
+          setCurrentIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        }
+      }
+      
+      setIsDragging(false);
+      setDragOffset(0);
+      
+      // 전역 이벤트 리스너 제거
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+
+    // 전역 이벤트 리스너 등록
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
   };
 
 
@@ -313,8 +425,14 @@ function MediaSlider({ attachments }: MediaSliderProps) {
   return (
     <div className="relative w-full overflow-hidden rounded-xl">
       <div
-        className="flex transition-transform duration-300 ease-in-out"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        className={`flex ${isDragging ? '' : 'transition-transform duration-300 ease-in-out'}`}
+        style={{ 
+          transform: `translateX(${-currentIndex * 100 + (dragOffset / window.innerWidth) * 100}%)` 
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
       >
         {attachments.map((attachment) => (
           <div

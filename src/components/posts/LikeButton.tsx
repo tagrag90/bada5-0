@@ -14,9 +14,10 @@ import { getUserFriendlyMessage } from "@/lib/error-messages";
 interface LikeButtonProps {
   postId: string;
   initialState: LikeInfo;
+  variant?: "default" | "overlay";
 }
 
-export default function LikeButton({ postId, initialState }: LikeButtonProps) {
+export default function LikeButton({ postId, initialState, variant = "default" }: LikeButtonProps) {
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
@@ -59,11 +60,14 @@ export default function LikeButton({ postId, initialState }: LikeButtonProps) {
     },
   });
 
+  const isOverlay = variant === "overlay";
+
   return (
     <button
       onClick={() => mutate()}
       className={cn(
         "flex items-center gap-2 rounded-[10px] px-4 py-2",
+        isOverlay && "text-white hover:bg-white/10"
       )}
     >
       <Heart
@@ -72,10 +76,15 @@ export default function LikeButton({ postId, initialState }: LikeButtonProps) {
           "size-5",
           data.isLikedByUser
             ? "fill-[#ff5368] text-[#ff5368]"
-            : "fill-white text-[#000]",
+            : isOverlay 
+              ? "text-white" 
+              : "fill-white text-[#000]",
         )}
       />
-      <span className="text-sm font-normal tabular-nums">{data.likes}</span>
+      <span className={cn(
+        "text-sm font-normal tabular-nums",
+        isOverlay ? "text-white" : "text-black"
+      )}>{data.likes}</span>
     </button>
   );
 }

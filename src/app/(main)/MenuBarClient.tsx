@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Bookmark, Compass, Home, SquarePlus, PenLine, Search } from "lucide-react";
 import NotificationsButton from "./NotificationsButton";
 import PostEditorModal from "@/components/posts/editor/PostEditorModal";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import studioIcon from "@/assets/studio.png";
 import UserButton from "@/components/UserButton";
@@ -29,6 +31,35 @@ export function MenuBarClient({
 }: MenuBarClientProps) {
   const { user } = useSession();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
+  const lastClickTimeRef = useRef(0);
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    const isHomePage = pathname === '/';
+    
+    if (isHomePage) {
+      // 홈 페이지에서 홈 버튼 클릭 시 - 1회 클릭으로 새로고침
+      e.preventDefault();
+      
+      // 새로고침 시작 이벤트 발생
+      window.dispatchEvent(new CustomEvent('homeRefreshStart'));
+      
+      // 피드 새로고침
+      queryClient.invalidateQueries({
+        queryKey: ["post-feed"],
+      });
+      
+      // 스크롤을 맨 위로
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // 새로고침 완료 이벤트는 약간 지연 후 발생
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('homeRefreshEnd'));
+      }, 2000);
+    }
+  };
 
   return (
     <>
@@ -40,7 +71,7 @@ export function MenuBarClient({
           title="Home"
           asChild
         >
-          <Link href="/">
+          <Link href="/" onClick={handleHomeClick}>
             <Image src={homeIcon} alt="Home" width={24} height={24} />
           </Link>
         </Button>

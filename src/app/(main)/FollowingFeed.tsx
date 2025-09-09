@@ -9,6 +9,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 
 export default function FollowingFeed() {
+
   const {
     data,
     fetchNextPage,
@@ -16,6 +17,7 @@ export default function FollowingFeed() {
     isFetching,
     isFetchingNextPage,
     status,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["post-feed", "following"],
     queryFn: ({ pageParam }) =>
@@ -30,6 +32,11 @@ export default function FollowingFeed() {
   });
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
+
+  // Pull-to-Refresh 핸들러
+  const handleRefresh = async () => {
+    await refetch();
+  };
 
   if (status === "pending") {
     return <div className="rounded-t-[24px] bg-white p-4 drop-shadow"><PostsLoadingSkeleton /></div>;

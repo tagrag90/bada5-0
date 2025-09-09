@@ -12,6 +12,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
+import UserProfileMenu from "./UserProfileMenu";
 import { Instagram, Link2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -111,7 +112,13 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
       <div className="space-y-6">
         <div className="flex items-start justify-between gap-6 py-3">
           <div>
-            <h1 className="text-2xl font-bold">{user.displayName}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{user.displayName}</h1>
+              <UserProfileMenu 
+                username={user.username} 
+                isOwnProfile={user.id === loggedInUserId}
+              />
+            </div>
             <div className="text-muted-foreground">@{user.username}</div>
             {user.bio && (
               <div className="overflow-hidden whitespace-pre-line break-words">

@@ -14,11 +14,13 @@ import { getUserFriendlyMessage } from "@/lib/error-messages";
 interface BookmarkButtonProps {
   postId: string;
   initialState: BookmarkInfo;
+  variant?: "default" | "overlay";
 }
 
 export default function BookmarkButton({
   postId,
   initialState,
+  variant = "default",
 }: BookmarkButtonProps) {
   const { toast } = useToast();
 
@@ -64,14 +66,24 @@ export default function BookmarkButton({
     },
   });
 
+  const isOverlay = variant === "overlay";
+
   return (
-    <button onClick={() => mutate()} className="flex items-center gap-2 p-2">
+    <button 
+      onClick={() => mutate()} 
+      className={cn(
+        "flex items-center gap-2 p-2 rounded-[10px]",
+        isOverlay && "text-white hover:bg-white/10"
+      )}
+    >
       <Bookmark
         className={cn(
           "size-5",
           data.isBookmarkedByUser
             ? "fill-[#ff4b6e] text-[#ff4b6e]"
-            : "fill-gray-400 text-gray-400",
+            : isOverlay
+              ? "text-white"
+              : "fill-gray-400 text-gray-400",
         )}
       />
     </button>

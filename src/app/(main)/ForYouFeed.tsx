@@ -24,6 +24,7 @@ export default function ForYouFeed() {
     isFetchingNextPage,
     status,
     error,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["post-feed", "for-you"],
     queryFn: async ({ pageParam }) => {
@@ -52,6 +53,11 @@ export default function ForYouFeed() {
   });
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
+
+  // Pull-to-Refresh 핸들러
+  const handleRefresh = async () => {
+    await refetch();
+  };
 
   if (status === "pending") {
     return (

@@ -4,6 +4,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 새로고침 인디케이터 애니메이션 */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* 부드러운 회전 애니메이션 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 모바일 Safe Area 지원 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 모바일 하단 네비게이션 바 추가 여백 */
+@media (max-width: 640px) {
+  .mobile-navbar {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+
 @import "~stream-chat-react/dist/css/v2/index.css";
 
 /* index.css 또는 App.css for slick-carousel */

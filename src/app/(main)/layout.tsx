@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
+import RefreshIndicator from "@/components/RefreshIndicator";
 
 // import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
@@ -15,7 +16,8 @@ export default async function Layout({
 
   return (
     <SessionProvider value={session}>
-      <div className="flex min-h-screen flex-col">
+      <RefreshIndicator />
+      <div className="flex min-h-screen flex-col md:h-auto">
         {/* <Navbar /> */}
         <div className="mx-auto flex w-full max-w-7xl grow gap-5 px-0 py-5 md:p-5">
           {isLoggedIn && (
@@ -27,7 +29,7 @@ export default async function Layout({
           <div className="w-full max-w-5xl">{children}</div>
         </div>
         {isLoggedIn && (
-          <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 sm:hidden" />
+          <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 mobile-navbar sm:hidden flex-shrink-0" />
         )}
       </div>
     </SessionProvider>
