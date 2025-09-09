@@ -101,7 +101,14 @@ export async function POST(
     // 푸시 알림 발송 (자신의 게시물이 아닐 때만)
     if (loggedInUser.id !== post.userId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
+        console.log('Sending like push notification:', {
+          postUserId: post.userId,
+          currentUserId: loggedInUser.id,
+          displayName: loggedInUser.displayName,
+          postId: postId
+        });
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -117,6 +124,9 @@ export async function POST(
             }
           }),
         });
+
+        const result = await response.json();
+        console.log('Like push notification response:', result);
       } catch (error) {
         console.error('Failed to send push notification for like:', error);
         // 푸시 알림 실패해도 좋아요 기능은 정상 작동

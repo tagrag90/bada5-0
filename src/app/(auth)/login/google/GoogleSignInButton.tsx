@@ -23,74 +23,39 @@ export default function GoogleSignInButton() {
   const handleGoogleLogin = () => {
     setIsLoading(true);
     
-    // 환경 감지 (시뮬레이터 포함)
-    const isTestFlight = typeof window !== 'undefined' && (
-      window.navigator.userAgent.includes('TestFlight') ||
-      window.location.hostname.includes('testflight') ||
-      // iOS 시뮬레이터 감지
+    // 모바일 환경 감지 (iOS, Android + 시뮬레이터)
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(window.navigator.userAgent) ||
+      // iOS 시뮬레이터 감지 추가
       window.navigator.userAgent.includes('iPhone Simulator') ||
       window.navigator.userAgent.includes('iPad Simulator') ||
-      // iOS 앱 내 웹뷰 감지 (Safari가 없는 Mobile 환경)
+      // 앱 내 웹뷰 감지 (Safari가 없는 Mobile 환경)
       (window.navigator.userAgent.includes('Mobile/') && 
-       !window.navigator.userAgent.includes('Safari/')) ||
-      // 개발 환경에서 테스트용 (localhost에서 모바일 시뮬레이션)
-      (window.location.hostname === 'localhost' && 
-       window.navigator.userAgent.includes('Mobile'))
+       !window.navigator.userAgent.includes('Safari/'))
     );
 
-    if (isTestFlight) {
-      // TestFlight 또는 앱 내 웹뷰에서는 외부 브라우저로 강제 이동
-      const loginUrl = `${window.location.origin}/login/google?testflight=true`;
+    // 디버깅용 로그
+    console.log('Google Login Debug:', {
+      userAgent: window.navigator.userAgent,
+      isMobile: isMobile,
+      hostname: window.location.hostname
+    });
+
+    if (isMobile) {
+      // 모바일/시뮬레이터에서는 Safari로 이동할지 사용자에게 확인
+      const userConfirm = confirm(
+        '구글 로그인을 위해 Safari로 이동하시겠습니까?\n\n' +
+        '로그인 완료 후 다시 앱으로 돌아와주세요.'
+      );
       
-      // 여러 방법으로 외부 브라우저 열기 시도
-      try {
-        // 방법 1: window.open으로 새 탭에서 열기
-        const newWindow = window.open(loginUrl, '_blank', 'noopener,noreferrer');
-        
-        if (newWindow) {
-          // 새 창이 열렸으면 주기적으로 확인
-          const checkClosed = setInterval(() => {
-            try {
-              if (newWindow.closed) {
-                clearInterval(checkClosed);
-                setIsLoading(false);
-                window.location.reload();
-              }
-            } catch (e) {
-              // 크로스 오리진 에러 무시
-              clearInterval(checkClosed);
-              setIsLoading(false);
-              window.location.reload();
-            }
-          }, 1000);
-          
-          // 10초 후 자동으로 확인 중단
-          setTimeout(() => {
-            clearInterval(checkClosed);
-            setIsLoading(false);
-          }, 10000);
-        } else {
-          throw new Error('Popup blocked');
-        }
-      } catch (error) {
-        // 방법 2: 직접 location.href로 이동 (같은 창에서)
-        console.log('Popup failed, using direct redirect:', error);
-        
-        // 시뮬레이터에서는 confirm으로 사용자에게 확인 후 진행
-        const userConfirm = confirm(
-          'TestFlight/시뮬레이터 환경에서 구글 로그인을 진행합니다.\n\n' +
-          '로그인 완료 후 다시 앱으로 돌아오려면 뒤로가기를 사용해주세요.\n\n' +
-          '계속하시겠습니까?'
-        );
-        
-        if (userConfirm) {
-          window.location.href = loginUrl;
-        } else {
-          setIsLoading(false);
-        }
+      if (userConfirm) {
+        // Safari로 구글 로그인 페이지 열기
+        window.location.href = `${window.location.origin}/login/google?testflight=true`;
+      } else {
+        setIsLoading(false);
       }
     } else {
-      // 일반 웹 브라우저에서는 기존 방식 사용
+      // 데스크톱에서는 기존 방식 사용
       window.location.href = '/login/google';
     }
   };

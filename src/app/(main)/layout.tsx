@@ -19,7 +19,7 @@ export default async function Layout({
       <RefreshIndicator />
       <div className="flex min-h-screen flex-col md:h-auto">
         {/* <Navbar /> */}
-        <div className="mx-auto flex w-full max-w-7xl grow gap-5 px-0 py-5 md:p-5">
+        <div className="mx-auto flex w-full max-w-7xl grow gap-5 px-0 py-0 md:p-5">
           {isLoggedIn && (
             <div className="sticky top-[5.25rem] hidden h-fit flex-none flex-col space-y-3 sm:block">
               <MenuBar className="rounded-2xl bg-card px-3 py-5 lg:px-5" />

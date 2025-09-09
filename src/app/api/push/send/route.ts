@@ -99,6 +99,17 @@ export async function POST(request: NextRequest) {
       sendToAll = false // 모든 사용자에게 발송
     } = await request.json();
 
+    console.log('Push notification request received:', {
+      title,
+      body,
+      badge,
+      sound,
+      data,
+      userIds,
+      sendToAll,
+      totalTokensInMemory: global.globalPushTokens.size
+    });
+
     if (!title || !body) {
       return NextResponse.json(
         { error: 'title and body are required' },
@@ -116,6 +127,17 @@ export async function POST(request: NextRequest) {
         return userIds.includes(tokenData.userId);
       }
       return false;
+    });
+
+    console.log(`Filtered tokens for sending:`, {
+      totalTokens: global.globalPushTokens.size,
+      filteredTokens: tokensToSend.length,
+      tokensToSend: tokensToSend.map(([token, data]) => ({
+        token: token.substring(0, 20) + '...',
+        platform: data.platform,
+        userId: data.userId,
+        createdAt: data.createdAt
+      }))
     });
 
     console.log(`Sending push notifications to ${tokensToSend.length} devices`);

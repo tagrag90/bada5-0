@@ -105,14 +105,14 @@ export default function MainContent() {
 
       {/* 모바일 버전 */}
       <div
-        className="mb-2 w-full px-4 py-5 mobile-top-navbar md:hidden"
-        style={{ backgroundColor: '#000000' }}
+        className="w-full px-4 pt-8 pb-5 md:hidden"
+        style={{ backgroundColor: '#ffffff' }}
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex w-12 flex-shrink-0 justify-start">
             <Link href="/login">
               {!isLoggedIn && (
-                <Button variant="outline" size="sm" className="font-semibold text-white">
+                <Button variant="outline" size="sm" className="font-semibold text-black border-black">
                   로그인
                 </Button>
               )}
@@ -120,7 +120,7 @@ export default function MainContent() {
           </div>
           <Link href="/">
             <Image
-              src={MainLogoWhite}
+              src={MainLogoBlack}
               alt="logo"
               width={18}
               height={18}
@@ -135,8 +135,8 @@ export default function MainContent() {
             className={cn(
               "text-sm font-medium transition-colors",
               activeMobileTab === 'for-you'
-                ? 'text-white font-semibold'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'text-black font-semibold'
+                : 'text-gray-500 hover:text-gray-700'
             )}
           >
             전체
@@ -147,8 +147,8 @@ export default function MainContent() {
               className={cn(
                 "text-sm font-medium transition-colors",
                 activeMobileTab === 'following'
-                  ? 'text-white font-semibold'
-                  : 'text-gray-400 hover:text-gray-300'
+                  ? 'text-black font-semibold'
+                  : 'text-gray-500 hover:text-gray-700'
               )}
             >
               팔로잉

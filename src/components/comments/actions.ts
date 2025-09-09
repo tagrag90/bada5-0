@@ -44,7 +44,15 @@ export async function submitComment({
   // 푸시 알림 발송 (자신의 게시물이 아닐 때만)
   if (post.user.id !== user.id) {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
+      console.log('Sending comment push notification:', {
+        postUserId: post.user.id,
+        currentUserId: user.id,
+        displayName: user.displayName,
+        postId: post.id,
+        commentId: newComment.id
+      });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,6 +69,9 @@ export async function submitComment({
           }
         }),
       });
+
+      const result = await response.json();
+      console.log('Push notification response:', result);
     } catch (error) {
       console.error('Failed to send push notification for comment:', error);
       // 푸시 알림 실패해도 댓글 기능은 정상 작동

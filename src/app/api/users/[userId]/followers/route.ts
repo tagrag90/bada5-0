@@ -84,7 +84,13 @@ export async function POST(
 
     // 푸시 알림 발송
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
+      console.log('Sending follow push notification:', {
+        followedUserId: userId,
+        followerUserId: loggedInUser.id,
+        displayName: loggedInUser.displayName
+      });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/push/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,6 +105,9 @@ export async function POST(
           }
         }),
       });
+
+      const result = await response.json();
+      console.log('Follow push notification response:', result);
     } catch (error) {
       console.error('Failed to send push notification for follow:', error);
       // 푸시 알림 실패해도 팔로우 기능은 정상 작동
