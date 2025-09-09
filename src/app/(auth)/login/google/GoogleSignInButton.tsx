@@ -1,16 +1,111 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 export default function GoogleSignInButton() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // 구글 로그인 완료 메시지 리스너
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'GOOGLE_LOGIN_SUCCESS') {
+        setIsLoading(false);
+        // 페이지 새로고침하여 로그인 상태 반영
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const handleGoogleLogin = () => {
+    setIsLoading(true);
+    
+    // 환경 감지 (시뮬레이터 포함)
+    const isTestFlight = typeof window !== 'undefined' && (
+      window.navigator.userAgent.includes('TestFlight') ||
+      window.location.hostname.includes('testflight') ||
+      // iOS 시뮬레이터 감지
+      window.navigator.userAgent.includes('iPhone Simulator') ||
+      window.navigator.userAgent.includes('iPad Simulator') ||
+      // iOS 앱 내 웹뷰 감지 (Safari가 없는 Mobile 환경)
+      (window.navigator.userAgent.includes('Mobile/') && 
+       !window.navigator.userAgent.includes('Safari/')) ||
+      // 개발 환경에서 테스트용 (localhost에서 모바일 시뮬레이션)
+      (window.location.hostname === 'localhost' && 
+       window.navigator.userAgent.includes('Mobile'))
+    );
+
+    if (isTestFlight) {
+      // TestFlight 또는 앱 내 웹뷰에서는 외부 브라우저로 강제 이동
+      const loginUrl = `${window.location.origin}/login/google?testflight=true`;
+      
+      // 여러 방법으로 외부 브라우저 열기 시도
+      try {
+        // 방법 1: window.open으로 새 탭에서 열기
+        const newWindow = window.open(loginUrl, '_blank', 'noopener,noreferrer');
+        
+        if (newWindow) {
+          // 새 창이 열렸으면 주기적으로 확인
+          const checkClosed = setInterval(() => {
+            try {
+              if (newWindow.closed) {
+                clearInterval(checkClosed);
+                setIsLoading(false);
+                window.location.reload();
+              }
+            } catch (e) {
+              // 크로스 오리진 에러 무시
+              clearInterval(checkClosed);
+              setIsLoading(false);
+              window.location.reload();
+            }
+          }, 1000);
+          
+          // 10초 후 자동으로 확인 중단
+          setTimeout(() => {
+            clearInterval(checkClosed);
+            setIsLoading(false);
+          }, 10000);
+        } else {
+          throw new Error('Popup blocked');
+        }
+      } catch (error) {
+        // 방법 2: 직접 location.href로 이동 (같은 창에서)
+        console.log('Popup failed, using direct redirect:', error);
+        
+        // 시뮬레이터에서는 confirm으로 사용자에게 확인 후 진행
+        const userConfirm = confirm(
+          'TestFlight/시뮬레이터 환경에서 구글 로그인을 진행합니다.\n\n' +
+          '로그인 완료 후 다시 앱으로 돌아오려면 뒤로가기를 사용해주세요.\n\n' +
+          '계속하시겠습니까?'
+        );
+        
+        if (userConfirm) {
+          window.location.href = loginUrl;
+        } else {
+          setIsLoading(false);
+        }
+      }
+    } else {
+      // 일반 웹 브라우저에서는 기존 방식 사용
+      window.location.href = '/login/google';
+    }
+  };
+
   return (
     <Button
       variant="outline"
-      className="bg-white text-black hover:bg-gray-100 hover:text-black"
-      asChild
+      className="bg-white text-black hover:bg-gray-100 hover:text-black disabled:opacity-50"
+      onClick={handleGoogleLogin}
+      disabled={isLoading}
     >
-      <a href="/login/google" className="flex w-full items-center gap-2">
+      <div className="flex w-full items-center gap-2">
         <GoogleIcon />
-        Sign in with Google
-      </a>
+        {isLoading ? 'Google 로그인 중...' : 'Sign in with Google'}
+      </div>
     </Button>
   );
 }

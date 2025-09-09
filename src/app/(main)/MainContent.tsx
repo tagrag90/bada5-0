@@ -105,7 +105,7 @@ export default function MainContent() {
 
       {/* 모바일 버전 */}
       <div
-        className="mb-2 w-full px-4 py-5 md:hidden"
+        className="mb-2 w-full px-4 py-5 mobile-top-navbar md:hidden"
         style={{ backgroundColor: '#000000' }}
       >
         <div className="flex w-full items-center justify-between">
