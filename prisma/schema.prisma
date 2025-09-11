@@ -60,6 +60,7 @@ model Post {
   content             String
   userId              String
   createdAt           DateTime       @default(now())
+  linkPreviews        Json?          // 링크 미리보기 메타데이터 저장
   bookmarks           Bookmark[]
   comments            Comment[]
   likes               Like[]

@@ -26,6 +26,7 @@ import PostEditorModal from "./editor/PostEditorModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import ReactHtmlParser from "react-html-parser";
+import LinkPreviewComponent from "./editor/LinkPreviewComponent";
 
 interface PostProps {
   post: PostData;
@@ -133,6 +134,34 @@ export default function Post({ post }: PostProps) {
               <MediaSlider attachments={post.attachments} />
             </div>
           )}
+
+      {/* 링크 미리보기 표시 - content에서 메타데이터 추출 */}
+      {(() => {
+        try {
+          // content에서 링크 미리보기 메타데이터 추출
+          const linkPreviewMatch = post.content.match(/<!-- LINK_PREVIEWS: (.*?) -->/);
+          if (linkPreviewMatch) {
+            const previews = JSON.parse(linkPreviewMatch[1]);
+            return Array.isArray(previews) && previews.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                {previews.map((preview: any, index: number) => (
+                  <LinkPreviewComponent
+                    key={preview.id || index}
+                    url={preview.url}
+                    title={preview.title}
+                    description={preview.description}
+                    image={preview.image}
+                  />
+                ))}
+              </div>
+            ) : null;
+          }
+          return null;
+        } catch (error) {
+          console.error('링크 미리보기 파싱 오류:', error);
+          return null;
+        }
+      })()}
           <div className="mt-3 flex items-center space-x-4">
             {isLoggedIn ? (
               <>
@@ -243,27 +272,27 @@ function ContentRenderer({ content }: { content: string }) {
       }
     }
 
-    // 유튜브 임베드 처리
-    if (
-      node.type === "tag" &&
-      node.name === "div" &&
-      node.attribs.class?.includes("youtube-embed")
-    ) {
-      const iframe = node.children.find((child: any) => child.name === "iframe");
-      if (iframe) {
-        return (
-          <div className="youtube-embed w-full">
-            <iframe
-              width="100%"
-              src={iframe.attribs.src}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-        );
-      }
-    }
+    // YouTube 별도 임베드 처리 제거 (링크 미리보기로 통합)
+    // if (
+    //   node.type === "tag" &&
+    //   node.name === "div" &&
+    //   node.attribs.class?.includes("youtube-embed")
+    // ) {
+    //   const iframe = node.children.find((child: any) => child.name === "iframe");
+    //   if (iframe) {
+    //     return (
+    //       <div className="youtube-embed w-full">
+    //         <iframe
+    //           width="100%"
+    //           src={iframe.attribs.src}
+    //           frameBorder="0"
+    //           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    //           allowFullScreen
+    //         ></iframe>
+    //       </div>
+    //     );
+    //   }
+    // }
 
     return undefined; // 기본 변환 사용
   };
@@ -273,8 +302,18 @@ function ContentRenderer({ content }: { content: string }) {
     transform,
   };
 
+  // 링크 미리보기 메타데이터와 숨겨진 URL들 제거한 순수한 content만 렌더링
+  const cleanContent = content
+    .replace(/<!-- LINK_PREVIEWS: .*? -->/g, '') // 미리보기 메타데이터 제거
+    .replace(/<!-- HIDDEN_LINK: .*? -->/g, '') // 숨겨진 하이퍼링크 제거
+    .replace(/<!-- HIDDEN_URL: .*? -->/g, '') // 숨겨진 일반 URL 제거
+    .replace(/-->/g, '') // 남은 특수문자 --> 제거
+    .replace(/<p>\s*<\/p>/g, '') // 빈 p 태그 제거
+    .replace(/\s{2,}/g, ' ') // 연속 공백 정리
+    .trim(); // 앞뒤 공백 제거
+  
   // 먼저 YouTube 링크를 HTML 태그로 변환
-  const contentWithYoutubeLinks = convertYouTubeLinks(content);
+  const contentWithYoutubeLinks = convertYouTubeLinks(cleanContent);
 
   return <>{ReactHtmlParser(contentWithYoutubeLinks, options)}</>;
 }

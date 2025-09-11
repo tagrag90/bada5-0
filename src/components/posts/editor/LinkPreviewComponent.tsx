@@ -30,7 +30,7 @@ const LinkPreviewComponent: React.FC<LinkPreviewProps> = ({
   }, [url]);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden my-2 relative">
+    <div className="border border-black rounded-2xl overflow-hidden my-2 relative">
       {/* 닫기 버튼 */}
       {onRemove && (
         <button
