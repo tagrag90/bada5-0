@@ -69,16 +69,22 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export function convertYouTubeLinks(content: string): string {
-  if (content.includes("youtube.com/embed")) {
-    return content; // 이미 임베드된 경우 그대로 반환
-  }
+// YouTube 별도 임베드 기능 제거 - 링크 미리보기로 통합
+// export function convertYouTubeLinks(content: string): string {
+//   if (content.includes("youtube.com/embed")) {
+//     return content; // 이미 임베드된 경우 그대로 반환
+//   }
 
-  const youtubeRegex =
-    /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/g;
-  return content.replace(youtubeRegex, (match, videoId) => {
-    return `<div class="youtube-embed w-full"><iframe width="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-  });
+//   const youtubeRegex =
+//     /https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/g;
+//   return content.replace(youtubeRegex, (match, videoId) => {
+//     return `<div class="youtube-embed w-full"><iframe width="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+//   });
+// }
+
+export function convertYouTubeLinks(content: string): string {
+  // YouTube 링크 변환 비활성화 - 링크 미리보기로 통합됨
+  return content;
 }
 
 export function stripHtmlTags(html: string) {
