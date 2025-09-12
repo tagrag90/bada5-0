@@ -307,8 +307,32 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
 
   useEffect(() => {
     if (isEditMode && post && editor) {
-      editor.commands.setContent(post.content || "");
-      setEditorInput(post.content || "");
+      // 수정 모드에서 content 처리
+      let cleanContent = post.content || "";
+      let extractedPreviews: any[] = [];
+      
+      // content에서 링크 미리보기 메타데이터 추출
+      const linkPreviewMatch = cleanContent.match(/<!-- LINK_PREVIEWS: (.*?) -->/);
+      if (linkPreviewMatch) {
+        try {
+          extractedPreviews = JSON.parse(linkPreviewMatch[1]);
+          setLinkPreviews(extractedPreviews);
+        } catch (error) {
+          console.error('링크 미리보기 파싱 오류:', error);
+        }
+      }
+      
+      // 숨겨진 링크들을 다시 복원하여 에디터에 표시
+      const restoredContent = cleanContent
+        .replace(/<!-- LINK_PREVIEWS: .*? -->/g, '') // 메타데이터 제거
+        .replace(/<!-- HIDDEN_LINK: (.*?) -->/g, (match, hiddenUrl) => {
+          // 숨겨진 하이퍼링크를 다시 복원
+          return `<a href="${hiddenUrl}" target="_blank" rel="noopener noreferrer">${hiddenUrl}</a>`;
+        })
+        .replace(/<!-- HIDDEN_URL: (.*?) -->/g, '$1'); // 숨겨진 URL 텍스트 복원
+      
+      editor.commands.setContent(restoredContent);
+      setEditorInput(restoredContent);
 
       if (post.attachments && post.attachments.length > 0) {
         const initialAttachments: Attachment[] = post.attachments.map(
