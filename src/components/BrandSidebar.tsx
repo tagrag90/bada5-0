@@ -17,7 +17,7 @@ export default function BrandSidebar({ className }: BrandSidebarProps) {
             Studio_bada
           </p>
         </Link>
-        
+
         {/* 소셜미디어 링크들 */}
         <div className="flex items-center gap-4">
           {/* YouTube */}

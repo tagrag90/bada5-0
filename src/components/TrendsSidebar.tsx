@@ -143,13 +143,15 @@ async function TrendingTopicsWithBrand() {
             </div>
           </div>
           <div className="flex w-full justify-end">
-            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+            <div className="flex flex-col justify-end gap-1 text-xs">
               <Link
                 href="https://www.vessel.today"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className="text-right">Vessel</div>
+                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                  Vessel
+                </div>
               </Link>
 
               <Link
@@ -157,14 +159,16 @@ async function TrendingTopicsWithBrand() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className="text-right">Baseball playlist</div>
+                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                  Baseball playlist
+                </div>
               </Link>
-              <Link
-                href="https://profuse-soil-41e.notion.site/GUEMSoNG-Digital-Magazine-1788bfe8131a80ecb20ed23cd21f2fdf?pvs=4"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="text-right">Magazine 굄성;</div>
+
+              {/* 404 탐험하기 버튼 */}
+              <Link href="/nonexistent-page" className="block">
+                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                  404 탐험하기
+                </div>
               </Link>
 
             </div>
