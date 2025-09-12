@@ -26,6 +26,7 @@ import { ClipboardEvent, DragEvent, useCallback, useEffect, useRef, useState } f
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
+import MediaReorderableGrid from "./MediaReorderableGrid";
 // import { YouTube } from "./extensions/YouTube"; // YouTube 별도 임베드 기능 제거
 import { PostData } from "@/lib/types";
 import Italic from "@tiptap/extension-italic";
@@ -465,39 +466,11 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
         </div>
 
         {attachments.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {attachments.map((attachment) => (
-              <div
-                key={attachment.id || attachment.file.name}
-                className="relative rounded-lg overflow-hidden aspect-square"
-              >
-                {attachment.type === "IMAGE" ||
-                attachment.file.type.startsWith("image") ? (
-                  <Image
-                    src={attachment.url || URL.createObjectURL(attachment.file)}
-                    alt="Attachment"
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <video
-                    src={attachment.url || URL.createObjectURL(attachment.file)}
-                    className="w-full h-full object-cover"
-                    controls
-                  />
-                )}
-                <button
-                  type="button"
-                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
-                  onClick={() =>
-                    removeAttachment(attachment.id || attachment.file.name)
-                  }
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+          <MediaReorderableGrid
+            attachments={attachments}
+            onReorder={setAttachments}
+            onRemove={removeAttachment}
+          />
         )}
 
         {isUploading && (

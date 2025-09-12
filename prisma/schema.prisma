@@ -19,10 +19,7 @@ model User {
   avatarUrl             String?
   bio                   String?
   createdAt             DateTime        @default(now())
-  board_members         board_members[]
-  boards                boards[]
   bookmarks             Bookmark[]
-  cards                 cards[]
   comments              Comment[]
   following             Follow[]        @relation("Following")
   followers             Follow[]        @relation("Followers")
@@ -131,55 +128,9 @@ model Notification {
   @@map("notifications")
 }
 
-model board_members {
-  id       String    @id
-  boardId  String
-  userId   String
-  role     BoardRole @default(MEMBER)
-  joinedAt DateTime  @default(now())
-  boards   boards    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  users    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([boardId, userId])
-}
 
-model boards {
-  id            String          @id
-  title         String
-  description   String?
-  ownerId       String
-  isPublic      Boolean         @default(false)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime
-  board_members board_members[]
-  users         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  lists         lists[]
-}
 
-model cards {
-  id          String    @id
-  title       String
-  description String?
-  position    Int
-  listId      String
-  assigneeId  String?
-  dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime
-  users       User?     @relation(fields: [assigneeId], references: [id])
-  lists       lists     @relation(fields: [listId], references: [id], onDelete: Cascade)
-}
-
-model lists {
-  id        String   @id
-  title     String
-  position  Int
-  boardId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  cards     cards[]
-  boards    boards   @relation(fields: [boardId], references: [id], onDelete: Cascade)
-}
 
 enum MediaType {
   IMAGE
@@ -192,9 +143,3 @@ enum NotificationType {
   COMMENT
 }
 
-enum BoardRole {
-  OWNER
-  ADMIN
-  MEMBER
-  VIEWER
-}
