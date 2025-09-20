@@ -18,6 +18,29 @@ export default function BrandSidebar({ className }: BrandSidebarProps) {
           </p>
         </Link>
 
+        {/* 멤버십 데모 페이지 링크들 */}
+        <div className="space-y-2 mb-4">
+          <p className="text-sm font-medium text-stone-600 mb-2">멤버십 데모</p>
+
+          <Link href="/membership/payment/artist_jun" className="block">
+            <p className="w-full justify-start pb-1 text-sm text-stone-500 hover:text-stone-700 hover:underline cursor-pointer">
+              💳 멤버십 결제
+            </p>
+          </Link>
+
+          <Link href="/creator/dashboard/membership" className="block">
+            <p className="w-full justify-start pb-1 text-sm text-stone-500 hover:text-stone-700 hover:underline cursor-pointer">
+              👨‍🎨 크리에이터 대시보드
+            </p>
+          </Link>
+
+          <Link href="/user/subscriptions" className="block">
+            <p className="w-full justify-start pb-1 text-sm text-stone-500 hover:text-stone-700 hover:underline cursor-pointer">
+              👤 내 구독 관리
+            </p>
+          </Link>
+        </div>
+
         {/* 소셜미디어 링크들 */}
         <div className="flex items-center gap-4">
           {/* YouTube */}
