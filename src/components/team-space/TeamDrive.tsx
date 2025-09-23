@@ -207,13 +207,13 @@ export default function TeamDrive() {
   };
 
   const recentFiles = mockFiles
-    .flatMap(file => file.children ? [file, ...file.children] : [file])
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .flatMap((file: any) => file.children ? [file, ...file.children] : [file])
+    .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 6);
 
   const starredFiles = mockFiles
-    .flatMap(file => file.children ? [file, ...file.children] : [file])
-    .filter(file => file.isStarred);
+    .flatMap((file: any) => file.children ? [file, ...file.children] : [file])
+    .filter((file: any) => file.isStarred);
 
   return (
     <div className="space-y-6">
@@ -342,9 +342,9 @@ export default function TeamDrive() {
                     <div className="space-y-2">
                       {/* 파일 아이콘/썸네일 */}
                       <div className="aspect-square flex items-center justify-center bg-gray-50 rounded">
-                        {file.thumbnail ? (
+                        {(file as any).thumbnail ? (
                           <img 
-                            src={file.thumbnail} 
+                            src={(file as any).thumbnail} 
                             alt={file.name}
                             className="w-full h-full object-cover rounded"
                           />
@@ -406,9 +406,9 @@ export default function TeamDrive() {
                     <div className="flex items-center space-x-4">
                       {/* 아이콘 */}
                       <div className="flex-shrink-0">
-                        {file.thumbnail ? (
+                        {(file as any).thumbnail ? (
                           <img 
-                            src={file.thumbnail} 
+                            src={(file as any).thumbnail} 
                             alt={file.name}
                             className="w-10 h-10 object-cover rounded"
                           />
@@ -477,9 +477,9 @@ export default function TeamDrive() {
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <div className="aspect-square flex items-center justify-center bg-gray-50 rounded">
-                      {file.thumbnail ? (
+                      {(file as any).thumbnail ? (
                         <img 
-                          src={file.thumbnail} 
+                          src={(file as any).thumbnail} 
                           alt={file.name}
                           className="w-full h-full object-cover rounded"
                         />
@@ -505,9 +505,9 @@ export default function TeamDrive() {
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <div className="aspect-square flex items-center justify-center bg-gray-50 rounded">
-                      {file.thumbnail ? (
+                      {(file as any).thumbnail ? (
                         <img 
-                          src={file.thumbnail} 
+                          src={(file as any).thumbnail} 
                           alt={file.name}
                           className="w-full h-full object-cover rounded"
                         />
