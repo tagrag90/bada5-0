@@ -18,6 +18,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "t3dy4ejwe7.ufs.sh",
         pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+        pathname: "/**",
       }
     ],
   },

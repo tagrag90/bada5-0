@@ -2,9 +2,10 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getUserDataSelect } from "@/lib/types";
 import { formatNumber, cn } from "@/lib/utils";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Users } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import FollowButton from "./FollowButton";
 import UserAvatar from "./UserAvatar";
@@ -18,7 +19,9 @@ interface TrendsSidebarProps {
   className?: string;
 }
 
-export default function TrendsSidebar({ className }: TrendsSidebarProps) {
+export default async function TrendsSidebar({ className }: TrendsSidebarProps) {
+  const { user } = await validateRequest();
+
   return (
     <div
       className={cn(
@@ -26,6 +29,22 @@ export default function TrendsSidebar({ className }: TrendsSidebarProps) {
         className,
       )}
     >
+      {/* 내 팀 스페이스 버튼 - 로그인한 사용자에게만 표시 */}
+      {user && (
+        <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
+          <Button 
+            asChild 
+            className="w-full flex items-center justify-center gap-2"
+            variant="outline"
+          >
+            <Link href="/team-space-demo">
+              <Users className="h-4 w-4" />
+              내 팀 스페이스
+            </Link>
+          </Button>
+        </div>
+      )}
+
       <div className="relative group mb-4">
         {/* 공지사항 */}
         <div 

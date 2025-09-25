@@ -20,6 +20,7 @@ export async function GET(req: Request) {
           displayName: true,
           avatarUrl: true,
           bio: true,
+          skills: true,
           createdAt: true,
           followers: {
             where: {

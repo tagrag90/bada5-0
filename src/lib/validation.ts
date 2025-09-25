@@ -38,6 +38,7 @@ export const updateUserProfileSchema = z.object({
   ).min(3, "3자 이상이어야 합니다.").max(20, "20자 이하여야 합니다."),
   displayName: requiredString,
   bio: z.string().max(1000, "Must be at most 1000 characters"),
+  skills: z.array(z.string()).max(20, "최대 20개의 스킬까지 추가할 수 있습니다.").optional(),
 });
 
 export type UpdateUserProfileValues = z.infer<typeof updateUserProfileSchema>;

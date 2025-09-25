@@ -13,8 +13,9 @@ import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
 import UserProfileMenu from "./UserProfileMenu";
-import { Instagram, Link2, Users } from "lucide-react";
+import { Instagram, Link2, Users, Settings } from "lucide-react";
 import Link from "next/link";
+import { SkillList } from "@/components/SkillBadge";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -104,6 +105,9 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
     following: user._count.following || 0,
   };
 
+  // 실제 사용자 스킬 데이터 사용
+  const userSkills = user.skills || [];
+
   return (
     <div
       className="w-full border bg-card p-8 shadow-sm"
@@ -162,6 +166,13 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
             />
           </div>
         </div>
+
+        {/* 스킬 배지 - 팔로잉/팔로워 바로 아래 */}
+        {userSkills.length > 0 && (
+          <div className="mt-4">
+            <SkillList skills={userSkills} />
+          </div>
+        )}
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
             <TooltipProvider>
@@ -209,21 +220,7 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
         </div>
 
-        {/* 내 팀 스페이스 버튼 - 본인 프로필일 때만 표시 */}
-        {user.id === loggedInUserId && (
-          <div className="pt-4 border-t">
-            <Button 
-              asChild 
-              className="w-full flex items-center justify-center gap-2"
-              variant="outline"
-            >
-              <Link href="/team-space-demo">
-                <Users className="h-4 w-4" />
-                내 팀 스페이스
-              </Link>
-            </Button>
-          </div>
-        )}
+
 
         {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>
