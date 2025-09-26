@@ -23,6 +23,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.jsdelivr.net",
         pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "skillicons.dev",
+        pathname: "/**",
       }
     ],
   },
