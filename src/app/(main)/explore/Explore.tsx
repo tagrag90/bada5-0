@@ -1,6 +1,6 @@
 "use client";
 
-import { Beaker, CreditCard, Palette, User } from "lucide-react";
+import { Beaker } from "lucide-react";
 import ServiceCard from "@/components/ServiceCard";
 import Image from "next/image";
 import Link from "next/link";
@@ -70,19 +70,24 @@ export default function Explore() {
             <span className="text-sm text-gray-500">베타 기능들을 미리 체험해보세요</span>
           </div>
           
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Link 
+              href="/ticketing-demo"
+              className="group p-4 border rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors"
+            >
+              <div>
+                <p className="font-medium text-sm">티켓팅 시스템</p>
+                <p className="text-xs text-gray-500">이벤트 티켓 발급</p>
+              </div>
+            </Link>
+
             <Link 
               href="/membership/payment/artist_jun"
               className="group p-4 border rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                  <CreditCard className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">멤버십 결제</p>
-                  <p className="text-xs text-gray-500">결제 시스템 데모</p>
-                </div>
+              <div>
+                <p className="font-medium text-sm">멤버십 결제</p>
+                <p className="text-xs text-gray-500">결제 시스템 데모</p>
               </div>
             </Link>
 
@@ -90,14 +95,9 @@ export default function Explore() {
               href="/creator/dashboard/membership"
               className="group p-4 border rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                  <Palette className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">크리에이터 대시보드</p>
-                  <p className="text-xs text-gray-500">창작자 관리 도구</p>
-                </div>
+              <div>
+                <p className="font-medium text-sm">크리에이터 대시보드</p>
+                <p className="text-xs text-gray-500">창작자 관리 도구</p>
               </div>
             </Link>
 
@@ -105,14 +105,9 @@ export default function Explore() {
               href="/user/subscriptions"
               className="group p-4 border rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                  <User className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">내 구독 관리</p>
-                  <p className="text-xs text-gray-500">구독 현황 확인</p>
-                </div>
+              <div>
+                <p className="font-medium text-sm">내 구독 관리</p>
+                <p className="text-xs text-gray-500">구독 현황 확인</p>
               </div>
             </Link>
           </div>

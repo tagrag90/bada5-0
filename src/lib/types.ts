@@ -137,3 +137,119 @@ export interface MessageCountInfo {
 export interface FollowingInfo {
   following: number;
 }
+
+// ============= Studio Types =============
+
+export function getStudioDataSelect(loggedInUserId: string) {
+  return {
+    id: true,
+    name: true,
+    slug: true,
+    description: true,
+    type: true,
+    avatarUrl: true,
+    bannerUrl: true,
+    isPublic: true,
+    isVerified: true,
+    subscribersCount: true,
+    createdAt: true,
+    updatedAt: true,
+    ownerId: true,
+    owner: {
+      select: getUserDataSelect(loggedInUserId),
+    },
+    members: {
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        role: true,
+      },
+    },
+    subscriptions: {
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        userId: true,
+      },
+    },
+    _count: {
+      select: {
+        members: true,
+        subscriptions: true,
+        events: true,
+      },
+    },
+  } satisfies Prisma.StudioSelect;
+}
+
+export type StudioData = Prisma.StudioGetPayload<{
+  select: ReturnType<typeof getStudioDataSelect>;
+}>;
+
+export interface StudiosPage {
+  studios: StudioData[];
+  nextCursor: string | null;
+}
+
+// ============= Event Types =============
+
+export function getEventDataInclude(loggedInUserId: string) {
+  return {
+    studio: {
+      select: getStudioDataSelect(loggedInUserId),
+    },
+    ticketTypes: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        totalCount: true,
+        issuedCount: true,
+        price: true,
+        color: true,
+      },
+    },
+    _count: {
+      select: {
+        tickets: true,
+      },
+    },
+  } satisfies Prisma.EventInclude;
+}
+
+export type EventData = Prisma.EventGetPayload<{
+  include: ReturnType<typeof getEventDataInclude>;
+}>;
+
+export interface EventsPage {
+  events: EventData[];
+  nextCursor: string | null;
+}
+
+// ============= Ticket Types =============
+
+export function getTicketDataInclude(loggedInUserId: string) {
+  return {
+    event: {
+      include: {
+        studio: true,
+        ticketTypes: true,
+      },
+    },
+    type: true,
+    user: {
+      select: getUserDataSelect(loggedInUserId),
+    },
+  } satisfies Prisma.TicketInclude;
+}
+
+export type TicketData = Prisma.TicketGetPayload<{
+  include: ReturnType<typeof getTicketDataInclude>;
+}>;
+
+export interface TicketsPage {
+  tickets: TicketData[];
+  nextCursor: string | null;
+}

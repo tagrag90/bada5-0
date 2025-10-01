@@ -10,28 +10,37 @@ datasource db {
 }
 
 model User {
-  id                    String          @id
-  username              String          @unique
+  id                    String                 @id
+  username              String                 @unique
   displayName           String
-  email                 String?         @unique
+  email                 String?                @unique
   passwordHash          String?
-  googleId              String?         @unique
+  googleId              String?                @unique
   avatarUrl             String?
   bio                   String?
-  skills                String[]        @default([])
-  createdAt             DateTime        @default(now())
+  skills                String[]               @default([])
+  createdAt             DateTime               @default(now())
+  
+  // 기존 관계
   board_members         board_members[]
   boards                boards[]
   bookmarks             Bookmark[]
   cards                 cards[]
   comments              Comment[]
-  following             Follow[]        @relation("Following")
-  followers             Follow[]        @relation("Followers")
+  following             Follow[]               @relation("Following")
+  followers             Follow[]               @relation("Followers")
   likes                 Like[]
-  issuedNotifications   Notification[]  @relation("Issuer")
-  receivedNotifications Notification[]  @relation("Recipient")
+  issuedNotifications   Notification[]         @relation("Issuer")
+  receivedNotifications Notification[]         @relation("Recipient")
   posts                 Post[]
   sessions              Session[]
+  
+  // Studio 관계
+  ownedStudios          Studio[]               @relation("OwnedStudios")
+  studioMemberships     StudioMember[]
+  studioSubscriptions   StudioSubscription[]
+  tickets               Ticket[]
+  studioItems           StudioItem[]
 
   @@map("users")
 }
@@ -198,4 +207,196 @@ enum BoardRole {
   ADMIN
   MEMBER
   VIEWER
+}
+
+// ============= Studio System Models =============
+
+model Studio {
+  id               String               @id @default(cuid())
+  name             String
+  slug             String               @unique
+  description      String?
+  type             StudioType           @default(PERSONAL)
+  
+  ownerId          String
+  owner            User                 @relation("OwnedStudios", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  avatarUrl        String?
+  bannerUrl        String?
+  isPublic         Boolean              @default(true)
+  isVerified       Boolean              @default(false)
+  
+  subscribersCount Int                  @default(0)
+  
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  
+  members          StudioMember[]
+  subscriptions    StudioSubscription[]
+  events           Event[]
+  items            StudioItem[]
+  
+  @@map("studios")
+}
+
+model StudioMember {
+  id        String      @id @default(cuid())
+  studioId  String
+  userId    String
+  role      StudioRole  @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+  
+  studio    Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([studioId, userId])
+  @@map("studio_members")
+}
+
+model StudioSubscription {
+  id           String   @id @default(cuid())
+  studioId     String
+  userId       String
+  subscribedAt DateTime @default(now())
+  
+  studio       Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([studioId, userId])
+  @@map("studio_subscriptions")
+}
+
+enum StudioType {
+  PERSONAL
+  TEAM
+}
+
+enum StudioRole {
+  OWNER
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+// ============= Ticketing System Models =============
+
+model Event {
+  id          String      @id @default(cuid())
+  studioId    String
+  studio      Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  
+  title       String
+  description String?
+  slug        String      @unique
+  location    String?
+  startDate   DateTime
+  endDate     DateTime
+  imageUrl    String?
+  
+  status      EventStatus @default(DRAFT)
+  isPublic    Boolean     @default(true)
+  viewCount   Int         @default(0)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  ticketTypes TicketType[]
+  tickets     Ticket[]
+  
+  @@map("events")
+}
+
+model TicketType {
+  id          String  @id @default(cuid())
+  eventId     String
+  event       Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  totalCount  Int
+  issuedCount Int     @default(0)
+  price       Int     @default(0)
+  color       String?
+  
+  tickets     Ticket[]
+  
+  @@map("ticket_types")
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  eventId     String
+  typeId      String
+  userId      String
+  
+  qrCode      String       @unique
+  qrSignature String
+  
+  status      TicketStatus @default(VALID)
+  
+  issuedAt    DateTime     @default(now())
+  usedAt      DateTime?
+  checkedInBy String?
+  
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type        TicketType   @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("tickets")
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ONGOING
+  ENDED
+  CANCELLED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+  EXPIRED
+}
+
+// ============= Studio Unified Item System (Notion-style) =============
+
+model StudioItem {
+  id          String       @id @default(cuid())
+  studioId    String
+  studio      Studio       @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  
+  // 공통 필드
+  title       String
+  content     String
+  type        StudioItemType @default(NOTE)
+  
+  // 선택적 필드 (타입에 따라 사용)
+  date        DateTime?
+  time        String?
+  duration    String?
+  location    String?
+  attendees   String[]     @default([])
+  tags        String[]     @default([])
+  
+  // 메타데이터
+  isPinned    Boolean      @default(false)
+  category    String?
+  color       String?
+  
+  // 작성자
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  @@map("studio_items")
+}
+
+enum StudioItemType {
+  NOTE      // 메모
+  EVENT     // 일정/이벤트
+  TASK      // 할 일 (추후 확장)
 }

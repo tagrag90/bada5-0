@@ -65,6 +65,42 @@ export const fileRouter = {
 
       return { mediaId: media.id };
     }),
+  studioAvatar: f({
+    image: { maxFileSize: "2MB" },
+  })
+    .middleware(async () => {
+      const { user } = await validateRequest();
+
+      if (!user) throw new UploadThingError("Unauthorized");
+
+      return { user };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      const newAvatarUrl = file.url.replace(
+        "/f/",
+        `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/`,
+      );
+
+      return { avatarUrl: newAvatarUrl };
+    }),
+  studioBanner: f({
+    image: { maxFileSize: "4MB" },
+  })
+    .middleware(async () => {
+      const { user } = await validateRequest();
+
+      if (!user) throw new UploadThingError("Unauthorized");
+
+      return { user };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      const newBannerUrl = file.url.replace(
+        "/f/",
+        `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/`,
+      );
+
+      return { bannerUrl: newBannerUrl };
+    }),
 } satisfies FileRouter;
 
 export type AppFileRouter = typeof fileRouter;
