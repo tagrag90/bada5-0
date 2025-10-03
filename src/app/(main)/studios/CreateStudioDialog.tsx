@@ -77,7 +77,7 @@ export default function CreateStudioDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6">
+      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle>새 스튜디오 만들기</DialogTitle>
         </DialogHeader>

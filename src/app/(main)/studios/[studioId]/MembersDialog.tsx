@@ -75,7 +75,7 @@ export default function MembersDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6">
+        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>팀 멤버</DialogTitle>

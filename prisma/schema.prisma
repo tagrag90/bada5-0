@@ -69,6 +69,7 @@ model Post {
   title               String?
   content             String
   userId              String
+  studioId            String?
   createdAt           DateTime       @default(now())
   linkPreviews        Json?
   bookmarks           Bookmark[]
@@ -77,6 +78,7 @@ model Post {
   linkedNotifications Notification[]
   attachments         Media[]
   user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studio              Studio?        @relation("StudioPosts", fields: [studioId], references: [id], onDelete: Cascade)
 
   @@map("posts")
 }
@@ -223,6 +225,7 @@ model Studio {
   
   avatarUrl        String?
   bannerUrl        String?
+  socialLinks      String[]             @default([])
   isPublic         Boolean              @default(true)
   isVerified       Boolean              @default(false)
   
@@ -235,6 +238,7 @@ model Studio {
   subscriptions    StudioSubscription[]
   events           Event[]
   items            StudioItem[]
+  posts            Post[]             @relation("StudioPosts")
   
   @@map("studios")
 }

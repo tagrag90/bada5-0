@@ -1,4 +1,3 @@
-import TrendsSidebar from "@/components/TrendsSidebar";
 import TrendingTopics from "@/components/TrendingTopics";
 import SearchField from "@/components/SearchField";
 import { Metadata } from "next";
@@ -61,7 +60,6 @@ export default function Page({ searchParams: { q } }: PageProps) {
           )}
         </div>
       </div>
-      <TrendsSidebar />
     </main>
   );
 }

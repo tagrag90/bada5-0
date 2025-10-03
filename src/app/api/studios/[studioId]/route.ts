@@ -62,7 +62,7 @@ export async function PATCH(
     await requireStudioOwner(user.id, params.studioId);
 
     const body = await req.json();
-    const { name, description, avatarUrl, bannerUrl, isPublic } = body;
+    const { name, description, avatarUrl, bannerUrl, socialLinks, isPublic } = body;
 
     const studio = await prisma.studio.update({
       where: { id: params.studioId },
@@ -71,6 +71,7 @@ export async function PATCH(
         ...(description !== undefined && { description }),
         ...(avatarUrl !== undefined && { avatarUrl }),
         ...(bannerUrl !== undefined && { bannerUrl }),
+        ...(socialLinks !== undefined && { socialLinks }),
         ...(isPublic !== undefined && { isPublic }),
       },
       select: getStudioDataSelect(user.id),

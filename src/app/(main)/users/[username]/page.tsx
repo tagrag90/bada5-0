@@ -1,7 +1,6 @@
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
 import FollowerCount from "@/components/FollowerCount";
-import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
 import prisma from "@/lib/prisma";
 import { FollowerInfo, FollowingInfo, getUserDataSelect, UserData } from "@/lib/types";
@@ -83,7 +82,6 @@ export default async function Page({ params: { username } }: PageProps) {
         </div> */}
         <UserPosts userId={user.id} />
       </div>
-      <TrendsSidebar />
     </main>
   );
 }
@@ -220,7 +218,16 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
         </div>
 
-
+        {/* 내 스튜디오 버튼 (본인 프로필에서만) */}
+        {user.id === loggedInUserId && (
+          <div className="pt-4">
+            <Link href="/studios">
+              <Button variant="ghost" className="w-full bg-gray-100 hover:bg-gray-200">
+                내 스튜디오
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span>

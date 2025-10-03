@@ -1,4 +1,3 @@
-import TrendsSidebar from "@/components/TrendsSidebar";
 import { Metadata } from "next";
 
 import Explore from "./Explore";
@@ -16,7 +15,6 @@ export default function Page() {
         </div> */}
         <Explore />
       </div>
-      <TrendsSidebar />
     </main>
   );
 }

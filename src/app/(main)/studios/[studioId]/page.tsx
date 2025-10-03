@@ -13,6 +13,12 @@ export default async function StudioDetailPage({
     redirect("/login");
   }
 
-  return <StudioDetailContent studioId={params.studioId} />;
+  return (
+    <main className="flex w-full min-w-0 gap-5">
+      <div className="w-full min-w-0 space-y-5">
+        <StudioDetailContent studioId={params.studioId} />
+      </div>
+    </main>
+  );
 }
 

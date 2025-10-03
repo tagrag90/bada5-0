@@ -55,7 +55,7 @@ export default function InviteMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-white dark:bg-gray-900 p-6">
+      <DialogContent className="sm:max-w-[400px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle>멤버 초대</DialogTitle>
         </DialogHeader>

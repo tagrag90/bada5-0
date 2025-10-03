@@ -11,17 +11,32 @@ import EditStudioDialog from "./EditStudioDialog";
 import MembersDialog from "./MembersDialog";
 import StudioCalendar from "./StudioCalendar";
 import StudioNotes from "./StudioNotes";
+import StudioPosts from "./StudioPosts";
+import StudioBadge from "@/components/StudioBadge";
+import SocialLinks from "@/components/SocialLinks";
 import Image from "next/image";
+import { formatNumber } from "@/lib/utils";
 
 export default function StudioDetailContent({ studioId }: { studioId: string }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("events");
+  const [activeTab, setActiveTab] = useState("posts");
+  
   const { data: studio, isLoading } = useQuery({
     queryKey: ["studio", studioId],
     queryFn: async () => {
       const res = await fetch(`/api/studios/${studioId}`);
       if (!res.ok) throw new Error("Failed to fetch studio");
+      return res.json();
+    },
+  });
+
+  // 현재 로그인한 유저 가져오기
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const res = await fetch("/api/users/me");
+      if (!res.ok) return null;
       return res.json();
     },
   });
@@ -42,11 +57,14 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
     );
   }
 
+  const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
+
   return (
-    <div className="w-full max-w-5xl mx-auto p-6 space-y-6">
-      {/* 배너 이미지 */}
-      {studio.bannerUrl && (
-        <Card className="overflow-hidden">
+    <div className="w-full min-w-0 space-y-5">
+      {/* 프로필 카드 (배너 포함) */}
+      <Card className="overflow-hidden" style={{ borderRadius: "1.5rem" }}>
+        {/* 배너 이미지 */}
+        {studio.bannerUrl && (
           <div className="relative w-full aspect-[21/9]">
             <Image
               src={studio.bannerUrl}
@@ -55,15 +73,35 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
               className="object-cover"
             />
           </div>
-        </Card>
-      )}
+        )}
 
-      {/* 헤더 */}
-      <Card className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-muted overflow-hidden relative">
+        {/* 프로필 정보 */}
+        <div className="p-8">
+          <div className="space-y-6">
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold">{studio.name}</h1>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>@{studio.slug}</span>
+                  <StudioBadge size="sm" />
+                </div>
+                
+                {studio.description && (
+                  <div className="mt-4 overflow-hidden whitespace-pre-line break-words">
+                    {studio.description}
+                  </div>
+                )}
+
+                {/* 소셜 링크 */}
+                {studio.socialLinks && studio.socialLinks.length > 0 && (
+                  <div className="mt-4">
+                    <SocialLinks links={studio.socialLinks} />
+                  </div>
+                )}
+              </div>
+
+              {/* 프로필 사진 */}
+              <div className="w-24 h-24 rounded-full bg-muted overflow-hidden relative flex-shrink-0">
                 <Image
                   src={studio.avatarUrl || "/logo-bada.png"}
                   alt={studio.name}
@@ -71,83 +109,118 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
                   className="object-cover"
                 />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold">{studio.name}</h1>
-                <p className="text-muted-foreground">@{studio.slug}</p>
+            </div>
+
+            {/* 통계 */}
+            <div className="flex items-center gap-8 text-sm">
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">
+                  {formatNumber(studio._count.events)}
+                </span>
+                <span className="text-muted-foreground">Post</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">
+                  {formatNumber(studio._count.members)}
+                </span>
+                <span className="text-muted-foreground">Following</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-xl font-bold">
+                  {formatNumber(studio.subscribersCount)}
+                </span>
+                <span className="text-muted-foreground">Followers</span>
               </div>
             </div>
-            {studio.description && (
-              <p className="text-muted-foreground">{studio.description}</p>
-            )}
-            <div className="flex items-center gap-4 text-sm">
-              <span>구독자 {studio.subscribersCount}</span>
-              <span>멤버 {studio._count.members}</span>
-              <span>이벤트 {studio._count.events}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  studio.type === "PERSONAL"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
-                }`}
-              >
-                {studio.type === "PERSONAL" ? "개인" : "팀"}
-              </span>
-              {studio.isVerified && (
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                  인증됨
-                </span>
+
+            {/* 버튼 영역 */}
+            <div className="flex items-center justify-end gap-2">
+              {isOwner ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowEditDialog(true)}
+                  >
+                    Edit profile
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowMembersDialog(true)}
+                  >
+                    멤버
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    className="bg-black text-white hover:bg-black/90"
+                  >
+                    구독
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    메시지
+                  </Button>
+                </>
               )}
-              {!studio.isPublic && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                  비공개
-                </span>
-              )}
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowMembersDialog(true)}>
-              멤버
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
-              설정
-            </Button>
           </div>
         </div>
       </Card>
 
       {/* 탭 네비게이션 */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 bg-card">
-          <TabsTrigger value="events">이벤트</TabsTrigger>
-          <TabsTrigger value="calendar">캘린더</TabsTrigger>
-          <TabsTrigger value="notes">메모</TabsTrigger>
-        </TabsList>
+      <div className="mt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          {/* 좌측 정렬 뱃지 스타일 탭 */}
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`px-6 py-2 rounded-full font-medium transition-all ${
+                activeTab === "posts"
+                  ? "bg-black text-white border-2 border-black"
+                  : "bg-transparent text-foreground border-2 border-gray-300 hover:border-gray-400"
+              }`}
+            >
+              포스트
+            </button>
+            <button
+              onClick={() => setActiveTab("calendar")}
+              className={`px-6 py-2 rounded-full font-medium transition-all ${
+                activeTab === "calendar"
+                  ? "bg-black text-white border-2 border-black"
+                  : "bg-transparent text-foreground border-2 border-gray-300 hover:border-gray-400"
+              }`}
+            >
+              캘린더
+            </button>
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`px-6 py-2 rounded-full font-medium transition-all ${
+                activeTab === "notes"
+                  ? "bg-black text-white border-2 border-black"
+                  : "bg-transparent text-foreground border-2 border-gray-300 hover:border-gray-400"
+              }`}
+            >
+              메모
+            </button>
+          </div>
 
-        <TabsContent value="events" className="mt-6">
-          <Card className="p-12 text-center">
-            <div className="space-y-4">
-              <div className="text-6xl">🎫</div>
-              <div>
-                <h3 className="text-xl font-semibold">아직 이벤트가 없습니다</h3>
-                <p className="text-muted-foreground mt-2">
-                  첫 번째 이벤트를 만들고 티켓을 발급하세요
-                </p>
-              </div>
-              <Button size="lg">이벤트 만들기</Button>
-            </div>
-          </Card>
+        <TabsContent value="posts" className="mt-6">
+          <StudioPosts studioId={studioId} isOwner={isOwner} />
         </TabsContent>
 
-        <TabsContent value="calendar" className="mt-6">
-          <StudioCalendar studioId={studioId} />
-        </TabsContent>
+          <TabsContent value="calendar" className="mt-6">
+            <StudioCalendar studioId={studioId} />
+          </TabsContent>
 
-        <TabsContent value="notes" className="mt-6">
-          <StudioNotes studioId={studioId} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="notes" className="mt-6">
+            <StudioNotes studioId={studioId} />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* 다이얼로그들 */}
       {studio && (
@@ -164,7 +237,16 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
           />
         </>
       )}
+
+      {/* 중앙 하단 Floating 글쓰기 버튼 (소유자만) */}
+      {isOwner && (
+        <Link href={`/studios/${studioId}/write`}>
+          <button className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-black text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2 font-medium">
+            <span className="text-xl">✏️</span>
+            <span>글쓰기</span>
+          </button>
+        </Link>
+      )}
     </div>
   );
 }
-

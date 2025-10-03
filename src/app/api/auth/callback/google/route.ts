@@ -108,8 +108,15 @@ export async function GET(req: NextRequest) {
                 function goBack() {
                   // 부모 창이 있으면 메시지 전송 후 창 닫기
                   if (window.opener) {
-                    window.opener.postMessage({ type: 'GOOGLE_LOGIN_SUCCESS' }, '*');
-                    window.close();
+                    try {
+                      // 현재 origin으로 메시지 전송 (보안 강화)
+                      window.opener.postMessage({ type: 'GOOGLE_LOGIN_SUCCESS' }, window.location.origin);
+                      window.close();
+                    } catch (error) {
+                      console.error('postMessage error:', error);
+                      // 에러 발생 시 홈으로 이동
+                      window.location.href = '/';
+                    }
                   } else {
                     // 시뮬레이터나 같은 창에서 온 경우 뒤로가기 또는 홈으로
                     if (window.history.length > 1) {

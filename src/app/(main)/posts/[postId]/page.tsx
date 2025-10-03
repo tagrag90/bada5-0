@@ -53,7 +53,41 @@ export default async function Page({ params: { postId } }: PageProps) {
   }
 
   const post = await getPost(postId, user.id);
+  
+  // 블로그 포스트인지 확인
+  const isBlogPost = !!post.title && !!post.studioId;
 
+  // 블로그 포스트 상세 페이지 레이아웃
+  if (isBlogPost) {
+    return (
+      <main className="w-full min-w-0">
+        <div className="max-w-4xl mx-auto px-0 md:px-6 py-8">
+          <div className="bg-white rounded-3xl p-4 md:p-8 shadow-sm">
+            {/* 미니멀 뒤로가기 */}
+            <div className="mb-12">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/" className="text-muted-foreground hover:text-foreground">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  뒤로가기
+                </Link>
+              </Button>
+            </div>
+
+            {/* 포스트 */}
+            <Post post={post} />
+
+            {/* 댓글 섹션 */}
+            <div className="mt-16 pt-8 border-t border-gray-200">
+              <h2 className="text-2xl font-bold mb-8">댓글</h2>
+              <Comments post={post} />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 일반 포스트 레이아웃
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
@@ -71,19 +105,6 @@ export default async function Page({ params: { postId } }: PageProps) {
           <h2 className="text-xl font-semibold mb-4">댓글</h2>
           <div>
             <Comments post={post} />
-          </div>
-        </div>
-      </div>
-      <div className="hidden lg:flex lg:flex-col lg:space-y-5 lg:w-80">
-        <div className="sticky top-[5.25rem] space-y-5">
-          <div className="rounded-2xl bg-card p-5">
-            <div className="text-xl font-bold">About this user</div>
-            <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-              <UserInfoSidebar user={post.user} />
-            </Suspense>
-          </div>
-          <div className="w-full">
-            <TrendsSidebar className="!static w-full" />
           </div>
         </div>
       </div>

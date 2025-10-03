@@ -1,0 +1,70 @@
+/* 드래그 핸들 스타일 */
+.ProseMirror {
+  position: relative;
+}
+
+/* 드래그 가능한 블록 (텍스트 단락, 이미지) */
+.ProseMirror [draggable="true"] {
+  cursor: grab;
+  transition: all 0.2s ease;
+  position: relative;
+  padding-left: 24px;
+}
+
+.ProseMirror [draggable="true"]:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+
+/* 드래그 핸들 아이콘 (hover 시만 표시) */
+.ProseMirror [draggable="true"]:hover::before {
+  content: '⋮⋮';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 14px;
+  cursor: grab;
+  user-select: none;
+}
+
+/* 드래그 중일 때 */
+.ProseMirror [draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.5;
+}
+
+/* 이미지 특별 스타일 */
+.ProseMirror img {
+  cursor: move;
+  transition: all 0.2s ease;
+  user-select: none;
+  max-width: 100%;
+  height: auto;
+}
+
+.ProseMirror img:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.01);
+}
+
+/* 선택된 노드 */
+.ProseMirror .ProseMirror-selectednode {
+  outline: 2px solid #00DD89;
+  outline-offset: 2px;
+}
+
+/* 드래그 중인 이미지 */
+.ProseMirror img.ProseMirror-selectednode {
+  opacity: 0.5;
+}
+
+/* 드롭 커서 */
+.ProseMirror .ProseMirror-dropcursor {
+  position: relative;
+  pointer-events: none;
+  border-left: 3px solid #00DD89;
+  margin-left: -1.5px;
+}
+

@@ -27,6 +27,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import ReactHtmlParser from "react-html-parser";
 import LinkPreviewComponent from "./editor/LinkPreviewComponent";
+import StudioBadge from "../StudioBadge";
+import BlogPostCard from "./BlogPostCard";
 
 interface PostProps {
   post: PostData;
@@ -44,6 +46,9 @@ export default function Post({ post }: PostProps) {
 
   // 상세 페이지인지 확인
   const isDetailPage = pathname?.startsWith(`/posts/${post.id}`);
+  
+  // 블로그형 포스트인지 확인 (제목이 있고 스튜디오 포스트)
+  const isBlogPost = !!post.title && !!post.studioId;
   
 
   const updateCommentCount = (newCount: number) => {
@@ -65,6 +70,76 @@ export default function Post({ post }: PostProps) {
 
 
 
+  // 블로그 포스트 상세 페이지 전용 레이아웃
+  if (isBlogPost && isDetailPage) {
+    return (
+      <>
+        <article className="w-full bg-white">
+          {/* 미니멀 메타 정보 */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-bold mb-6 leading-tight">{post.title}</h1>
+            <div className="flex items-center justify-center gap-3 text-muted-foreground">
+              {post.studio ? (
+                <>
+                  <Link
+                    href={`/studios/${post.studio.id}`}
+                    className="hover:underline font-medium"
+                  >
+                    {post.studio.name}
+                  </Link>
+                  <span>·</span>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={`/users/${post.user.username}`}
+                    className="hover:underline font-medium"
+                  >
+                    {post.user.displayName}
+                  </Link>
+                  <span>·</span>
+                </>
+              )}
+              <time suppressHydrationWarning>
+                {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </time>
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <hr className="border-t border-gray-200 mb-12" />
+
+          {/* 본문 내용 */}
+          <div className="prose prose-lg max-w-none mb-16">
+            <ContentRenderer content={post.content} />
+          </div>
+
+          {/* 구분선 */}
+          <hr className="border-t border-gray-200 mt-16" />
+        </article>
+
+        {/* 수정 모달 */}
+        {isEditModalOpen && (
+          <PostEditorModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              queryClient.invalidateQueries({
+                queryKey: ["post-feed"],
+              });
+            }}
+            post={post}
+          />
+        )}
+      </>
+    );
+  }
+
+  // 일반 포스트 레이아웃
   return (
     <>
     <article
@@ -76,42 +151,76 @@ export default function Post({ post }: PostProps) {
       )}
     >
       <div className="flex items-start">
-        {isLoggedIn ? (
-          <UserTooltip user={post.user}>
-            <Link
-              href={`/users/${post.user.username}`}
-              className="mr-3 flex-shrink-0"
-            >
-              <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
-            </Link>
-          </UserTooltip>
-        ) : (
-          <div
-            className="mr-3 flex-shrink-0 cursor-pointer"
-            onClick={() => handleRequireLogin("프로필 보기")}
+        {/* 스튜디오 포스트면 스튜디오 아바타, 아니면 유저 아바타 */}
+        {post.studio ? (
+          <Link
+            href={`/studios/${post.studio.id}`}
+            className="mr-3 flex-shrink-0"
           >
-            <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
-          </div>
+            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden relative">
+              <Image
+                src={post.studio.avatarUrl || "/logo-bada.png"}
+                alt={post.studio.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </Link>
+        ) : (
+          <>
+            {isLoggedIn ? (
+              <UserTooltip user={post.user}>
+                <Link
+                  href={`/users/${post.user.username}`}
+                  className="mr-3 flex-shrink-0"
+                >
+                  <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
+                </Link>
+              </UserTooltip>
+            ) : (
+              <div
+                className="mr-3 flex-shrink-0 cursor-pointer"
+                onClick={() => handleRequireLogin("프로필 보기")}
+              >
+                <UserAvatar avatarUrl={post.user.avatarUrl} userId={post.user.id} size={40} />
+              </div>
+            )}
+          </>
         )}
         <div className="min-w-0 flex-grow">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center space-x-2">
-              {isLoggedIn ? (
-                <UserTooltip user={post.user}>
+              {/* 스튜디오 포스트면 스튜디오 이름, 아니면 유저 이름 */}
+              {post.studio ? (
+                <>
                   <Link
-                    href={`/users/${post.user.username}`}
+                    href={`/studios/${post.studio.id}`}
                     className="truncate font-semibold hover:underline"
                   >
-                    {post.user.displayName}
+                    {post.studio.name}
                   </Link>
-                </UserTooltip>
+                  <StudioBadge size="sm" />
+                </>
               ) : (
-                <span
-                  className="cursor-pointer truncate font-semibold hover:underline"
-                  onClick={() => handleRequireLogin("프로필 보기")}
-                >
-                  {post.user.displayName}
-                </span>
+                <>
+                  {isLoggedIn ? (
+                    <UserTooltip user={post.user}>
+                      <Link
+                        href={`/users/${post.user.username}`}
+                        className="truncate font-semibold hover:underline"
+                      >
+                        {post.user.displayName}
+                      </Link>
+                    </UserTooltip>
+                  ) : (
+                    <span
+                      className="cursor-pointer truncate font-semibold hover:underline"
+                      onClick={() => handleRequireLogin("프로필 보기")}
+                    >
+                      {post.user.displayName}
+                    </span>
+                  )}
+                </>
               )}
               <span className="text-sm text-gray-500" suppressHydrationWarning>
                 · {formatRelativeDate(post.createdAt)}
@@ -126,13 +235,24 @@ export default function Post({ post }: PostProps) {
               />
             )}
           </div>
-          <div className="post-content break-words text-base">
-            <ContentRenderer content={post.content} />
-          </div>
-          {!!post.attachments.length && (
+          
+          {/* 블로그형 포스트 (피드에서만 미리보기) */}
+          {isBlogPost && !isDetailPage ? (
             <div className="mt-3">
-              <MediaSlider attachments={post.attachments} />
+              <BlogPostCard post={post} />
             </div>
+          ) : (
+            /* 일반 포스트 또는 상세 페이지 */
+            <>
+              <div className="post-content break-words text-base">
+                <ContentRenderer content={post.content} />
+              </div>
+              {!!post.attachments.length && (
+                <div className="mt-3">
+                  <MediaSlider attachments={post.attachments} />
+                </div>
+              )}
+            </>
           )}
 
       {/* 링크 미리보기 표시 - content에서 메타데이터 추출 */}
@@ -162,60 +282,64 @@ export default function Post({ post }: PostProps) {
           return null;
         }
       })()}
-          <div className="mt-3 flex items-center space-x-4">
-            {isLoggedIn ? (
-              <>
-                <LikeButton
-                  postId={post.id}
-                  initialState={{
-                    likes: post._count.likes,
-                    isLikedByUser: post.likes.some(
-                      (like) => like.userId === user?.id,
-                    ),
-                  }}
-                />
-                <CommentButton commentCount={commentCount} postId={post.id} />
-                <BookmarkButton
-                  postId={post.id}
-                  initialState={{
-                    isBookmarkedByUser: post.bookmarks.some(
-                      (bookmark) => bookmark.userId === user?.id,
-                    ),
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleRequireLogin("좋아요")}
-                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
-                >
-                  <Heart
-                    strokeWidth={1.5}
-                    className="size-5 fill-white text-[#000]"
+          {/* 블로그 포스트가 아닐 때만 액션 버튼 표시 */}
+          {!isBlogPost && (
+            <div className="mt-3 flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  <LikeButton
+                    postId={post.id}
+                    initialState={{
+                      likes: post._count.likes,
+                      isLikedByUser: post.likes.some(
+                        (like) => like.userId === user?.id,
+                      ),
+                    }}
                   />
-                  <span className="text-sm font-normal tabular-nums">
-                    {post._count.likes}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleRequireLogin("댓글 작성")}
-                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
-                >
-                  <MessageCircle className="size-5 text-[#000]" />
-                  <span className="text-sm font-normal tabular-nums">
-                    {commentCount}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleRequireLogin("북마크")}
-                  className="flex items-center gap-2 rounded-[10px] px-4 py-2"
-                >
-                  <Bookmark className="size-5 text-[#000]" />
-                </button>
-              </>
-            )}
-          </div>
+                  <CommentButton commentCount={commentCount} postId={post.id} />
+                  <BookmarkButton
+                    postId={post.id}
+                    initialState={{
+                      isBookmarkedByUser: post.bookmarks.some(
+                        (bookmark) => bookmark.userId === user?.id,
+                      ),
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleRequireLogin("좋아요")}
+                    className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                  >
+                    <Heart
+                      strokeWidth={1.5}
+                      className="size-5 fill-white text-[#000]"
+                    />
+                    <span className="text-sm font-normal tabular-nums">
+                      {post._count.likes}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleRequireLogin("댓글 작성")}
+                    className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                  >
+                    <MessageCircle className="size-5 text-[#000]" />
+                    <span className="text-sm font-normal tabular-nums">
+                      {commentCount}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleRequireLogin("북마크")}
+                    className="flex items-center gap-2 rounded-[10px] px-4 py-2"
+                  >
+                    <Bookmark className="size-5 text-[#000]" />
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        
         </div>
       </div>
       {isLoggedIn && showComments && (

@@ -170,7 +170,7 @@ export default function StudioCalendar({ studioId }: { studioId: string }) {
 
       {/* 일정 추가 다이얼로그 */}
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 p-6">
+        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
           <DialogHeader>
             <DialogTitle>새 일정 추가</DialogTitle>
           </DialogHeader>

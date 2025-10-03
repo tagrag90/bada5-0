@@ -51,6 +51,8 @@ export default function useMediaUpload() {
           return {
             ...a,
             mediaId: uploadResult.serverData.mediaId,
+            url: uploadResult.url,
+            type: uploadResult.type,
             isUploading: false,
           };
         }),

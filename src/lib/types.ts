@@ -36,6 +36,14 @@ export function getPostDataInclude(loggedInUserId: string) {
     user: {
       select: getUserDataSelect(loggedInUserId),
     },
+    studio: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        avatarUrl: true,
+      },
+    },
     attachments: true,
     likes: {
       where: {
@@ -149,6 +157,7 @@ export function getStudioDataSelect(loggedInUserId: string) {
     type: true,
     avatarUrl: true,
     bannerUrl: true,
+    socialLinks: true,
     isPublic: true,
     isVerified: true,
     subscribersCount: true,

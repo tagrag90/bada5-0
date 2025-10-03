@@ -39,6 +39,14 @@ export async function GET(req: Request) {
           },
         },
       },
+      studio: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          avatarUrl: true,
+        },
+      },
       attachments: true,
       likes: {
         where: {

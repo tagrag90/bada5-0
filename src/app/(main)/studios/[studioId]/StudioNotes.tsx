@@ -20,6 +20,7 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -90,9 +91,6 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
     note.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const pinnedNotes = filteredNotes.filter((note: any) => note.isPinned);
-  const regularNotes = filteredNotes.filter((note: any) => !note.isPinned);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate(formData);
@@ -116,76 +114,16 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
         </Button>
       </div>
 
-      {/* 고정된 메모 */}
-      {pinnedNotes.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            고정된 메모
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pinnedNotes.map((note: any) => (
-              <Card key={note.id} className="bg-yellow-50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base">{note.title}</CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {note.type === "NOTE" ? "메모" : "일정"}
-                        </Badge>
-                        {note.date && (
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(note.date).toLocaleDateString("ko-KR")}
-                            {note.time && ` ${note.time}`}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(note.id)}
-                      className="text-red-500"
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-700 line-clamp-4 whitespace-pre-line">
-                    {note.content}
-                  </p>
-                  {note.location && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      📍 {note.location}
-                    </p>
-                  )}
-                  {note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {note.tags.map((tag: string) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-3">
-                    {note.author.displayName}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 일반 메모 */}
+      {/* 메모 그리드 */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">모든 메모</h3>
-        {regularNotes.length > 0 ? (
+        {filteredNotes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {regularNotes.map((note: any) => (
-              <Card key={note.id}>
+            {filteredNotes.map((note: any) => (
+              <Card 
+                key={note.id} 
+                className="bg-yellow-50 border-yellow-200 hover:shadow-lg transition-all cursor-pointer"
+                onClick={() => setSelectedNote(note)}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -205,7 +143,10 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteMutation.mutate(note.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMutation.mutate(note.id);
+                      }}
                       className="text-red-500"
                     >
                       삭제
@@ -246,7 +187,7 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
 
       {/* 메모 추가 다이얼로그 */}
       <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6">
+        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
           <DialogHeader>
             <DialogTitle>새 메모 작성</DialogTitle>
           </DialogHeader>
@@ -345,6 +286,76 @@ export default function StudioNotes({ studioId }: { studioId: string }) {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 메모 상세보기 다이얼로그 */}
+      <Dialog open={!!selectedNote} onOpenChange={() => setSelectedNote(null)}>
+        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
+          {selectedNote && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedNote.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {selectedNote.type === "NOTE" ? "메모" : "일정"}
+                  </Badge>
+                  {selectedNote.date && (
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(selectedNote.date).toLocaleDateString("ko-KR")}
+                      {selectedNote.time && ` ${selectedNote.time}`}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-sm whitespace-pre-line">
+                  {selectedNote.content}
+                </p>
+
+                {selectedNote.location && (
+                  <p className="text-sm text-muted-foreground">
+                    📍 {selectedNote.location}
+                  </p>
+                )}
+
+                {selectedNote.tags && selectedNote.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedNote.tags.map((tag: string) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="pt-4 border-t text-sm text-muted-foreground">
+                  작성자: {selectedNote.author.displayName}
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setSelectedNote(null)}
+                  >
+                    닫기
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-red-500"
+                    onClick={() => {
+                      deleteMutation.mutate(selectedNote.id);
+                      setSelectedNote(null);
+                    }}
+                  >
+                    삭제
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

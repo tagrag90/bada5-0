@@ -25,52 +25,38 @@ export default async function TrendsSidebar({ className }: TrendsSidebarProps) {
   return (
     <div
       className={cn(
-        "sticky top-[5.25rem] hidden h-fit w-72 flex-none space-y-5 rounded-2xl md:block lg:w-80",
+        "h-fit space-y-5",
         className,
       )}
     >
-      {/* 내 팀 스페이스 버튼 - 로그인한 사용자에게만 표시 */}
-      {user && (
-        <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-          <Button 
-            asChild 
-            className="w-full flex items-center justify-center gap-2"
-            variant="outline"
-          >
-            <Link href="/team-space-demo">
-              <Users className="h-4 w-4" />
-              내 팀 스페이스
-            </Link>
-          </Button>
-        </div>
-      )}
-
-      <div className="relative group mb-4">
-        {/* 공지사항 */}
-        <div 
-          className="relative space-y-3 rounded-2xl bg-black p-4 shadow-md transition-all duration-500 group-hover:scale-[1.03]"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Image
-                src={Logo}
-                alt="logo"
-                width={20}
-                height={20}
-              />
-              <span className="text-sm font-bold text-white">Notice</span>
-            </div>
-          </div>
-          
-          <h2 className="text-sm font-medium text-white">
-            Welcome to Divetobada! It&apos;s a social community for everyone who likes K-culture.
-          </h2>
-        </div>
-      </div>
       {/* <LatestYoutubeVideo channelId="UC9uSl4n2Zmz__HciYpWyASw" /> */}
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         <WhoToFollow />
+        <StudiosToExplore />
         <TrendingTopicsWithBrand />
+        
+        {/* 공지사항 - 맨 아래로 이동 */}
+        <div className="relative group">
+          <div 
+            className="relative space-y-3 rounded-2xl bg-black p-6 shadow-md transition-all duration-500 group-hover:scale-[1.03] mx-4 my-6"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Image
+                  src={Logo}
+                  alt="logo"
+                  width={20}
+                  height={20}
+                />
+                <span className="text-sm font-bold text-white">Notice</span>
+              </div>
+            </div>
+            
+            <h2 className="text-sm font-medium text-white">
+              Welcome to Divetobada! It&apos;s a social community for everyone who likes K-culture.
+            </h2>
+          </div>
+        </div>
       </Suspense>
     </div>
   );
@@ -133,11 +119,13 @@ async function WhoToFollow() {
 }
 
 import TrendingTopics from "./TrendingTopics";
+import StudiosToExplore from "./StudiosToExplore";
 
 async function TrendingTopicsWithBrand() {
   return (
     <>
-      <TrendingTopics />
+      {/* 트렌딩 토픽 임시 주석처리 */}
+      {/* <TrendingTopics /> */}
       
       {/* 브랜드 사이드바 */}
       <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">

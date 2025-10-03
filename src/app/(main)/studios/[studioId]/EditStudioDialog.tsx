@@ -32,6 +32,8 @@ export default function EditStudioDialog({
   const [name, setName] = useState(studio.name);
   const [description, setDescription] = useState(studio.description || "");
   const [isPublic, setIsPublic] = useState(studio.isPublic);
+  const [socialLinks, setSocialLinks] = useState<string[]>(studio.socialLinks || []);
+  const [newLink, setNewLink] = useState("");
   
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
   const [croppedBanner, setCroppedBanner] = useState<Blob | null>(null);
@@ -45,6 +47,7 @@ export default function EditStudioDialog({
       setName(studio.name);
       setDescription(studio.description || "");
       setIsPublic(studio.isPublic);
+      setSocialLinks(studio.socialLinks || []);
     }
   }, [studio]);
 
@@ -73,7 +76,7 @@ export default function EditStudioDialog({
       const res = await fetch(`/api/studios/${studio.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, avatarUrl, bannerUrl }),
+        body: JSON.stringify({ ...data, avatarUrl, bannerUrl, socialLinks }),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -92,7 +95,18 @@ export default function EditStudioDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ name, description, isPublic });
+    updateMutation.mutate({ name, description, isPublic, socialLinks });
+  };
+
+  const addLink = () => {
+    if (newLink.trim() && !socialLinks.includes(newLink.trim())) {
+      setSocialLinks([...socialLinks, newLink.trim()]);
+      setNewLink("");
+    }
+  };
+
+  const removeLink = (index: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
   };
 
   const handleImageSelect = (file: File | undefined, type: "avatar" | "banner") => {
@@ -112,7 +126,7 @@ export default function EditStudioDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6">
+      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-900 p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle>스튜디오 설정</DialogTitle>
         </DialogHeader>
@@ -161,6 +175,40 @@ export default function EditStudioDialog({
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>소셜 링크</Label>
+            <div className="space-y-2">
+              {socialLinks.map((link, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={link} disabled className="flex-1 text-sm" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeLink(index)}
+                    className="text-red-500"
+                  >
+                    삭제
+                  </Button>
+                </div>
+              ))}
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="https://instagram.com/..."
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  className="flex-1"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addLink}>
+                  추가
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              URL을 입력하면 자동으로 플랫폼 아이콘이 표시됩니다
+            </p>
           </div>
 
           <div className="space-y-2">

@@ -9,6 +9,12 @@ export default function GoogleSignInButton() {
   useEffect(() => {
     // 구글 로그인 완료 메시지 리스너
     const handleMessage = (event: MessageEvent) => {
+      // origin 검증 추가 (보안 강화)
+      if (event.origin !== window.location.origin) {
+        console.warn('Rejected postMessage from invalid origin:', event.origin);
+        return;
+      }
+
       if (event.data?.type === 'GOOGLE_LOGIN_SUCCESS') {
         setIsLoading(false);
         // 페이지 새로고침하여 로그인 상태 반영

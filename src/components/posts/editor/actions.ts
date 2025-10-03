@@ -20,10 +20,12 @@ const UpdatePostSchema = z.object({
 });
 
 export async function submitPost(input: {
+  title?: string;
   content: string;
   mediaIds: string[];
-  linkPreviews?: any[]; // 링크 미리보기 데이터
-  id?: string; // 수정 모드일 때 사용
+  linkPreviews?: any[];
+  id?: string;
+  studioId?: string;
 }) {
   const { user } = await validateRequest();
 
@@ -33,6 +35,7 @@ export async function submitPost(input: {
   if (input.id) {
     return updatePost({
       id: input.id,
+      title: input.title,
       content: input.content,
       mediaIds: input.mediaIds,
       linkPreviews: input.linkPreviews
@@ -73,8 +76,10 @@ export async function submitPost(input: {
 
   const newPost = await prisma.post.create({
     data: {
+      title: input.title || null,
       content: finalContent,
       userId: user.id,
+      ...(input.studioId && { studioId: input.studioId }),
       attachments: {
         connect: mediaIds.map((id) => ({ id })),
       },
@@ -87,6 +92,7 @@ export async function submitPost(input: {
 
 export async function updatePost(input: {
   id: string;
+  title?: string;
   content: string;
   mediaIds: string[];
   linkPreviews?: any[]; // 링크 미리보기 데이터
@@ -149,6 +155,7 @@ export async function updatePost(input: {
   const updatedPost = await prisma.post.update({
     where: { id },
     data: {
+      title: input.title || null,
       content: finalContent,
       attachments: {
         connect: mediaIds.map((mediaId) => ({ id: mediaId })),

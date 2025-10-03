@@ -25,6 +25,7 @@ import Image from "next/image";
 import { ClipboardEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
+import "./DragHandle.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
 import MediaReorderableGrid from "./MediaReorderableGrid";
 // import { YouTube } from "./extensions/YouTube"; // YouTube 별도 임베드 기능 제거
@@ -35,6 +36,8 @@ import Strike from "@tiptap/extension-strike";
 import Code from "@tiptap/extension-code";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
+import TiptapImage from "@tiptap/extension-image";
+import Dropcursor from "@tiptap/extension-dropcursor";
 import LinkPreview from "./extensions/LinkPreview";
 import LinkPreviewComponent from "./LinkPreviewComponent";
 
@@ -50,12 +53,16 @@ const debounce = (func: Function, delay: number) => {
 interface PostEditorProps {
   onSuccess?: () => void;
   post?: PostData;
+  studioId?: string;
+  studio?: any;
 }
 
-export default function PostEditor({ onSuccess, post }: PostEditorProps) {
+export default function PostEditor({ onSuccess, post, studioId, studio }: PostEditorProps) {
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
+  const [title, setTitle] = useState(post?.title || "");
   const isEditMode = !!post;
+  const placeholderText = studio ? "이야기를 시작하세요..." : "무슨 일이 일어나고 있나요?";
   
   // 드래그 앤 드롭 상태 관리
   const [isDragOver, setIsDragOver] = useState(false);
@@ -86,7 +93,13 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = () => {
-    fileInputRef.current?.click();
+    if (studio) {
+      // 스튜디오: 파일 선택기 열기 (인라인 삽입용)
+      fileInputRef.current?.click();
+    } else {
+      // 일반 유저: 기존 방식
+      fileInputRef.current?.click();
+    }
   };
 
   // 드래그 앤 드롭 이벤트 핸들러들
@@ -137,8 +150,19 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     );
     
     if (imageFiles.length > 0) {
-      startUpload(imageFiles);
+      if (studio) {
+        // 스튜디오: 인라인 삽입을 위해 업로드
+        handleStudioImageUpload(imageFiles);
+      } else {
+        // 일반: 기존 방식
+        startUpload(imageFiles);
+      }
     }
+  };
+
+  // 스튜디오 이미지 업로드
+  const handleStudioImageUpload = (files: File[]) => {
+    startUpload(files);
   };
 
   // URL별 로딩 상태 관리 (중복 방지)
@@ -160,11 +184,21 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
       
       if (!urls) return;
       
+      // img 태그 안의 URL 추출 (제외용)
+      const imgSrcRegex = /<img[^>]+src=["']([^"']+)["']/g;
+      const imgUrls = new Set<string>();
+      let imgMatch;
+      while ((imgMatch = imgSrcRegex.exec(content)) !== null) {
+        imgUrls.add(imgMatch[1]);
+      }
+      
       // 새로운 URL만 처리 (이미 미리보기가 생성된 URL 또는 로딩 중인 URL 제외)
       const newUrls = urls.filter(url => 
         !linkPreviews.some(preview => preview.url === url) &&
         !loadingUrls.has(url) &&
         !url.match(/\.(jpg|jpeg|png|gif|webp|mp4|avi|mov)$/i) && // 이미지/비디오 파일 제외
+        !url.includes('utfs.io') && // uploadthing 이미지 URL 제외
+        !imgUrls.has(url) && // img 태그 안의 URL 제외
         true // 모든 URL 처리 (YouTube 포함)
       );
       
@@ -261,6 +295,39 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     extensions: [
       StarterKit.configure({
         hardBreak: false,
+        paragraph: {
+          HTMLAttributes: {
+            class: "my-2",
+            ...(studio && {
+              draggable: "true",
+              'data-drag-handle': "",
+            }),
+          },
+        },
+        heading: {
+          HTMLAttributes: {
+            ...(studio && {
+              draggable: "true",
+              'data-drag-handle': "",
+            }),
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            ...(studio && {
+              draggable: "true",
+              'data-drag-handle': "",
+            }),
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            ...(studio && {
+              draggable: "true",
+              'data-drag-handle': "",
+            }),
+          },
+        },
       }),
       HardBreak.extend({
         addKeyboardShortcuts() {
@@ -275,7 +342,7 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder: "무슨 일이 일어나고 있나요?",
+        placeholder: placeholderText,
       }),
       // YouTube.configure({
       //   inline: false,
@@ -291,6 +358,18 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
       Link.configure({
         autolink: true,
         openOnClick: false,
+      }),
+      TiptapImage.configure({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full h-auto my-4 cursor-move",
+          draggable: "true",
+        },
+      }),
+      Dropcursor.configure({
+        color: "#00DD89",
+        width: 3,
       }),
       // LinkPreview.configure({
       //   HTMLAttributes: {
@@ -350,24 +429,53 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
     }
   }, [isEditMode, post, editor, setAttachments]);
 
+  // 이미 삽입된 이미지 URL 추적
+  const insertedImageUrls = useRef<Set<string>>(new Set());
+
+  // 스튜디오에서 업로드 완료 시 에디터에 삽입
+  useEffect(() => {
+    if (studio && attachments.length > 0 && editor) {
+      attachments.forEach((attachment) => {
+        if (
+          attachment.url && 
+          !attachment.isUploading && 
+          !insertedImageUrls.current.has(attachment.url)
+        ) {
+          // 에디터에 이미지 삽입
+          editor.commands.setImage({ 
+            src: attachment.url,
+            alt: attachment.file.name 
+          });
+          // 삽입 완료 표시
+          insertedImageUrls.current.add(attachment.url);
+          // attachments에서 제거
+          setTimeout(() => removeAttachment(attachment.file.name), 100);
+        }
+      });
+    }
+  }, [attachments, studio, editor, removeAttachment]);
+
   const handleSubmit = async () => {
     try {
       if (isEditMode && post) {
         await mutation.mutateAsync({
           id: post.id,
+          title: studio ? title : undefined,
           content: editorInput,
-          mediaIds: attachments
+          mediaIds: studio ? [] : attachments
             .map((a) => a.id || a.mediaId)
             .filter(Boolean) as string[],
           linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
         });
       } else {
         await mutation.mutateAsync({
+          title: studio ? title : undefined,
           content: editorInput,
-          mediaIds: attachments
+          mediaIds: studio ? [] : attachments
             .map((a) => a.mediaId)
             .filter(Boolean) as string[],
           linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
+          studioId,
         });
       }
 
@@ -375,6 +483,8 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
       resetMediaUploads();
       setLinkPreviews([]); // 링크 미리보기 초기화
       setEditorInput("");
+      setTitle("");
+      insertedImageUrls.current.clear(); // 삽입된 이미지 추적 초기화
       onSuccess?.();
     } catch (error) {
       console.error("Failed to submit post:", error);
@@ -433,8 +543,24 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col">
+    <div className={cn(
+      "flex flex-col",
+      studio ? "gap-8 min-h-[calc(100vh-200px)]" : "gap-4"
+    )}>
+      {/* 제목 입력 (스튜디오 전용) */}
+      {studio && (
+        <div>
+          <input
+            type="text"
+            placeholder="제목을 입력하세요"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full text-5xl font-bold border-none outline-none focus:outline-none bg-transparent placeholder:text-muted-foreground/40 px-0"
+          />
+        </div>
+      )}
+
+      <div className={cn("flex flex-col", studio ? "flex-1" : "")}>
         <div 
           className={cn(
             "flex gap-3 relative transition-all duration-200",
@@ -456,16 +582,24 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
             </div>
           )}
           
-          <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
+          {/* 스튜디오가 아닐 때만 아바타 표시 */}
+          {!studio && (
+            <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
+          )}
+          
           <div className="flex-1">
             <EditorContent
               editor={editor}
-              className="prose prose-stone dark:prose-invert w-full max-w-full focus:outline-none min-h-[150px]"
+              className={cn(
+                "prose prose-stone dark:prose-invert w-full max-w-full focus:outline-none",
+                studio ? "prose-lg min-h-[400px] text-lg" : "min-h-[150px]"
+              )}
             />
           </div>
         </div>
 
-        {attachments.length > 0 && (
+        {/* 스튜디오가 아닐 때만 하단 그리드 표시 */}
+        {!studio && attachments.length > 0 && (
           <MediaReorderableGrid
             attachments={attachments}
             onReorder={setAttachments}
@@ -523,102 +657,148 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           </div>
         )}
 
-        {/* 에디터 기능 버튼들 - 사진첨부, 볼드체만 활성화, 나머지 주석처리 */}
-        <div className="mt-2 flex items-center gap-1 border-y p-2">
-          {/* 볼드체 버튼 - 활성화 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            disabled={!editor.can().chain().focus().toggleBold().run()}
-            data-active={editor.isActive("bold")}
-            title="굵게"
-          >
-            <Bold className="h-5 w-5" />
-          </Button>
+        {/* 하단 고정 툴바 (스튜디오용) + 호버 효과 */}
+        {studio ? (
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 pointer-events-none">
+            <div className="group pointer-events-auto">
+              <div className="bg-card border shadow-lg rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-300 ease-in-out transform group-hover:-translate-y-2 group-hover:shadow-xl">
+                {/* 볼드체 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  disabled={!editor.can().chain().focus().toggleBold().run()}
+                  data-active={editor.isActive("bold")}
+                  title="굵게"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
 
-          {/* 사진 첨부 버튼 - 활성화 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={handleImageClick}
-            disabled={isUploading}
-            title="미디어"
-          >
-            <ImagesIcon className="h-5 w-5" />
-          </Button>
+                {/* 사진 첨부 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-9 w-9"
+                  onClick={handleImageClick}
+                  disabled={isUploading}
+                  title="미디어"
+                >
+                  <ImagesIcon className="h-4 w-4" />
+                </Button>
 
-          {/* 나머지 버튼들 - 주석처리 */}
-          {/* <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            disabled={!editor.can().chain().focus().toggleItalic().run()}
-            data-active={editor.isActive("italic")}
-            title="기울임꼴"
-          >
-            <ItalicIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            disabled={!editor.can().chain().focus().toggleUnderline().run()}
-            data-active={editor.isActive("underline")}
-            title="밑줄"
-          >
-            <UnderlineIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            disabled={!editor.can().chain().focus().toggleStrike().run()}
-            data-active={editor.isActive("strike")}
-            title="취소선"
-          >
-            <StrikethroughIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            disabled={!editor.can().chain().focus().toggleCode().run()}
-            data-active={editor.isActive("code")}
-            title="코드"
-          >
-            <CodeIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn("rounded-full", editorActiveStyle)}
-            onClick={() =>
-              editor.chain().focus().toggleHighlight({ color: "#B2FF85" }).run()
-            }
-            disabled={!editor.can().chain().focus().toggleHighlight().run()}
-            data-active={editor.isActive("highlight", { color: "#B2FF85" })}
-            title="하이라이트"
-          >
-            <HighlighterIcon className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={handleYoutubeEmbed}
-            disabled={!editor}
-            title="유튜브"
-          >
-            <_YoutubeIcon className="h-5 w-5" />
-          </Button> */}
-        </div>
+                <div className="w-px h-6 bg-border mx-1" />
+
+                {/* 게시 버튼 */}
+                <LoadingButton
+                  onClick={handleSubmit}
+                  loading={mutation.isPending || isUploading}
+                  disabled={!editor.getText().trim() && attachments.length === 0}
+                  className="rounded-full px-6 h-9"
+                >
+                  게시
+                </LoadingButton>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* 일반 툴바 (일반 포스트용) */
+          <div className="mt-2 flex items-center gap-1 border-y p-2">
+            {/* 볼드체 버튼 - 활성화 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              disabled={!editor.can().chain().focus().toggleBold().run()}
+              data-active={editor.isActive("bold")}
+              title="굵게"
+            >
+              <Bold className="h-5 w-5" />
+            </Button>
+
+            {/* 사진 첨부 버튼 - 활성화 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={handleImageClick}
+              disabled={isUploading}
+              title="미디어"
+            >
+              <ImagesIcon className="h-5 w-5" />
+            </Button>
+
+            {/* 나머지 버튼들 - 주석처리 */}
+            {/* <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              disabled={!editor.can().chain().focus().toggleItalic().run()}
+              data-active={editor.isActive("italic")}
+              title="기울임꼴"
+            >
+              <ItalicIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              disabled={!editor.can().chain().focus().toggleUnderline().run()}
+              data-active={editor.isActive("underline")}
+              title="밑줄"
+            >
+              <UnderlineIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              disabled={!editor.can().chain().focus().toggleStrike().run()}
+              data-active={editor.isActive("strike")}
+              title="취소선"
+            >
+              <StrikethroughIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              disabled={!editor.can().chain().focus().toggleCode().run()}
+              data-active={editor.isActive("code")}
+              title="코드"
+            >
+              <CodeIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() =>
+                editor.chain().focus().toggleHighlight({ color: "#B2FF85" }).run()
+              }
+              disabled={!editor.can().chain().focus().toggleHighlight().run()}
+              data-active={editor.isActive("highlight", { color: "#B2FF85" })}
+              title="하이라이트"
+            >
+              <HighlighterIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={handleYoutubeEmbed}
+              disabled={!editor}
+              title="유튜브"
+            >
+              <_YoutubeIcon className="h-5 w-5" />
+            </Button> */}
+          </div>
+        )}
 
         {/* 파일 인풋 - 사진 첨부 기능 유지 */}
         <input
@@ -629,21 +809,28 @@ export default function PostEditor({ onSuccess, post }: PostEditorProps) {
           multiple
           onChange={(e) => {
             if (e.target.files) {
-              startUpload(Array.from(e.target.files));
+              const files = Array.from(e.target.files);
+              if (studio) {
+                handleStudioImageUpload(files);
+              } else {
+                startUpload(files);
+              }
               e.target.value = "";
             }
           }}
         />
-        <div className="mt-2 flex justify-end">
-          <LoadingButton
-            onClick={handleSubmit}
-            loading={mutation.isPending}
-            disabled={!editorInput.trim() && attachments.length === 0}
-            className="min-w-20"
-          >
-            {isEditMode ? "수정" : "게시"}
-          </LoadingButton>
-        </div>
+        {!studio && (
+          <div className="mt-2 flex justify-end">
+            <LoadingButton
+              onClick={handleSubmit}
+              loading={mutation.isPending}
+              disabled={!editorInput.trim() && attachments.length === 0}
+              className="min-w-20"
+            >
+              {isEditMode ? "수정" : "게시"}
+            </LoadingButton>
+          </div>
+        )}
       </div>
     </div>
   );

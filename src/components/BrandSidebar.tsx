@@ -11,10 +11,10 @@ export default function BrandSidebar({ className }: BrandSidebarProps) {
   return (
     <div className={cn("flex w-full justify-end border-t border-dotted border-[#E0E0E0]", className)}>
       <div className="pt-4">
-        {/* 내 스튜디오 링크 */}
-        <Link href="/studios" className="block">
+        {/* Studio_bada 탐색 링크 */}
+        <Link href="/explore" className="block">
           <p className="w-full justify-end pb-2 text-right text-lg font-bold text-stone-600 hover:underline cursor-pointer">
-            내 스튜디오
+            Studio_bada
           </p>
         </Link>
 

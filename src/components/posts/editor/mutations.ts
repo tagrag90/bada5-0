@@ -62,6 +62,13 @@ export function useSubmitPostMutation() {
         },
       });
 
+      // 스튜디오 포스트면 스튜디오 포스트 쿼리도 업데이트
+      if (newPost.studioId) {
+        queryClient.invalidateQueries({
+          queryKey: ["studio-posts", newPost.studioId],
+        });
+      }
+
       toast({
         description: "게시물이 작성되었습니다.",
       });
