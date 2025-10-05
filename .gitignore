@@ -53,3 +53,7 @@ next-env.d.ts
 Thumbs.db
 # 환경변수 백업 파일
 .env*.backup*
+
+# Sample/예시 파일
+.sample
+*.sample
