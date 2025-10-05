@@ -168,11 +168,108 @@ export const communityGuidelines = [
   }
 ];
 
-export const shortcuts = [
-  { key: "Ctrl/Cmd + K", description: "검색 열기" },
-  { key: "N", description: "새 게시물 작성" },
-  { key: "H", description: "홈으로 이동" },
-  { key: "E", description: "탐색 페이지로 이동" },
-  { key: "?", description: "단축키 도움말" },
+export const teamBadaServices = [
+  {
+    name: "Vessel",
+    description: "Medium 스타일의 블로그 플랫폼 - 깊이있는 스토리를 공유하세요",
+    url: "https://www.vessel.today/",
+    badge: "블로그"
+  }
 ];
+
+export const experimentalFeatures = [
+  {
+    name: "티켓팅 시스템",
+    description: "이벤트 티켓 발급",
+    url: "/ticketing-demo",
+    status: "베타"
+  },
+  {
+    name: "멤버십 결제",
+    description: "결제 시스템 데모",
+    url: "/membership/payment/artist_jun",
+    status: "베타"
+  },
+  {
+    name: "크리에이터 대시보드",
+    description: "창작자 관리 도구",
+    url: "/creator/dashboard/membership",
+    status: "베타"
+  },
+  {
+    name: "내 구독 관리",
+    description: "구독 현황 확인",
+    url: "/user/subscriptions",
+    status: "베타"
+  }
+];
+
+export const officialChannel = {
+  channelId: "UC9uSl4n2Zmz__HciYpWyASw",
+  title: "Divetobada 공식 채널",
+  description: "최신 소식과 튜토리얼을 확인하세요"
+};
+
+export const ssoIntegration = {
+  title: "Login with Divetobada",
+  description: "Divetobada 계정을 다른 서비스의 마스터 인증 시스템으로 사용하세요",
+  benefits: [
+    "하나의 Divetobada 계정으로 모든 Team Bada 서비스 접근",
+    "이메일 기반 자동 계정 매칭 및 생성",
+    "안전한 JWT 기반 인증 (5분 유효)",
+    "Google Login처럼 간편한 통합"
+  ],
+  howItWorks: [
+    "외부 서비스에서 'Login with Divetobada' 버튼 클릭",
+    "Divetobada 로그인 페이지로 자동 이동",
+    "로그인 완료 시 SSO 토큰 생성",
+    "외부 서비스로 리다이렉트 및 자동 로그인"
+  ],
+  implementation: {
+    step1: {
+      title: "1. 외부 서비스 백엔드에 SSO 엔드포인트 추가",
+      code: `// Express 예시
+app.post("/sso/divetobada", async (req, res) => {
+  const { token } = req.body;
+  const decoded = jwt.verify(token, SHARED_SSO_SECRET);
+  
+  // 이메일로 계정 찾기 또는 생성
+  let user = await User.findOne({ email: decoded.email });
+  if (!user) {
+    user = await createUser(decoded);
+  }
+  
+  return res.json({ access_token: generateToken(user) });
+});`
+    },
+    step2: {
+      title: "2. 프론트엔드에 SSO 처리 페이지 추가",
+      code: `// /sso 페이지
+const token = searchParams.get('token');
+axios.post('/sso/divetobada', { token })
+  .then(({ data }) => {
+    saveSession(data);
+    redirect('/dashboard');
+  });`
+    },
+    step3: {
+      title: "3. 로그인 페이지에 위젯 추가",
+      code: `<iframe 
+  src="https://divetobada.com/api/widget/login-button?redirect=YOUR_SSO_URL&service=YOUR_SERVICE_NAME"
+  width="100%" 
+  height="60"
+  frameborder="0"
+  scrolling="no"
+  style="border: none;"
+></iframe>`
+    }
+  },
+  notes: [
+    "⚠️ SHARED_SSO_SECRET는 Divetobada와 동일한 값을 사용해야 합니다",
+    "⚠️ YOUR_SSO_URL은 토큰을 받을 엔드포인트 (예: http://yoursite.com/sso)",
+    "⚠️ YOUR_SERVICE_NAME은 서비스 식별자 (예: vessel, soundcamp 등)",
+    "💡 프로덕션에서는 https://divetobada.com 사용"
+  ],
+  example: "현재 Vessel 블로그 플랫폼에서 성공적으로 작동 중"
+};
 

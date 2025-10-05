@@ -23,7 +23,7 @@ export default async function Layout({
       <SidebarProvider>
         <RefreshIndicator />
         <div className="flex min-h-screen flex-col md:h-auto">
-          {/* 좌측 사이드바 - 브랜드 정보 */}
+          {/* 좌측 사이드바 - 스튜디오/Docs에서만 표시 (Context로 제어) */}
           {isLoggedIn && (
             <LeftSidebar>
               <TrendsSidebar className="!static !w-full" />
@@ -32,17 +32,28 @@ export default async function Layout({
         
         {/* <Navbar /> */}
         <div 
-          className="mx-auto flex w-full grow justify-center gap-6 px-0 py-0 md:p-5 xl:pl-[var(--sidebar-width,256px)]"
+          className="mx-auto flex w-full grow justify-center gap-6 px-0 py-0 md:p-5"
         >
-          {/* 중앙 피드 영역 */}
-          <div className="w-full min-w-0 max-w-3xl mobile-page-container md:pt-0">{children}</div>
-          
-          {/* 우측 사이드바 - Notice, 친구 찾기, 스튜디오 */}
-          {isLoggedIn && (
-            <div className="sticky top-5 hidden h-fit w-80 flex-none xl:block">
-              <FeedRightSidebar />
-            </div>
-          )}
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              @media (min-width: 1280px) {
+                .main-layout-container {
+                  padding-left: var(--has-sidebar, 0px) !important;
+                }
+              }
+            `
+          }} />
+          <div className="main-layout-container w-full flex justify-center gap-6">
+            {/* 중앙 피드 영역 */}
+            <div className="w-full min-w-0 max-w-3xl mobile-page-container md:pt-0">{children}</div>
+            
+            {/* 우측 사이드바 - Notice, 친구 찾기, 스튜디오 */}
+            {isLoggedIn && (
+              <div className="sticky top-5 hidden h-fit w-80 flex-none xl:block">
+                <FeedRightSidebar />
+              </div>
+            )}
+          </div>
         </div>
         
         {/* 모바일 하단 네비바 */}

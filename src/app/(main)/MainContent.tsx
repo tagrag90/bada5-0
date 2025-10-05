@@ -48,7 +48,7 @@ export default function MainContent() {
             )}
           </div>
           <div className="flex w-1/3 items-center justify-center">
-            <Link href="/">
+            <Link href="/docs">
               <Image
                 src={MainLogoWhite}
                 alt="logo"
@@ -118,7 +118,7 @@ export default function MainContent() {
               )}
             </Link>
           </div>
-          <Link href="/">
+          <Link href="/docs">
             <Image
               src={MainLogoWhite}
               alt="logo"

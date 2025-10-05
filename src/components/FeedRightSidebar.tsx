@@ -1,24 +1,19 @@
-import { validateRequest } from "@/auth";
-import prisma from "@/lib/prisma";
-import { getUserDataSelect } from "@/lib/types";
-import { formatNumber, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
-import FollowButton from "./FollowButton";
-import UserAvatar from "./UserAvatar";
-import UserTooltip from "./UserTooltip";
+import WhoToFollow from "./WhoToFollow";
+import StudiosToExplore from "./StudiosToExplore";
 import Image from "next/image";
 import Logo from "@/assets/logo.png";
+import BrandSidebar from "./BrandSidebar";
+import UserProfileButton from "./UserProfileButton";
 
 interface FeedRightSidebarProps {
   className?: string;
 }
 
-export default async function FeedRightSidebar({ className }: FeedRightSidebarProps) {
-  const { user } = await validateRequest();
-
+export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
   return (
     <div
       className={cn(
@@ -26,6 +21,9 @@ export default async function FeedRightSidebar({ className }: FeedRightSidebarPr
         className,
       )}
     >
+      {/* 프로필 버튼 - 상단 */}
+      <UserProfileButton />
+
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         {/* 공지사항 */}
         <div className="relative group">
@@ -50,71 +48,63 @@ export default async function FeedRightSidebar({ className }: FeedRightSidebarPr
           </div>
         </div>
 
-        {/* 친구 찾아볼까요 */}
         <WhoToFollow />
-        
-        {/* 새로 생긴 스튜디오 */}
         <StudiosToExplore />
+        
+        {/* 브랜드 사이드바 - 하단 */}
+        <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
+          <BrandSidebar />
+
+          <div className="flex flex-col gap-6">
+            <div className="flex w-full justify-end">
+              <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+                <div className="text-right">
+                  Email : teambada1206@gmail.com(only)
+                </div>
+                <div className="text-right">서비스이용약관</div>
+                <Link href="/privacy">
+                  <div className="text-right hover:text-foreground transition-colors cursor-pointer">개인정보처리방침</div>
+                </Link>
+              </div>
+            </div>
+            <div className="flex w-full justify-end">
+              <div className="flex flex-col justify-end gap-1 text-xs">
+                <Link
+                  href="https://www.vessel.today"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Vessel
+                  </div>
+                </Link>
+
+                <Link
+                  href="https://www.instagram.com/team_masanbaseball/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Baseball playlist
+                  </div>
+                </Link>
+
+                <Link href="/nonexistent-page" className="block">
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    404 탐험하기
+                  </div>
+                </Link>
+
+                <Link href="/docs" className="block">
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Docs
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </Suspense>
     </div>
   );
 }
-
-async function WhoToFollow() {
-  const { user } = await validateRequest();
-
-  if (!user) return null;
-
-  const usersToFollow = await prisma.user.findMany({
-    where: {
-      NOT: {
-        id: user.id,
-      },
-      followers: {
-        none: {
-          followerId: user.id,
-        },
-      },
-    },
-    select: getUserDataSelect(user.id),
-    take: 5,
-  });
-
-  return (
-    <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <div className="text-xl font-bold">크리에이터를 발견하세요</div>
-      {usersToFollow.map((user) => (
-        <div key={user.id} className="flex items-center justify-between gap-3">
-          <UserTooltip user={user}>
-            <Link
-              href={`/users/${user.username}`}
-              className="flex items-center gap-3"
-            >
-              <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} className="flex-none" />
-              <div>
-                <p className="line-clamp-1 break-all font-semibold hover:underline">
-                  {user.displayName}
-                </p>
-                <p className="line-clamp-1 break-all text-muted-foreground">
-                  @{user.username}
-                </p>
-              </div>
-            </Link>
-          </UserTooltip>
-          <FollowButton
-            userId={user.id}
-            initialState={{
-              followers: user._count.followers,
-              isFollowedByUser: user.followers.some(
-                ({ followerId }) => followerId === user.id,
-              ),
-            }}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-import StudiosToExplore from "./StudiosToExplore";
-

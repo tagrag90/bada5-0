@@ -1,19 +1,36 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode, useState, useCallback } from "react";
+
+type SidebarType = 'none' | 'studio' | 'docs';
+
+interface SidebarData {
+  studioId?: string;
+  studioName?: string;
+  isOwner?: boolean;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
 
 interface SidebarContextType {
-  sidebarContent: ReactNode | null;
-  setSidebarContent: (content: ReactNode | null) => void;
+  sidebarType: SidebarType;
+  sidebarData: SidebarData | null;
+  setSidebar: (type: SidebarType, data?: SidebarData) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [sidebarContent, setSidebarContent] = useState<ReactNode | null>(null);
+  const [sidebarType, setSidebarType] = useState<SidebarType>('none');
+  const [sidebarData, setSidebarData] = useState<SidebarData | null>(null);
+
+  const setSidebar = useCallback((type: SidebarType, data?: SidebarData) => {
+    setSidebarType(type);
+    setSidebarData(data || null);
+  }, []);
 
   return (
-    <SidebarContext.Provider value={{ sidebarContent, setSidebarContent }}>
+    <SidebarContext.Provider value={{ sidebarType, sidebarData, setSidebar }}>
       {children}
     </SidebarContext.Provider>
   );

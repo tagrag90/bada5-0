@@ -10,8 +10,9 @@ import YoutubeStats from "@/components/YoutubeStats";
 const services = [
   {
     name: "Vessel",
-    description: "Vessel",
+    description: "Medium 스타일의 블로그 플랫폼 - 깊이있는 스토리를 공유하세요",
     url: "https://www.vessel.today/",
+    badge: "블로그",
   },
 ];
 

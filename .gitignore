@@ -51,3 +51,5 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+# 환경변수 백업 파일
+.env*.backup*

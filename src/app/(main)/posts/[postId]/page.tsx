@@ -40,8 +40,17 @@ export async function generateMetadata({
 
   const post = await getPost(postId, user.id);
 
+  // HTML 태그 및 특수 문자 제거
+  const cleanContent = post.content
+    .replace(/<[^>]*>/g, '') // HTML 태그 제거
+    .replace(/&[^;]+;/g, '') // HTML 엔티티 제거
+    .replace(/\s+/g, ' ') // 연속 공백 제거
+    .trim();
+
   return {
-    title: `${post.user.displayName}: ${post.content.slice(0, 50)}...`,
+    title: post.title 
+      ? `${post.title} | ${post.user.displayName}`
+      : `${post.user.displayName}: ${cleanContent.slice(0, 50)}${cleanContent.length > 50 ? '...' : ''}`,
   };
 }
 

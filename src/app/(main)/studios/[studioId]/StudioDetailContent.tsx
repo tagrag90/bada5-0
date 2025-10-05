@@ -23,7 +23,7 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
-  const { setSidebarContent } = useSidebar();
+  const { setSidebar } = useSidebar();
   
   const { data: studio, isLoading } = useQuery({
     queryKey: ["studio", studioId],
@@ -46,18 +46,16 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
 
-  // 사이드바 컨텐츠 설정 및 이벤트 리스너 (모든 hooks를 조기 return 전에 호출)
+  // 사이드바 설정 및 이벤트 리스너
   useEffect(() => {
     if (studio) {
-      setSidebarContent(
-        <StudioNavSidebar
-          studioId={studioId}
-          studioName={studio.name}
-          isOwner={isOwner}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      );
+      setSidebar('studio', {
+        studioId,
+        studioName: studio.name,
+        isOwner,
+        activeTab,
+        onTabChange: setActiveTab,
+      });
     }
 
     // 다이얼로그 열기 이벤트 리스너
@@ -69,11 +67,11 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
     // 클린업
     return () => {
-      setSidebarContent(null);
+      setSidebar('none');
       window.removeEventListener('openMembersDialog', handleOpenMembers);
       window.removeEventListener('openSettingsDialog', handleOpenSettings);
     };
-  }, [studio, studioId, isOwner, activeTab, setSidebarContent]);
+  }, [studio, studioId, isOwner, activeTab, setSidebar]);
 
   if (isLoading) {
     return (
