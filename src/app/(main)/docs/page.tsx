@@ -348,7 +348,7 @@ export default function DocsPage() {
             </p>
             <div className="flex justify-center relative">
               <iframe 
-                src="/api/widget/login-button?redirect=http://localhost:5173/sso&service=demo"
+                src="/api/widget/login-button?redirect=https://vessel.today/sso&service=demo"
                 width="320" 
                 height="70"
                 style={{ border: 'none', pointerEvents: 'none' }}

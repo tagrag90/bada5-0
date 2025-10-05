@@ -6,9 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const redirect = searchParams.get('redirect') || 'http://localhost:5173/sso';
+  const redirect = searchParams.get('redirect') || 'https://vessel.today/sso';
   const service = searchParams.get('service') || 'external';
   const theme = searchParams.get('theme') || 'light';
+  
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://divetobada.com';
 
   const html = `
 <!DOCTYPE html>
@@ -77,7 +79,7 @@ export async function GET(request: NextRequest) {
   <button class="bada-login-btn" onclick="handleLogin()">
     <div class="logo-container">
       <img 
-        src="http://localhost:3000/_next/static/media/logo.21df6df2.png" 
+        src="${baseUrl}/_next/static/media/logo.21df6df2.png" 
         alt="Divetobada" 
         class="logo"
       />
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
 
   <script>
     function handleLogin() {
-      const loginUrl = window.location.origin + '/auth/sso?service=${service}&redirect=${encodeURIComponent(redirect)}';
+      const loginUrl = '${baseUrl}/auth/sso?service=${service}&redirect=${encodeURIComponent(redirect)}';
       
       if (window.parent !== window) {
         // iframe 내부
