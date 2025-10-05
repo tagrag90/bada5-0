@@ -1,27 +1,14 @@
-import { validateRequest } from "@/auth";
-import prisma from "@/lib/prisma";
-import { getUserDataSelect } from "@/lib/types";
-import { formatNumber, cn } from "@/lib/utils";
-import { Loader2, X, Users } from "lucide-react";
-import { unstable_cache } from "next/cache";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Suspense } from "react";
-import FollowButton from "./FollowButton";
-import UserAvatar from "./UserAvatar";
-import UserTooltip from "./UserTooltip";
-import Image from "next/image";
-import Logo from "@/assets/logo.png";
-import LatestYoutubeVideo from "./LatestYoutubeVideo";
+import Link from "next/link";
 import BrandSidebar from "./BrandSidebar";
+import { Loader2 } from "lucide-react";
 
 interface TrendsSidebarProps {
   className?: string;
 }
 
 export default async function TrendsSidebar({ className }: TrendsSidebarProps) {
-  const { user } = await validateRequest();
-
   return (
     <div
       className={cn(
@@ -29,159 +16,63 @@ export default async function TrendsSidebar({ className }: TrendsSidebarProps) {
         className,
       )}
     >
-      {/* <LatestYoutubeVideo channelId="UC9uSl4n2Zmz__HciYpWyASw" /> */}
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-        <WhoToFollow />
-        <StudiosToExplore />
-        <TrendingTopicsWithBrand />
-        
-        {/* 공지사항 - 맨 아래로 이동 */}
-        <div className="relative group">
-          <div 
-            className="relative space-y-3 rounded-2xl bg-black p-6 shadow-md transition-all duration-500 group-hover:scale-[1.03] mx-4 my-6"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Image
-                  src={Logo}
-                  alt="logo"
-                  width={20}
-                  height={20}
-                />
-                <span className="text-sm font-bold text-white">Notice</span>
+        {/* 브랜드 사이드바만 유지 */}
+        <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
+          <BrandSidebar />
+
+          <div className="flex flex-col gap-6">
+            <div className="flex w-full justify-end">
+              <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
+                <div className="text-right">
+                  Email : teambada1206@gmail.com(only)
+                </div>
+                <div className="text-right">서비스이용약관</div>
+                <Link href="/privacy">
+                  <div className="text-right hover:text-foreground transition-colors cursor-pointer">개인정보처리방침</div>
+                </Link>
               </div>
             </div>
-            
-            <h2 className="text-sm font-medium text-white">
-              Welcome to Divetobada! It&apos;s a social community for everyone who likes K-culture.
-            </h2>
+            <div className="flex w-full justify-end">
+              <div className="flex flex-col justify-end gap-1 text-xs">
+                <Link
+                  href="https://www.vessel.today"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Vessel
+                  </div>
+                </Link>
+
+                <Link
+                  href="https://www.instagram.com/team_masanbaseball/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Baseball playlist
+                  </div>
+                </Link>
+
+                {/* 404 탐험하기 버튼 */}
+                <Link href="/nonexistent-page" className="block">
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    404 탐험하기
+                  </div>
+                </Link>
+
+                {/* Docs 페이지 */}
+                <Link href="/docs" className="block">
+                  <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
+                    Docs
+                  </div>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </Suspense>
     </div>
-  );
-}
-
-async function WhoToFollow() {
-  const { user } = await validateRequest();
-
-  if (!user) return null;
-
-  const usersToFollow = await prisma.user.findMany({
-    where: {
-      NOT: {
-        id: user.id,
-      },
-      followers: {
-        none: {
-          followerId: user.id,
-        },
-      },
-    },
-    select: getUserDataSelect(user.id),
-    take: 5,
-  });
-
-  return (
-    <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-      <div className="text-xl font-bold">친구를 찾아볼까요?</div>
-      {usersToFollow.map((user) => (
-        <div key={user.id} className="flex items-center justify-between gap-3">
-          <UserTooltip user={user}>
-            <Link
-              href={`/users/${user.username}`}
-              className="flex items-center gap-3"
-            >
-                              <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} className="flex-none" />
-              <div>
-                <p className="line-clamp-1 break-all font-semibold hover:underline">
-                  {user.displayName}
-                </p>
-                <p className="line-clamp-1 break-all text-muted-foreground">
-                  @{user.username}
-                </p>
-              </div>
-            </Link>
-          </UserTooltip>
-          <FollowButton
-            userId={user.id}
-            initialState={{
-              followers: user._count.followers,
-              isFollowedByUser: user.followers.some(
-                ({ followerId }) => followerId === user.id,
-              ),
-            }}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-import TrendingTopics from "./TrendingTopics";
-import StudiosToExplore from "./StudiosToExplore";
-
-async function TrendingTopicsWithBrand() {
-  return (
-    <>
-      {/* 트렌딩 토픽 임시 주석처리 */}
-      {/* <TrendingTopics /> */}
-      
-      {/* 브랜드 사이드바 */}
-      <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
-        <BrandSidebar />
-
-        <div className="flex flex-col gap-6">
-          {/* <div className="flex w-full justify-end">
-            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
-              <div className="text-right">대표자:박준서</div>
-              <div className="text-right">사업자등록번호:602-13-77154</div>
-            </div>
-          </div> */}
-          <div className="flex w-full justify-end">
-            <div className="flex flex-col justify-end gap-1 text-xs text-gray-400">
-              <div className="text-right">
-                Email : teambada1206@gmail.com(only)
-              </div>
-              <div className="text-right">서비스이용약관</div>
-              <Link href="/privacy">
-                <div className="text-right hover:text-foreground transition-colors cursor-pointer">개인정보처리방침</div>
-              </Link>
-            </div>
-          </div>
-          <div className="flex w-full justify-end">
-            <div className="flex flex-col justify-end gap-1 text-xs">
-              <Link
-                href="https://www.vessel.today"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
-                  Vessel
-                </div>
-              </Link>
-
-              <Link
-                href="https://www.instagram.com/team_masanbaseball/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
-                  Baseball playlist
-                </div>
-              </Link>
-
-              {/* 404 탐험하기 버튼 */}
-              <Link href="/nonexistent-page" className="block">
-                <div className="text-right text-stone-500 hover:text-stone-700 hover:underline cursor-pointer transition-colors">
-                  404 탐험하기
-                </div>
-              </Link>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
   );
 }

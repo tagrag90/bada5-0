@@ -2,6 +2,7 @@
 
 import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
 import Post from "@/components/posts/Post";
+import BlogPostCard from "@/components/posts/BlogPostCard";
 import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
 import UserAvatar from "@/components/UserAvatar";
 import UserTooltip from "@/components/UserTooltip";
@@ -140,11 +141,19 @@ export default function SearchResults({ query }: SearchResultsProps) {
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">게시물</h3>
           <div className="space-y-5">
-            {posts.map((post) => (
-              <div key={post.id} className="p-4 rounded-lg border bg-background/30">
-                <Post post={post} />
-              </div>
-            ))}
+            {posts.map((post) => {
+              const isBlogPost = !!post.title && !!post.studioId;
+              
+              if (isBlogPost) {
+                return <BlogPostCard key={post.id} post={post} />;
+              }
+              
+              return (
+                <div key={post.id} className="p-4 rounded-lg border bg-background/30">
+                  <Post post={post} />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

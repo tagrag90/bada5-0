@@ -2,6 +2,7 @@
 
 import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
 import Post from "@/components/posts/Post";
+import BlogPostCard from "@/components/posts/BlogPostCard";
 import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
 import kyInstance from "@/lib/ky";
 import { PostsPage } from "@/lib/types";
@@ -74,8 +75,8 @@ export default function ForYouFeed() {
           Bada에 오신 것을 환영합니다
         </h2>
         <p className="mb-4 text-muted-foreground">
-          크리에이터와 아티스트들을 위한 소셜 미디어 커뮤니티에 가입하고 더 많은
-          기능을 이용해보세요.
+          크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼에 가입하고 
+          주도권을 가지고 활동을 시작해보세요.
         </p>
         <Link href="/login">
           <Button className="w-full">로그인하기</Button>
@@ -120,9 +121,15 @@ export default function ForYouFeed() {
         </div>
       )}
 
-      {posts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
+      {posts.map((post) => {
+        const isBlogPost = !!post.title && !!post.studioId;
+        
+        if (isBlogPost) {
+          return <BlogPostCard key={post.id} post={post} />;
+        }
+        
+        return <Post key={post.id} post={post} />;
+      })}
 
       {isFetchingNextPage && <Loader2 className="mx-auto my-3 animate-spin" />}
 

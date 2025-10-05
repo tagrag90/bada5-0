@@ -3,6 +3,8 @@
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { PostData } from "@/lib/types";
+import Image from "next/image";
+import StudioBadge from "../StudioBadge";
 
 interface BlogPostCardProps {
   post: PostData;
@@ -10,11 +12,37 @@ interface BlogPostCardProps {
 
 export default function BlogPostCard({ post }: BlogPostCardProps) {
   return (
-    <Link href={`/posts/${post.id}`}>
-      <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+    <Card className="p-6 hover:shadow-lg transition-shadow border-0">
+      {/* 스튜디오 정보 */}
+      {post.studio && (
+        <div className="flex items-center gap-3 mb-4">
+          <Link href={`/studios/${post.studio.id}`} className="flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden relative">
+              <Image
+                src={post.studio.avatarUrl || "/logo-bada.png"}
+                alt={post.studio.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <Link
+              href={`/studios/${post.studio.id}`}
+              className="font-semibold hover:underline truncate"
+            >
+              {post.studio.name}
+            </Link>
+            <StudioBadge size="sm" />
+          </div>
+        </div>
+      )}
+
+      {/* 포스트 내용 */}
+      <Link href={`/posts/${post.id}`} className="block">
         {/* 썸네일 이미지 (첫 번째 이미지만) */}
         {post.content.includes('<img') && (
-          <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
+          <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4">
             {(() => {
               const imgMatch = post.content.match(/<img[^>]+src="([^"]+)"/);
               if (imgMatch) {
@@ -49,9 +77,7 @@ export default function BlogPostCard({ post }: BlogPostCardProps) {
           <span>·</span>
           <span>댓글 {post._count.comments}</span>
         </div>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 }
-
-

@@ -2,6 +2,7 @@
 
 import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
 import Post from "@/components/posts/Post";
+import BlogPostCard from "@/components/posts/BlogPostCard";
 import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
 import kyInstance from "@/lib/ky";
 import { PostsPage } from "@/lib/types";
@@ -56,9 +57,15 @@ export default function Bookmarks() {
       className="rounded-t-[24px] bg-white p-4 drop-shadow"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
-      {posts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
+      {posts.map((post) => {
+        const isBlogPost = !!post.title && !!post.studioId;
+        
+        if (isBlogPost) {
+          return <BlogPostCard key={post.id} post={post} />;
+        }
+        
+        return <Post key={post.id} post={post} />;
+      })}
       {isFetchingNextPage && <Loader2 className="mx-auto my-3 animate-spin" />}
     </InfiniteScrollContainer>
   );

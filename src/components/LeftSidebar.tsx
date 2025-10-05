@@ -17,6 +17,7 @@ import { Check, LogOutIcon, Monitor, Moon, Settings, Sun, UserIcon } from "lucid
 import { logout } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 interface LeftSidebarProps {
   children?: React.ReactNode;
@@ -28,6 +29,7 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
   const sidebarRef = useRef<HTMLElement>(null);
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const { sidebarContent } = useSidebar();
 
   // localStorage에서 저장된 너비 불러오기
   useEffect(() => {
@@ -98,18 +100,22 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
           </Link>
         </div>
 
-        {/* 상단 영역 - 나중에 추가될 콘텐츠 */}
-        <div className="p-4 flex-shrink-0">
-          {/* 여기에 나중에 콘텐츠 추가 */}
-        </div>
+        {/* 동적 컨텐츠 영역 - Context에서 제공하는 컨텐츠 또는 기본 children */}
+        {sidebarContent ? (
+          <div className="flex-shrink-0">
+            {sidebarContent}
+          </div>
+        ) : (
+          <>
+            {/* 빈 공간 */}
+            <div className="flex-grow"></div>
 
-        {/* 빈 공간 */}
-        <div className="flex-grow"></div>
-
-        {/* 하단 영역 - 트렌드 사이드바 */}
-        <div className="flex-shrink-0">
-          {children}
-        </div>
+            {/* 하단 영역 - 기본 컨텐츠 (브랜드 사이드바 등) */}
+            <div className="flex-shrink-0">
+              {children}
+            </div>
+          </>
+        )}
 
         {/* 사용자 계정 섹션 - 최하단 */}
         {user && (

@@ -58,7 +58,7 @@ export default function PrivacyPolicyPage() {
       <PrivacySection title="1. 서비스 소개" icon="🌊">
         <div id="intro">
           <p className="mb-4">
-            <strong>{policyInfo.serviceName}</strong>은 K-culture를 사랑하는 모든 사람들을 위한 소셜 커뮤니티 플랫폼입니다. 
+            <strong>{policyInfo.serviceName}</strong>은 크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼입니다. 
             사용자의 개인정보를 안전하게 보호하며, 관련 법령에 따라 투명하게 처리합니다.
           </p>
           <p className="mb-4">

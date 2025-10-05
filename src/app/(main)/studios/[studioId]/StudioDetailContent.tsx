@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditStudioDialog from "./EditStudioDialog";
 import MembersDialog from "./MembersDialog";
 import StudioCalendar from "./StudioCalendar";
@@ -16,11 +16,14 @@ import StudioBadge from "@/components/StudioBadge";
 import SocialLinks from "@/components/SocialLinks";
 import Image from "next/image";
 import { formatNumber } from "@/lib/utils";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import StudioNavSidebar from "@/components/layout/StudioNavSidebar";
 
 export default function StudioDetailContent({ studioId }: { studioId: string }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
+  const { setSidebarContent } = useSidebar();
   
   const { data: studio, isLoading } = useQuery({
     queryKey: ["studio", studioId],
@@ -41,6 +44,37 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
     },
   });
 
+  const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
+
+  // 사이드바 컨텐츠 설정 및 이벤트 리스너 (모든 hooks를 조기 return 전에 호출)
+  useEffect(() => {
+    if (studio) {
+      setSidebarContent(
+        <StudioNavSidebar
+          studioId={studioId}
+          studioName={studio.name}
+          isOwner={isOwner}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      );
+    }
+
+    // 다이얼로그 열기 이벤트 리스너
+    const handleOpenMembers = () => setShowMembersDialog(true);
+    const handleOpenSettings = () => setShowEditDialog(true);
+
+    window.addEventListener('openMembersDialog', handleOpenMembers);
+    window.addEventListener('openSettingsDialog', handleOpenSettings);
+
+    // 클린업
+    return () => {
+      setSidebarContent(null);
+      window.removeEventListener('openMembersDialog', handleOpenMembers);
+      window.removeEventListener('openSettingsDialog', handleOpenSettings);
+    };
+  }, [studio, studioId, isOwner, activeTab, setSidebarContent]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -56,8 +90,6 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
       </div>
     );
   }
-
-  const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
 
   return (
     <div className="w-full min-w-0 space-y-5">

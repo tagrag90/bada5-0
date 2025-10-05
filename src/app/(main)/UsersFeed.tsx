@@ -35,7 +35,7 @@ export default function UsersFeed() {
       id: 2,
       title: "Welcome to Bada ✨",
       subtitle: "크리에이터와 함께하는 새로운 시작",
-      description: "다양한 아티스트들과 소통하고 영감을 나누어보세요",
+      description: "다양한 크리에이터들과 직접 소통하고 영감을 나누어보세요",
       gradient: "from-purple-600 via-blue-600 to-indigo-700",
       backgroundImage: null,
       hasButton: false,

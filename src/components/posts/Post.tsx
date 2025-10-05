@@ -28,7 +28,6 @@ import { Button } from "@/components/ui/button";
 import ReactHtmlParser from "react-html-parser";
 import LinkPreviewComponent from "./editor/LinkPreviewComponent";
 import StudioBadge from "../StudioBadge";
-import BlogPostCard from "./BlogPostCard";
 
 interface PostProps {
   post: PostData;
@@ -235,24 +234,15 @@ export default function Post({ post }: PostProps) {
               />
             )}
           </div>
-          
-          {/* 블로그형 포스트 (피드에서만 미리보기) */}
-          {isBlogPost && !isDetailPage ? (
+
+          {/* 포스트 내용 */}
+          <div className="post-content break-words text-base">
+            <ContentRenderer content={post.content} />
+          </div>
+          {!!post.attachments.length && (
             <div className="mt-3">
-              <BlogPostCard post={post} />
+              <MediaSlider attachments={post.attachments} />
             </div>
-          ) : (
-            /* 일반 포스트 또는 상세 페이지 */
-            <>
-              <div className="post-content break-words text-base">
-                <ContentRenderer content={post.content} />
-              </div>
-              {!!post.attachments.length && (
-                <div className="mt-3">
-                  <MediaSlider attachments={post.attachments} />
-                </div>
-              )}
-            </>
           )}
 
       {/* 링크 미리보기 표시 - content에서 메타데이터 추출 */}

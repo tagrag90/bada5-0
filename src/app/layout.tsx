@@ -40,10 +40,10 @@ export const metadata: Metadata = {
     template: "%s | Dive to Bada",
   },
   description:
-    "Bada는 크리에이터와 아티스트들이 소통하고, 협업을 통해 성장할 수 있도록 돕는 소셜미디어 커뮤니티입니다.",
+    "크리에이터와 팬을 직접 연결하는 새로운 엔터테인먼트 플랫폼. 소속사 없이도 주도권을 가지고 활동하며 팬들과 매끄럽게 소통하세요.",
   openGraph: {
     title: "Dive to Bada",
-    description: "크리에이터와 아티스트들의 소셜 미디어 커뮤니티",
+    description: "크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼",
     url: "https://divetobada.com",
     siteName: "Dive to Bada",
     images: [
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Dive to Bada",
-    description: "크리에이터와 아티스트들의 소셜 미디어 커뮤니티",
+    description: "크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼",
     images: [ogImage],
   },
 };

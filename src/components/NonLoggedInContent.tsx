@@ -26,7 +26,7 @@ export default function NonLoggedInContent() {
       id: 2,
       title: "Welcome to Bada ✨",
       subtitle: "크리에이터와 함께하는 새로운 시작",
-      description: "다양한 아티스트들과 소통하고 영감을 나누어보세요",
+      description: "다양한 크리에이터들과 직접 소통하고 영감을 나누어보세요",
       gradient: "from-purple-600 via-blue-600 to-indigo-700",
       backgroundImage: null,
       hasButton: false,
@@ -164,10 +164,10 @@ export default function NonLoggedInContent() {
       <div className="p-4 md:p-6">
         <div className="max-w-md mx-auto">
           <h2 className="mb-2 text-lg md:text-xl font-semibold">
-            사용자를 탐색하려면 로그인이 필요합니다
+            크리에이터를 탐색하려면 로그인이 필요합니다
           </h2>
           <p className="mb-4 text-sm md:text-base text-muted-foreground">
-            다양한 크리에이터와 아티스트들을 만나보세요.
+            다양한 크리에이터들을 발견하고 직접 소통해보세요.
           </p>
           <Link href="/login">
             <Button className="w-full">로그인하기</Button>
