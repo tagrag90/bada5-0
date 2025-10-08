@@ -22,11 +22,11 @@ const navItems = [
   { id: "sso", label: "Login with Divetobada" },
 ];
 
-export default function DocsNavSidebar({ 
+export default function DocsNavSidebar({
   activeSection = "getting-started",
   onSectionChange
 }: DocsNavSidebarProps) {
-  
+
   const handleClick = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -62,7 +62,7 @@ export default function DocsNavSidebar({
         <nav className="space-y-1">
           {navItems.map((item, index) => {
             const isActive = activeSection === item.id;
-            
+
             return (
               <button
                 key={item.id}
