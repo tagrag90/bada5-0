@@ -53,6 +53,21 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
 
+  // 멤버십 상태 확인
+  const { data: membershipStatus } = useQuery({
+    queryKey: ["studio-membership", studioId],
+    queryFn: async () => {
+      if (!studioId || !currentUser) return null;
+      const res = await fetch(`/api/studios/${studioId}/subscription-status`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!studioId && !!currentUser,
+  });
+
+  // 관리자 권한 확인 (소유자이거나 ADMIN 멤버)
+  const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
+
   // 스튜디오 상세 페이지에서도 디스코드 사이드바 활성화
   const [selectedStudioId, setSelectedStudioId] = useState<string | null>(studioId);
   const [selectedChannel, setSelectedChannel] = useState<string>(activeTab);
@@ -131,14 +146,15 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
     <div className="w-full min-w-0 space-y-5">
       {/* 간단한 스튜디오 헤더 (Reddit 스타일) */}
       <div className="flex items-center gap-4 py-4">
-        <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
-          <Image
-            src={studio.avatarUrl || "/logo-bada.png"}
-            alt={studio.name}
-            width={48}
-            height={48}
-            className="w-full h-full object-cover"
-          />
+            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
+              <Image
+                key={studio.avatarUrl || "default"}
+                src={studio.avatarUrl || "/logo-bada.png"}
+                alt={studio.name}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
+              />
         </div>
         <div>
           <h1 className="text-2xl font-bold">{studio.name}</h1>
@@ -187,8 +203,8 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
         </>
       )}
 
-      {/* 중앙 하단 Floating 글쓰기 버튼 (소유자만) */}
-      {isOwner && (
+      {/* 중앙 하단 Floating 글쓰기 버튼 (관리자 권한만) */}
+      {isAdmin && (
         <Link href={`/studios/${studioId}/write`}>
           <button className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-black text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2 font-medium">
             <span className="text-xl">✏️</span>

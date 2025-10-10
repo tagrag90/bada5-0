@@ -54,39 +54,66 @@ export default function EditStudioDialog({
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       // 이미지 업로드 먼저 수행
-      let avatarUrl = data.avatarUrl;
-      let bannerUrl = data.bannerUrl;
+      let finalAvatarUrl = data.avatarUrl;
+      let finalBannerUrl = data.bannerUrl;
 
       if (croppedAvatar) {
+        console.log("Uploading avatar...");
+        console.log("Cropped avatar size:", croppedAvatar.size);
         const avatarFile = new File([croppedAvatar], `studio_avatar_${studio.id}.webp`);
+        console.log("Avatar file created:", avatarFile.name, avatarFile.size);
         const uploadResult = await startAvatarUpload([avatarFile]);
+        console.log("Upload result:", uploadResult);
         if (uploadResult?.[0]?.serverData?.avatarUrl) {
-          avatarUrl = uploadResult[0].serverData.avatarUrl;
+          finalAvatarUrl = uploadResult[0].serverData.avatarUrl;
+          console.log("Avatar uploaded successfully:", finalAvatarUrl);
+        } else {
+          console.error("Avatar upload failed - no serverData.avatarUrl:", uploadResult);
+          console.error("Full upload result:", JSON.stringify(uploadResult, null, 2));
         }
       }
 
       if (croppedBanner) {
+        console.log("Uploading banner...");
         const bannerFile = new File([croppedBanner], `studio_banner_${studio.id}.webp`);
         const uploadResult = await startBannerUpload([bannerFile]);
         if (uploadResult?.[0]?.serverData?.bannerUrl) {
-          bannerUrl = uploadResult[0].serverData.bannerUrl;
+          finalBannerUrl = uploadResult[0].serverData.bannerUrl;
+          console.log("Banner uploaded:", finalBannerUrl);
+        } else {
+          console.error("Banner upload failed:", uploadResult);
         }
       }
+
+      // API 호출 시 이미지 URL 포함
+      const updateData = {
+        ...data,
+        ...(finalAvatarUrl !== data.avatarUrl && { avatarUrl: finalAvatarUrl }),
+        ...(finalBannerUrl !== data.bannerUrl && { bannerUrl: finalBannerUrl }),
+      };
+
+      console.log("Sending update data:", updateData);
 
       const res = await fetch(`/api/studios/${studio.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, avatarUrl, bannerUrl, socialLinks }),
+        body: JSON.stringify(updateData),
       });
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || "Failed to update studio");
       }
-      return res.json();
+      const result = await res.json();
+      console.log("Update result:", result);
+      return result;
     },
     onSuccess: () => {
+      // 모든 관련 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: ["studio", studio.id] });
       queryClient.invalidateQueries({ queryKey: ["studios"] });
+      queryClient.invalidateQueries({ queryKey: ["studio-membership", studio.id] });
+      queryClient.invalidateQueries({ queryKey: ["studio-members", studio.id] });
+
       setCroppedAvatar(null);
       setCroppedBanner(null);
       onOpenChange(false);
@@ -95,7 +122,14 @@ export default function EditStudioDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({ name, description, isPublic, socialLinks });
+    updateMutation.mutate({
+      name,
+      description,
+      isPublic,
+      socialLinks,
+      avatarUrl: studio.avatarUrl, // 현재 avatarUrl을 기본값으로 전달
+      bannerUrl: studio.bannerUrl, // 현재 bannerUrl을 기본값으로 전달
+    });
   };
 
   const addLink = () => {

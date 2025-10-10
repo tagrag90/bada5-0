@@ -28,23 +28,24 @@ interface StudioInfoCardProps {
   studio?: Studio;
   studioName: string;
   isOwner?: boolean;
+  isAdmin?: boolean;
 }
 
-export default function StudioInfoCard({ studio, studioName, isOwner = false }: StudioInfoCardProps) {
+export default function StudioInfoCard({ studio, studioName, isOwner = false, isAdmin = false }: StudioInfoCardProps) {
   const currentUser = useOptionalUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // 구독 상태 확인
-  const { data: subscriptionStatus } = useQuery({
-    queryKey: ["studio-subscription", studio?.id],
+  // 멤버십/구독 상태 확인
+  const { data: membershipStatus } = useQuery({
+    queryKey: ["studio-membership", studio?.id],
     queryFn: async () => {
       if (!studio?.id || !currentUser) return null;
       const res = await fetch(`/api/studios/${studio.id}/subscription-status`);
       if (!res.ok) return null;
       return res.json();
     },
-    enabled: !!studio?.id && !!currentUser && !isOwner,
+    enabled: !!studio?.id && !!currentUser,
   });
 
   // 구독 뮤테이션
@@ -126,6 +127,7 @@ export default function StudioInfoCard({ studio, studioName, isOwner = false }: 
           <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white">
             {studio?.avatarUrl ? (
               <Image
+                key={studio.avatarUrl} // URL 변경 시 강제 리렌더링
                 src={studio.avatarUrl}
                 alt={studio.name}
                 width={64}
@@ -182,41 +184,52 @@ export default function StudioInfoCard({ studio, studioName, isOwner = false }: 
         )}
 
         {/* 액션 버튼들 */}
-        {!isOwner && currentUser && (
+        {currentUser && !isOwner && (
           <>
             <Separator />
             <div className="space-y-2">
-              <Button
-                className={`w-full ${
-                  subscriptionStatus?.isSubscribed
-                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    : "bg-black text-white hover:bg-gray-800"
-                }`}
-                size="sm"
-                onClick={() => {
-                  if (subscriptionStatus?.isSubscribed) {
-                    unsubscribeMutation.mutate();
-                  } else {
-                    subscribeMutation.mutate();
-                  }
-                }}
-                disabled={subscribeMutation.isPending || unsubscribeMutation.isPending}
-              >
-                {subscribeMutation.isPending || unsubscribeMutation.isPending
-                  ? "처리 중..."
-                  : subscriptionStatus?.isSubscribed
-                  ? "구독 중"
-                  : "구독하기"}
-              </Button>
-              <Button variant="outline" className="w-full" size="sm">
-                메시지 보내기
-              </Button>
+              {membershipStatus?.isMember ? (
+                // 멤버인 경우
+                <div className="space-y-2">
+                  <div className="text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                      {membershipStatus.memberRole === 'ADMIN' ? '관리자' : '멤버'}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                // 멤버가 아닌 경우 (구독 버튼 표시)
+                <>
+                  <Button
+                    className={`w-full ${
+                      membershipStatus?.isSubscribed
+                        ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        : "bg-black text-white hover:bg-gray-800"
+                    }`}
+                    size="sm"
+                    onClick={() => {
+                      if (membershipStatus?.isSubscribed) {
+                        unsubscribeMutation.mutate();
+                      } else {
+                        subscribeMutation.mutate();
+                      }
+                    }}
+                    disabled={subscribeMutation.isPending || unsubscribeMutation.isPending}
+                  >
+                    {subscribeMutation.isPending || unsubscribeMutation.isPending
+                      ? "처리 중..."
+                      : membershipStatus?.isSubscribed
+                      ? "구독 중"
+                      : "구독하기"}
+                  </Button>
+                </>
+              )}
             </div>
           </>
         )}
 
-        {/* 소유자 전용 버튼들 */}
-        {isOwner && (
+        {/* 관리자 전용 버튼들 */}
+        {isAdmin && (
           <>
             <Separator />
             <div className="space-y-2">

@@ -48,6 +48,22 @@ export default function MembersDialog({
   const queryClient = useQueryClient();
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
+  // 역할 변경 뮤테이션
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      const res = await fetch(`/api/studios/${studioId}/members?memberId=${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error("역할 변경 실패");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["studio-members", studioId] });
+    },
+  });
+
   const { data: members, isLoading } = useQuery({
     queryKey: ["studio-members", studioId],
     queryFn: async () => {
@@ -111,9 +127,41 @@ export default function MembersDialog({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={getRoleColor(member.role)}>
-                      {getRoleLabel(member.role)}
-                    </Badge>
+                    {member.role !== "OWNER" ? (
+                      <div className="flex gap-1">
+                        <Button
+                          variant={member.role === "ADMIN" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "ADMIN" })}
+                          disabled={updateRoleMutation.isPending}
+                          className="text-xs px-2 py-1"
+                        >
+                          관리자
+                        </Button>
+                        <Button
+                          variant={member.role === "MODERATOR" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "MODERATOR" })}
+                          disabled={updateRoleMutation.isPending}
+                          className="text-xs px-2 py-1"
+                        >
+                          중간관리자
+                        </Button>
+                        <Button
+                          variant={member.role === "MEMBER" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "MEMBER" })}
+                          disabled={updateRoleMutation.isPending}
+                          className="text-xs px-2 py-1"
+                        >
+                          멤버
+                        </Button>
+                      </div>
+                    ) : (
+                      <Badge className={getRoleColor(member.role)}>
+                        {getRoleLabel(member.role)}
+                      </Badge>
+                    )}
                     {member.role !== "OWNER" && (
                       <Button
                         variant="ghost"

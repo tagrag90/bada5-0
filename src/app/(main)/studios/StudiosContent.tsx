@@ -80,6 +80,7 @@ export default function StudiosContent() {
                 <div className="space-y-3">
                   <div className="w-16 h-16 rounded-full bg-muted overflow-hidden relative">
                     <Image
+                      key={studio.avatarUrl || "default"}
                       src={studio.avatarUrl || "/logo-bada.png"}
                       alt={studio.name}
                       fill

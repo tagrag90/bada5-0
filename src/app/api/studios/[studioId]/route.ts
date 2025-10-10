@@ -1,6 +1,6 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { requireStudioOwner, checkStudioAccess } from "@/lib/permissions";
+import { requireStudioOwner, checkStudioAccess, getStudioPermission } from "@/lib/permissions";
 import { getStudioDataSelect } from "@/lib/types";
 import { NextRequest } from "next/server";
 
@@ -58,8 +58,11 @@ export async function PATCH(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 소유자 권한 확인
-    await requireStudioOwner(user.id, params.studioId);
+    // 소유자 또는 관리자 권한 확인
+    const permission = await getStudioPermission(user.id, params.studioId);
+    if (!permission || !permission.canManage) {
+      throw new Error("스튜디오를 관리할 권한이 없습니다");
+    }
 
     const body = await req.json();
     const { name, description, avatarUrl, bannerUrl, socialLinks, isPublic } = body;

@@ -109,15 +109,16 @@ export default function ServerList({
                 )}
                 title={studio.name}
               >
-                {studio.avatarUrl ? (
-                  <Image
-                    src={studio.avatarUrl}
-                    alt={studio.name}
-                    width={56}
-                    height={56}
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
-                ) : (
+                    {studio.avatarUrl ? (
+                      <Image
+                        key={studio.avatarUrl}
+                        src={studio.avatarUrl}
+                        alt={studio.name}
+                        width={56}
+                        height={56}
+                        className="h-14 w-14 rounded-full object-cover"
+                      />
+                    ) : (
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-300 text-xl font-bold text-black">
                     {studio.name.charAt(0).toUpperCase()}
                   </div>

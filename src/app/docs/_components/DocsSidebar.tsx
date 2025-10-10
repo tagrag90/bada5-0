@@ -41,6 +41,7 @@ const DOCS_NAV: NavItem[] = [
       { title: "로고", href: "/docs/brand/logo" },
       { title: "색상", href: "/docs/brand/colors" },
       { title: "타이포그래피", href: "/docs/brand/typography" },
+      { title: "이미지 사이즈", href: "/docs/brand/image-sizes" },
       { title: "소셜 미디어", href: "/docs/brand/social" },
       { title: "브랜드 자산", href: "/docs/brand/assets" },
     ]
