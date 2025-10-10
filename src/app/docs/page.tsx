@@ -87,6 +87,42 @@ export default function DocsHome() {
           </Link>
         </div>
       </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">실험실</h2>
+        <div className="space-y-3">
+          <Link href="/docs/lab" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              실험실 홈 →
+            </div>
+            <p className="text-sm text-muted-foreground">개발 중인 베타 기능들</p>
+          </Link>
+          <Link href="/docs/lab/ticketing" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              티켓팅 시스템 →
+            </div>
+            <p className="text-sm text-muted-foreground">이벤트 티켓 발급</p>
+          </Link>
+          <Link href="/docs/lab/membership" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              멤버십 결제 →
+            </div>
+            <p className="text-sm text-muted-foreground">크리에이터 구독 시스템</p>
+          </Link>
+          <Link href="/docs/lab/dashboard" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              크리에이터 대시보드 →
+            </div>
+            <p className="text-sm text-muted-foreground">콘텐츠 관리 도구</p>
+          </Link>
+          <Link href="/docs/lab/subscriptions" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              구독 관리 →
+            </div>
+            <p className="text-sm text-muted-foreground">사용자 구독 현황</p>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

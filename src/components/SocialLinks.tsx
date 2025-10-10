@@ -37,7 +37,7 @@ export default function SocialLinks({ links }: SocialLinksProps) {
           href={parsedLinks[0].url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:underline text-sm"
+          className="text-black hover:text-gray-800 hover:underline text-sm"
         >
           {extractUsername(parsedLinks[0].url, parsedLinks[0].platform)}
         </Link>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import StudioNavSidebar from "@/components/layout/StudioNavSidebar";
 import DocsNavSidebar from "@/components/layout/DocsNavSidebar";
+import DiscordStyleSidebar from "@/components/layout/DiscordStyleSidebar";
 
 interface LeftSidebarProps {
   children?: React.ReactNode;
@@ -13,7 +14,7 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
   const [width, setWidth] = useState(256);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
-  const { sidebarType, sidebarData } = useSidebar();
+  const { sidebarType, sidebarData, discordData } = useSidebar();
 
   // localStorage에서 저장된 너비 불러오기
   useEffect(() => {
@@ -90,19 +91,21 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
         className="fixed left-0 top-0 h-screen bg-card border-r border-border overflow-y-auto hidden xl:flex xl:flex-col z-30"
         style={{ width: `${width}px` }}
       >
-        {/* 타입에 따라 다른 사이드바 렌더링 */}
-        {sidebarType === 'studio' && sidebarData && (
-          <StudioNavSidebar
-            studioId={sidebarData.studioId!}
-            studioName={sidebarData.studioName!}
-            isOwner={sidebarData.isOwner || false}
-            activeTab={sidebarData.activeTab}
-            onTabChange={sidebarData.onTabChange}
-          />
-        )}
-        
+        {/* 독스 페이지를 제외한 모든 페이지에서 디스코드 사이드바 사용 */}
         {sidebarType === 'docs' && (
           <DocsNavSidebar />
+        )}
+
+        {(sidebarType === 'studio' || sidebarType === 'discord') && discordData && (
+          <DiscordStyleSidebar
+            selectedStudioId={discordData.selectedStudioId || undefined}
+            selectedChannel={discordData.selectedChannel}
+            onStudioSelect={discordData.onStudioSelect || (() => {})}
+            onChannelSelect={discordData.onChannelSelect || (() => {})}
+            isOwner={discordData.isOwner || false}
+            studioName={discordData.studioName || ""}
+            studio={discordData.studio}
+          />
         )}
 
 

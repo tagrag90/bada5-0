@@ -24,7 +24,7 @@ export default function UserProfileButton() {
     <div className="rounded-2xl bg-card p-3 shadow-sm">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors">
+          <button className="w-full flex items-center gap-3 px-2 py-2 rounded hover:bg-accent transition-colors">
             <UserAvatar avatarUrl={user.avatarUrl} userId={user.id} size={40} />
             <div className="flex-1 text-left min-w-0">
               <div className="font-semibold text-sm truncate">

@@ -5,12 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateStudioDialog from "./CreateStudioDialog";
 import Image from "next/image";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 export default function StudiosContent() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const { setDiscordSidebar } = useSidebar();
+
+  // 디스코드 스타일 사이드바 활성화
+  const [selectedStudioId, setSelectedStudioId] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string>('posts');
+
+  // 디스코드 사이드바 설정
+  const handleStudioSelect = (studioId: string | null) => {
+    setSelectedStudioId(studioId);
+    setSelectedChannel('posts'); // 스튜디오 변경 시 채널 초기화
+  };
+
+  const handleChannelSelect = (channel: string) => {
+    setSelectedChannel(channel);
+  };
+
+  // 디스코드 사이드바 활성화
+  useEffect(() => {
+    setDiscordSidebar({
+      selectedStudioId,
+      selectedChannel,
+      onStudioSelect: handleStudioSelect,
+      onChannelSelect: handleChannelSelect,
+      studioName: "",
+    });
+  }, [selectedStudioId, selectedChannel, setDiscordSidebar]);
 
   const { data: studios, isLoading } = useQuery({
     queryKey: ["studios"],

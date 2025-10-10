@@ -9,7 +9,7 @@ interface BrandSidebarProps {
 
 export default function BrandSidebar({ className }: BrandSidebarProps) {
   return (
-    <div className={cn("flex w-full justify-end border-t border-dotted border-[#E0E0E0]", className)}>
+    <div className={cn("flex w-full justify-end", className)}>
       <div className="pt-4">
         {/* Studio_bada 탐색 링크 */}
         <Link href="/explore" className="block">
@@ -103,6 +103,9 @@ export default function BrandSidebar({ className }: BrandSidebarProps) {
             </div>
           </Link>
         </div>
+
+        {/* 소셜 아이콘 하단 가로선 */}
+        <div className="border-t border-dotted border-[#E0E0E0] mt-4"></div>
       </div>
     </div>
   );

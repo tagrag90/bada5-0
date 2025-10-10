@@ -44,6 +44,11 @@ export default function FollowButton({
 
       return { previousState };
     },
+    onSuccess: () => {
+      // 팔로워/팔로잉 리스트 쿼리 무효화 (모달에서 최신 데이터 반영)
+      queryClient.invalidateQueries({ queryKey: ["followers-list"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["following-list"], exact: false });
+    },
     onError(error, variables, context) {
       queryClient.setQueryData(queryKey, context?.previousState);
       console.error(error);

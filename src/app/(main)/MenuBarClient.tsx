@@ -164,6 +164,7 @@ export function MenuBarClient({
         isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)}
       />
+
     </>
   );
 }

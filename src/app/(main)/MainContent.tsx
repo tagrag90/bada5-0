@@ -11,7 +11,6 @@ import ForYouFeed from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
 import UsersFeed from "./UsersFeed";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import UserButton from "@/components/UserButton";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,12 +20,42 @@ import { useOptionalUser } from "./SessionProvider";
 import InlinePostEditor from "@/components/posts/editor/InlinePostEditor";
 import { cn } from "@/lib/utils";
 import NonLoggedInContent from "@/components/NonLoggedInContent";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import { useState, useEffect } from "react";
 
 export default function MainContent() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const user = useOptionalUser();
   const isLoggedIn = !!user;
   const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('for-you');
+  const { setDiscordSidebar } = useSidebar();
+
+  // 디스코드 스타일 사이드바 활성화
+  const [selectedStudioId, setSelectedStudioId] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<string>('posts');
+
+  // 디스코드 사이드바 설정
+  const handleStudioSelect = (studioId: string | null) => {
+    setSelectedStudioId(studioId);
+    setSelectedChannel('posts'); // 스튜디오 변경 시 채널 초기화
+  };
+
+  const handleChannelSelect = (channel: string) => {
+    setSelectedChannel(channel);
+  };
+
+  // 디스코드 사이드바 활성화
+  useEffect(() => {
+    if (isLoggedIn) {
+      setDiscordSidebar({
+        selectedStudioId,
+        selectedChannel,
+        onStudioSelect: handleStudioSelect,
+        onChannelSelect: handleChannelSelect,
+        studioName: "",
+      });
+    }
+  }, [isLoggedIn, selectedStudioId, selectedChannel, setDiscordSidebar]);
 
   return (
     <main className="flex-1">

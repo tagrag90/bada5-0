@@ -48,15 +48,8 @@ function getPlatformIcon(platform: SocialPlatform) {
 }
 
 function getPlatformColor(platform: SocialPlatform): string {
-  const colors = {
-    instagram: 'text-pink-600 hover:text-pink-700',
-    youtube: 'text-red-600 hover:text-red-700',
-    twitter: 'text-blue-400 hover:text-blue-500',
-    tiktok: 'text-black hover:text-gray-800',
-    spotify: 'text-green-600 hover:text-green-700',
-    other: 'text-gray-600 hover:text-gray-700',
-  };
-  return colors[platform];
+  // 모든 플랫폼을 검정색으로 통일
+  return 'text-black hover:text-gray-800';
 }
 
 function getPlatformLabel(platform: SocialPlatform): string {

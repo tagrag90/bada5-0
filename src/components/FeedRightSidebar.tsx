@@ -13,6 +13,8 @@ interface FeedRightSidebarProps {
   className?: string;
 }
 
+// 우측 사이드바 주석처리 - 내용물이 DiscordStyleSidebar로 이동됨
+/*
 export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
   return (
     <div
@@ -21,13 +23,13 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
         className,
       )}
     >
-      {/* 프로필 버튼 - 상단 */}
+      {/* 프로필 버튼 - 상단 *//*}
       <UserProfileButton />
 
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-        {/* 공지사항 */}
+        {/* 공지사항 *//*}
         <div className="relative group">
-          <div 
+          <div
             className="relative space-y-3 rounded-2xl bg-black p-6 shadow-md transition-all duration-500 group-hover:scale-[1.03]"
           >
             <div className="flex items-center justify-between">
@@ -41,7 +43,7 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
                 <span className="text-sm font-bold text-white">Notice</span>
               </div>
             </div>
-            
+
             <h2 className="text-sm font-medium text-white">
               Welcome to Divetobada! 크리에이터와 팬을 직접 연결하는 새로운 엔터테인먼트 플랫폼입니다.
             </h2>
@@ -50,8 +52,8 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
 
         <WhoToFollow />
         <StudiosToExplore />
-        
-        {/* 브랜드 사이드바 - 하단 */}
+
+        {/* 브랜드 사이드바 - 하단 *//*}
         <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
           <BrandSidebar />
 
@@ -107,4 +109,10 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
       </Suspense>
     </div>
   );
+}
+*/
+
+// 임시 빈 컴포넌트 반환 (주석처리된 상태)
+export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
+  return null;
 }

@@ -11,7 +11,8 @@ export default function useFollowerInfo(
     queryFn: () =>
       kyInstance.get(`/api/users/${userId}/followers`).json<FollowerInfo>(),
     initialData: initialState,
-    staleTime: Infinity,
+    staleTime: 0, // 실시간 데이터 사용
+    refetchOnWindowFocus: true,
   });
 
   return query;
