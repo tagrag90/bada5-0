@@ -11,6 +11,56 @@ export default function DocsHome() {
       </section>
 
       <section>
+        <h2 className="text-2xl font-semibold mb-6">최근 업데이트</h2>
+        <div className="space-y-4">
+          {/* 터미널 창 스타일 */}
+          <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-2xl overflow-hidden">
+            {/* 터미널 헤더 */}
+            <div className="bg-slate-800 px-4 py-2 flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-slate-300 text-sm font-mono ml-2">divetobada.com</span>
+              </div>
+              <div className="text-slate-400 text-xs font-mono">bash</div>
+            </div>
+
+            {/* 터미널 콘텐츠 */}
+            <div className="p-4 font-mono text-sm">
+              {/* 업데이트 목록 */}
+              <div className="space-y-3 text-slate-200">
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">사소한요소수정25.10.10.</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.10</span>
+                </div>
+
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">바다사이드바제작및팔로워확인기능구현25.10.10.</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.10</span>
+                </div>
+
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">독스수정및잔잔바리정리 25.10.8.</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.8</span>
+                </div>
+
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">Update SSO widget to use production URLs</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.6</span>
+                </div>
+
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">Update .gitignore to exclude sample files</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.6</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2 className="text-2xl font-semibold mb-6">시작하기</h2>
         <div className="space-y-3">
           <Link href="/docs/getting-started" className="block group">

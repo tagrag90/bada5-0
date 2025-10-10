@@ -12,7 +12,7 @@ interface BlogPostCardProps {
 
 export default function BlogPostCard({ post }: BlogPostCardProps) {
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow border-0">
+    <Card className="p-6 border-0">
       {/* 스튜디오 정보 */}
       {post.studio && (
         <div className="flex items-center gap-3 mb-4">

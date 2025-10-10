@@ -332,7 +332,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       HardBreak.extend({
         addKeyboardShortcuts() {
           return {
-            Enter: () => this.editor.commands.setHardBreak(),
+            "Shift-Enter": () => this.editor.commands.setHardBreak(),
           };
         },
       }).configure({
@@ -675,6 +675,61 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
                   <Bold className="h-4 w-4" />
                 </Button>
 
+                {/* 이탈릭체 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  disabled={!editor.can().chain().focus().toggleItalic().run()}
+                  data-active={editor.isActive("italic")}
+                  title="기울임꼴"
+                >
+                  <ItalicIcon className="h-4 w-4" />
+                </Button>
+
+                {/* 취소선 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                  disabled={!editor.can().chain().focus().toggleStrike().run()}
+                  data-active={editor.isActive("strike")}
+                  title="취소선"
+                >
+                  <StrikethroughIcon className="h-4 w-4" />
+                </Button>
+
+                {/* 하이라이트 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
+                  onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  disabled={!editor.can().chain().focus().toggleHighlight().run()}
+                  data-active={editor.isActive("highlight")}
+                  title="하이라이트"
+                >
+                  <HighlighterIcon className="h-4 w-4" />
+                </Button>
+
+                {/* 코드 버튼 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
+                  onClick={() => editor.chain().focus().toggleCode().run()}
+                  disabled={!editor.can().chain().focus().toggleCode().run()}
+                  data-active={editor.isActive("code")}
+                  title="코드"
+                >
+                  <CodeIcon className="h-4 w-4" />
+                </Button>
+
+                {/* 구분선 */}
+                <div className="w-px h-6 bg-border mx-1" />
+
                 {/* 사진 첨부 버튼 */}
                 <Button
                   variant="ghost"
@@ -687,6 +742,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
                   <ImagesIcon className="h-4 w-4" />
                 </Button>
 
+                {/* 구분선 */}
                 <div className="w-px h-6 bg-border mx-1" />
 
                 {/* 게시 버튼 */}
@@ -729,8 +785,8 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
               <ImagesIcon className="h-5 w-5" />
             </Button>
 
-            {/* 나머지 버튼들 - 주석처리 */}
-            {/* <Button
+            {/* 이탈릭체 버튼 */}
+            <Button
               variant="ghost"
               size="icon"
               className={cn("rounded-full", editorActiveStyle)}
@@ -741,17 +797,8 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
             >
               <ItalicIcon className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("rounded-full", editorActiveStyle)}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              disabled={!editor.can().chain().focus().toggleUnderline().run()}
-              data-active={editor.isActive("underline")}
-              title="밑줄"
-            >
-              <UnderlineIcon className="h-5 w-5" />
-            </Button>
+
+            {/* 취소선 버튼 */}
             <Button
               variant="ghost"
               size="icon"
@@ -763,6 +810,21 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
             >
               <StrikethroughIcon className="h-5 w-5" />
             </Button>
+
+            {/* 하이라이트 버튼 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("rounded-full", editorActiveStyle)}
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              disabled={!editor.can().chain().focus().toggleHighlight().run()}
+              data-active={editor.isActive("highlight")}
+              title="하이라이트"
+            >
+              <HighlighterIcon className="h-5 w-5" />
+            </Button>
+
+            {/* 코드 버튼 */}
             <Button
               variant="ghost"
               size="icon"
@@ -774,29 +836,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
             >
               <CodeIcon className="h-5 w-5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("rounded-full", editorActiveStyle)}
-              onClick={() =>
-                editor.chain().focus().toggleHighlight({ color: "#B2FF85" }).run()
-              }
-              disabled={!editor.can().chain().focus().toggleHighlight().run()}
-              data-active={editor.isActive("highlight", { color: "#B2FF85" })}
-              title="하이라이트"
-            >
-              <HighlighterIcon className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={handleYoutubeEmbed}
-              disabled={!editor}
-              title="유튜브"
-            >
-              <_YoutubeIcon className="h-5 w-5" />
-            </Button> */}
           </div>
         )}
 

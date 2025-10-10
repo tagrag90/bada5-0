@@ -76,7 +76,7 @@ export default function StudiosContent() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {studios.map((studio: any) => (
             <Link key={studio.id} href={`/studios/${studio.id}`}>
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <Card className="p-6 cursor-pointer">
                 <div className="space-y-3">
                   <div className="w-16 h-16 rounded-full bg-muted overflow-hidden relative">
                     <Image

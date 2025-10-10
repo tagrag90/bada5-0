@@ -154,7 +154,7 @@ export default function Explore() {
 function StudioExploreCard({ studio }: { studio: PublicStudio }) {
   return (
     <Link href={`/studios/${studio.id}`}>
-      <div className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200 rounded-lg">
+      <div className="p-6 cursor-pointer bg-white border border-gray-200 rounded-lg">
         <div className="space-y-3">
           <div className="w-16 h-16 rounded-full bg-muted overflow-hidden relative mx-auto">
             <Image
