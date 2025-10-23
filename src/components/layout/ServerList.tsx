@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -66,6 +66,16 @@ export default function ServerList({
                 !selectedStudioId && "opacity-100 group-hover:opacity-100"
               )}
             />
+          </button>
+        </Link>
+
+        {/* Cosmos 우주 탐험 버튼 */}
+        <Link href="/ui-lab/cosmos">
+          <button
+            className="group relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 transition-all hover:from-purple-600 hover:to-blue-600 shadow-lg"
+            title="Cosmos 🌌"
+          >
+            <Sparkles className="h-7 w-7 text-white" />
           </button>
         </Link>
 
