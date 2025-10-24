@@ -1,9 +1,7 @@
 import { validateRequest } from "@/auth";
 import SessionProvider from "@/app/(main)/SessionProvider";
 import ReactQueryProvider from "@/app/ReactQueryProvider";
-import { SidebarProvider } from "@/components/layout/SidebarContext";
-import LeftSidebar from "@/components/LeftSidebar";
-import TrendsSidebar from "@/components/TrendsSidebar";
+import UILabSidebar from "./UILabSidebar";
 
 export default async function UILabLayout({
   children,
@@ -11,20 +9,14 @@ export default async function UILabLayout({
   children: React.ReactNode;
 }) {
   const session = await validateRequest();
-  const isLoggedIn = !!session.user;
 
   return (
     <SessionProvider value={session}>
-      <SidebarProvider>
-        <ReactQueryProvider>
-          {isLoggedIn && (
-            <LeftSidebar>
-              <TrendsSidebar className="!static !w-full" />
-            </LeftSidebar>
-          )}
+      <ReactQueryProvider>
+        <UILabSidebar session={session}>
           {children}
-        </ReactQueryProvider>
-      </SidebarProvider>
+        </UILabSidebar>
+      </ReactQueryProvider>
     </SessionProvider>
   );
 }

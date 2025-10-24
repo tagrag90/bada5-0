@@ -12,7 +12,6 @@ import { mockStudios as fallbackStudios, mockPosts as fallbackPosts, generate3DP
 import { useStudios, useStudioPosts, useStudioItems, useAllUsers, useUserPosts, useCurrentUser } from "./hooks";
 import { transformStudioData, transformPostData, transformItemsToProjects, generateConnections, transformUserData } from "./utils";
 import { Studio, Post as PostType, PlanetEntity } from "./types";
-
 type ViewMode = "2d" | "3d";
 
 export default function ConstellationHybrid() {
@@ -299,82 +298,67 @@ export default function ConstellationHybrid() {
           color: rgba(255, 255, 255, 0.9) !important;
         }
       `}</style>
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/docs/lab"
-              className="p-2 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors border border-white/10"
+      {/* 하단 중앙 메뉴 바 */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-4 py-3 border border-white/20 shadow-2xl">
+          {/* View Mode Toggle */}
+          <div className="flex gap-1 p-1 bg-black/20 rounded-full">
+            <button
+              onClick={() => handleViewModeChange("3d")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                viewMode === "3d"
+                  ? "bg-white text-black shadow-lg"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
             >
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </Link>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
-                <span className="text-2xl md:text-3xl">🌌</span>
-                <span>Cosmos</span>
-              </h1>
-              <p className="text-white/70 text-xs md:text-sm mt-1 hidden md:block">
-                2D와 3D를 자유롭게 전환하며 Studio 생태계를 탐험하세요
-              </p>
-            </div>
+              <Box className="w-4 h-4" />
+              <span className="text-sm font-medium">3D</span>
+            </button>
+            <button
+              onClick={() => handleViewModeChange("2d")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                viewMode === "2d"
+                  ? "bg-white text-black shadow-lg"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              <span className="text-sm font-medium">2D</span>
+            </button>
           </div>
 
-          <div className="flex gap-2">
-            {/* View Mode Toggle */}
-            <div className="flex gap-1 p-1 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
-              <button
-                onClick={() => handleViewModeChange("3d")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
-                  viewMode === "3d"
-                    ? "bg-white text-black shadow-lg"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Box className="w-4 h-4" />
-                <span className="text-sm font-medium">3D</span>
-              </button>
-              <button
-                onClick={() => handleViewModeChange("2d")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
-                  viewMode === "2d"
-                    ? "bg-white text-black shadow-lg"
-                    : "text-white/70 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Map className="w-4 h-4" />
-                <span className="text-sm font-medium">2D</span>
-              </button>
-            </div>
+          <div className="w-px h-6 bg-white/20" />
 
-            <button
-              onClick={() => setShowPostEditor(true)}
-              className="p-2 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors border border-white/10"
-              title="게시물 작성"
-            >
-              <PenSquare className="w-5 h-5 text-white" />
-            </button>
+          <button
+            onClick={() => setShowPostEditor(true)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            title="게시물 작성"
+          >
+            <PenSquare className="w-5 h-5 text-white" />
+          </button>
 
-            <button
-              onClick={() => setShowBrandSidebar(!showBrandSidebar)}
-              className="p-2 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors border border-white/10"
-              title="Studio_bada 정보"
-            >
-              <Home className="w-5 h-5 text-white" />
-            </button>
+          <button
+            onClick={() => setShowBrandSidebar(!showBrandSidebar)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            title="Studio_bada 정보"
+          >
+            <Home className="w-5 h-5 text-white" />
+          </button>
 
-            <button
-              onClick={() => setShowInfo(!showInfo)}
-              className="p-2 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors border border-white/10"
-              title="도움말"
-            >
-              <Info className="w-5 h-5 text-white" />
-            </button>
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            title="도움말"
+          >
+            <Info className="w-5 h-5 text-white" />
+          </button>
 
-            {viewMode === "3d" && (
+          {viewMode === "3d" && (
+            <>
+              <div className="w-px h-6 bg-white/20" />
               <button
                 onClick={() => setAutoRotate(!autoRotate)}
-                className="p-2 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors border border-white/10"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors"
                 title={autoRotate ? "자동 회전 끄기" : "자동 회전 켜기"}
               >
                 {autoRotate ? (
@@ -383,8 +367,8 @@ export default function ConstellationHybrid() {
                   <Play className="w-5 h-5 text-white" />
                 )}
               </button>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -420,9 +404,9 @@ export default function ConstellationHybrid() {
         )}
       </div>
 
-      {/* Info Panel */}
+      {/* Info Panel - 우측 상단 */}
       {showInfo && !selectedStudio && (
-        <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 max-w-xs md:max-w-md p-4 md:p-6 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 text-white">
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 max-w-xs md:max-w-md p-4 md:p-6 bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 text-white">
           <h3 className="font-bold text-lg mb-3">
             {viewMode === "3d" ? "3D 인터랙션 가이드" : "2D 인터랙션 가이드"}
           </h3>
