@@ -166,7 +166,7 @@ export default function ConstellationHybrid() {
   // 로딩 상태
   if (studiosLoading) {
     return (
-      <div className="fixed inset-0 bg-[#000510] flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#0a0e27] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
           <p className="text-white/70">우주를 생성하는 중...</p>
@@ -179,7 +179,7 @@ export default function ConstellationHybrid() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#000510] overflow-hidden">
+    <div className="fixed inset-0 bg-[#0a0e27] overflow-hidden">
       <style jsx global>{`
         .constellation-feed .constellation-post {
           background: rgba(255, 255, 255, 0.05);

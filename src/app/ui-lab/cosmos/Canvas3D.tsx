@@ -2,11 +2,47 @@
 
 import { useRef, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars, Html } from "@react-three/drei";
+import { OrbitControls, Stars, Html, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { Studio, Connection } from "./types";
 
-// 위성 (프로젝트) 컴포넌트
+// 위성 (스킬) 컴포넌트 - GLB 모델 사용
+function SkillSatellite({ project, planetSize, angle, distance }: any) {
+  const meshRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF('/models/satellite2.glb');
+  
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const time = state.clock.elapsedTime;
+      const speed = 0.3;
+      const x = Math.cos(time * speed + angle) * distance;
+      const z = Math.sin(time * speed + angle) * distance;
+      meshRef.current.position.set(x, 0.5, z);
+      
+      meshRef.current.rotation.y += 0.01;
+      meshRef.current.rotation.x = Math.sin(time) * 0.1;
+    }
+  });
+
+  return (
+    <group ref={meshRef}>
+      <primitive 
+        object={clonedScene} 
+        scale={0.08}
+      />
+      <pointLight
+        color={project.color}
+        intensity={1.5}
+        distance={1.5}
+        decay={2}
+      />
+    </group>
+  );
+}
+
+// 위성 (프로젝트) 컴포넌트 - 기존 박스 형태
 function ProjectSatellite({ project, planetSize, angle, distance }: any) {
   const meshRef = useRef<THREE.Mesh>(null);
 
@@ -99,15 +135,20 @@ function StudioPlanet({
         />
       </mesh>
 
-      {studio.projects && studio.projects.map((project: any, index: number) => (
-        <ProjectSatellite
-          key={project.id}
-          project={project}
-          planetSize={size}
-          angle={(Math.PI * 2 * index) / studio.projects.length}
-          distance={size * 2.5}
-        />
-      ))}
+      {studio.projects && studio.projects.map((project: any, index: number) => {
+        // 유저 행성이면 SkillSatellite (GLB 모델), 스튜디오면 ProjectSatellite (박스)
+        const SatelliteComponent = studio.entityType === "user" ? SkillSatellite : ProjectSatellite;
+        
+        return (
+          <SatelliteComponent
+            key={project.id}
+            project={project}
+            planetSize={size}
+            angle={(Math.PI * 2 * index) / studio.projects.length}
+            distance={size * 2.5}
+          />
+        );
+      })}
 
       <pointLight
         color={studio.color}
@@ -371,8 +412,8 @@ function Scene({
 }) {
   return (
     <>
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[10, 10, 5]} intensity={0.5} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={0.8} />
 
       <ParticleStars />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0.5} fade speed={0.5} />
@@ -440,8 +481,8 @@ export default function Canvas3D({
       gl={{ antialias: true, alpha: false }}
       className="absolute inset-0"
     >
-      <color attach="background" args={["#000510"]} />
-      <fog attach="fog" args={["#000510", 30, 100]} />
+      <color attach="background" args={["#0a0e27"]} />
+      <fog attach="fog" args={["#0a0e27", 30, 100]} />
       
       <Suspense fallback={null}>
         <Scene
@@ -457,4 +498,7 @@ export default function Canvas3D({
     </Canvas>
   );
 }
+
+// GLB 모델 프리로드
+useGLTF.preload('/models/satellite2.glb');
 
