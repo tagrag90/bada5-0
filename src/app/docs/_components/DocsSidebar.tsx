@@ -53,6 +53,10 @@ const DOCS_NAV: NavItem[] = [
   {
     title: "SSO 통합",
     href: "/docs/sso"
+  },
+  {
+    title: "피드백",
+    href: "/docs/feedback"
   }
 ];
 

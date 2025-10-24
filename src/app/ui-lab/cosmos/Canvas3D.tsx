@@ -322,7 +322,7 @@ function CameraController({
         }
       }
     } else {
-      // 선택 해제: OrbitControls 활성화
+      // 선택 해제: OrbitControls 활성화만 하고 위치는 유지
       if (controls) {
         controls.enabled = true;
         controls.autoRotate = autoRotate;
@@ -332,20 +332,7 @@ function CameraController({
         previousSelectedId.current = null;
       }
       
-      // 원래 위치로 복귀
-      camera.position.lerp(initialPosition.current, 0.05);
-      
-      // 원래 target으로 복귀
-      const currentLookAt = new THREE.Vector3();
-      camera.getWorldDirection(currentLookAt);
-      currentLookAt.multiplyScalar(10).add(camera.position);
-      currentLookAt.lerp(initialTarget.current, 0.05);
-      camera.lookAt(currentLookAt);
-      
-      if (controls) {
-        controls.target.copy(initialTarget.current);
-        controls.update();
-      }
+      // 복귀 애니메이션 제거 - 사용자가 드래그한 위치 유지
     }
   });
 

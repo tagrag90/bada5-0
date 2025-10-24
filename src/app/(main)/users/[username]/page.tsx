@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import FollowingCount from "@/components/FollowingCount";
+import UserPlanetBox from "@/components/UserPlanetBox";
 
 interface PageProps {
   params: { username: string };
@@ -74,12 +75,23 @@ export default async function Page({ params: { username } }: PageProps) {
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
-        <UserProfile user={user} loggedInUserId={loggedInUser.id} />
-        {/* <div className="bg-card p-5 shadow-sm">
-          <h2 className="text-center text-2xl font-bold">
-            {user.displayName}&apos;s posts
-          </h2>
-        </div> */}
+        {/* 개인 행성 박스 - 프로필 위 배너 */}
+        <div className="bg-card overflow-hidden rounded-2xl shadow-sm">
+          <div className="relative">
+            <UserPlanetBox
+              username={user.username}
+              displayName={user.displayName}
+              skills={user.skills || []}
+              subscribersCount={user._count.followers}
+              color="#8B5CF6"
+            />
+          </div>
+          {/* 프로필 카드를 행성 박스 아래에 */}
+          <div className="relative -mt-20 z-10">
+            <UserProfile user={user} loggedInUserId={loggedInUser.id} />
+          </div>
+        </div>
+
         <UserPosts userId={user.id} />
       </div>
     </main>

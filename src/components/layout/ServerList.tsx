@@ -72,10 +72,16 @@ export default function ServerList({
         {/* Cosmos 우주 탐험 버튼 */}
         <Link href="/ui-lab/cosmos">
           <button
-            className="group relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 transition-all hover:from-purple-600 hover:to-blue-600 shadow-lg"
+            className="group relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1d2e] transition-all hover:scale-110 shadow-lg overflow-hidden"
             title="Cosmos 🌌"
           >
-            <Sparkles className="h-7 w-7 text-white" />
+            <Image
+              src="/cosmos-icon.png"
+              alt="Cosmos"
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain"
+            />
           </button>
         </Link>
 

@@ -24,13 +24,8 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
-// 랜덤 이미지 배열 정의
-const ogImage = "/og-images/og-3.png";
-
-// 이미지 선택 함수
-function getOgImage() {
-  return ogImage;
-}
+// 오픈그래프 이미지
+const ogImage = "/og-images/og-bada.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://divetobada.com"),
@@ -39,10 +34,10 @@ export const metadata: Metadata = {
     template: "%s | Dive to Bada",
   },
   description:
-    "크리에이터와 팬을 직접 연결하는 새로운 엔터테인먼트 플랫폼. 소속사 없이도 주도권을 가지고 활동하며 팬들과 매끄럽게 소통하세요.",
+    "Platform for New culture-flow between creator and fan.",
   openGraph: {
     title: "Dive to Bada",
-    description: "크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼",
+    description: "Platform for New culture-flow between creator and fan.",
     url: "https://divetobada.com",
     siteName: "Dive to Bada",
     images: [
@@ -59,7 +54,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Dive to Bada",
-    description: "크리에이터와 팬을 직접 연결하는 엔터테인먼트 플랫폼",
+    description: "Platform for New culture-flow between creator and fan.",
     images: [ogImage],
   },
 };
