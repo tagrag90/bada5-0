@@ -21,51 +21,14 @@ export function useSubmitPostMutation() {
       console.log("🔍 mutation 호출됨 - 입력값:", variables);
     },
     onSuccess: async (newPost) => {
-      await queryClient.cancelQueries({
-        queryKey: ["post-feed"],
-        exact: false
-      });
-
-      queryClient.setQueriesData<InfiniteData<PostsPage>>(
-        {
-          queryKey: ["post-feed"],
-          exact: false,
-        },
-        (oldData) => {
-          if (!oldData) return oldData;
-          
-          const firstPage = oldData.pages[0];
-          if (!firstPage) return oldData;
-
-          return {
-            pageParams: oldData.pageParams,
-            pages: [
-              {
-                posts: [newPost, ...firstPage.posts],
-                nextCursor: firstPage.nextCursor,
-              },
-              ...oldData.pages.slice(1),
-            ],
-          };
-        }
-      );
-
-      queryClient.invalidateQueries({
+      // 간단한 객체 반환으로 인한 캐시 업데이트 방식 변경
+      // 복잡한 setQueriesData 대신 invalidateQueries 사용
+      await queryClient.invalidateQueries({
         queryKey: ["post-feed"],
         exact: false,
-        predicate: (query) => {
-          if (!user) return false;
-          
-          const isRelevantQuery = 
-            query.queryKey.includes("for-you") ||
-            (query.queryKey.includes("user-posts") && 
-             query.queryKey.includes(user.id));
-          
-          return isRelevantQuery && !query.state.data;
-        },
       });
 
-      // 스튜디오 포스트면 스튜디오 포스트 쿼리도 업데이트
+      // 스튜디오 포스트면 스튜디오 포스트 쿼리도 무효화
       if (newPost.studioId) {
         queryClient.invalidateQueries({
           queryKey: ["studio-posts", newPost.studioId],
@@ -100,29 +63,16 @@ export function useUpdatePostMutation() {
   const mutation = useMutation({
     mutationFn: updatePost,
     onSuccess: async (updatedPost) => {
-      // 개별 게시물 쿼리 업데이트
-      queryClient.setQueryData(["post", updatedPost.id], updatedPost);
+      // 간단한 객체 반환으로 인한 캐시 업데이트 방식 변경
+      // 복잡한 setQueryData 대신 invalidateQueries 사용
+      await queryClient.invalidateQueries({
+        queryKey: ["post", updatedPost.id],
+      });
 
-      // 피드 쿼리 업데이트
-      queryClient.setQueriesData<InfiniteData<PostsPage>>(
-        {
-          queryKey: ["post-feed"],
-          exact: false,
-        },
-        (oldData) => {
-          if (!oldData) return oldData;
-
-          return {
-            pageParams: oldData.pageParams,
-            pages: oldData.pages.map((page) => ({
-              ...page,
-              posts: page.posts.map((post) => 
-                post.id === updatedPost.id ? updatedPost : post
-              ),
-            })),
-          };
-        }
-      );
+      await queryClient.invalidateQueries({
+        queryKey: ["post-feed"],
+        exact: false,
+      });
 
       toast({
         description: "게시물이 수정되었습니다.",

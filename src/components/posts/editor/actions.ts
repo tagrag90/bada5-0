@@ -57,10 +57,25 @@ export async function submitPost(input: {
         connect: mediaIds.map((id) => ({ id })),
       },
     },
-    include: getPostDataInclude(user.id),
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      createdAt: true,
+      userId: true,
+      studioId: true,
+    },
   });
 
-  return newPost;
+  // 간단한 객체로 반환하여 serialize 문제 해결
+  return {
+    id: newPost.id,
+    title: newPost.title,
+    content: newPost.content,
+    createdAt: newPost.createdAt,
+    userId: newPost.userId,
+    studioId: newPost.studioId,
+  };
 }
 
 export async function updatePost(input: {
@@ -107,8 +122,23 @@ export async function updatePost(input: {
         connect: mediaIds.map((mediaId) => ({ id: mediaId })),
       },
     },
-    include: getPostDataInclude(user.id),
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      createdAt: true,
+      userId: true,
+      studioId: true,
+    },
   });
 
-  return updatedPost;
+  // 간단한 객체로 반환하여 serialize 문제 해결
+  return {
+    id: updatedPost.id,
+    title: updatedPost.title,
+    content: updatedPost.content,
+    createdAt: updatedPost.createdAt,
+    userId: updatedPost.userId,
+    studioId: updatedPost.studioId,
+  };
 }
