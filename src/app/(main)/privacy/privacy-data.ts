@@ -71,10 +71,10 @@ export const privacyDataItems: PrivacyDataItem[] = [
 // 제3자 서비스 연동 정보
 export const thirdPartyServices: ThirdPartyService[] = [
   {
-    name: "UploadThing",
+    name: "Vercel Blob",
     purpose: "파일 저장 및 CDN 서비스",
     dataShared: ["업로드 파일", "파일 메타데이터"],
-    website: "https://uploadthing.com"
+    website: "https://vercel.com/docs/storage/vercel-blob"
   },
   {
     name: "Google OAuth",

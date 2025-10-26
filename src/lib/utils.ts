@@ -49,15 +49,14 @@ export function slugify(input: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
-// 이미지 URL 압축 함수 (UploadThing 전용)
+// 이미지 URL 최적화 함수 (Vercel Blob 지원)
 export function getCompressedImageUrl(url: string, quality: number = 75, width?: number): string {
-  if (!url.includes('utfs.io') && !url.includes('ufs.sh')) return url;
-  
-  const params = new URLSearchParams();
-  params.append('q', quality.toString());
-  if (width) params.append('w', width.toString());
-  
-  return `${url}?${params.toString()}`;
+  // Vercel Blob에서는 기본적으로 원본 이미지 제공 (압축 미지원)
+  // 향후 이미지 최적화가 필요하면 Next.js Image 컴포넌트 사용 권장
+  if (!url.includes('blob.vercel-storage.com')) return url;
+
+  // 현재는 원본 URL 반환 (향후 최적화 로직 추가 가능)
+  return url;
 }
 
 // 파일 크기 포맷팅 함수

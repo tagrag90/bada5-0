@@ -197,7 +197,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         !linkPreviews.some(preview => preview.url === url) &&
         !loadingUrls.has(url) &&
         !url.match(/\.(jpg|jpeg|png|gif|webp|mp4|avi|mov)$/i) && // 이미지/비디오 파일 제외
-        !url.includes('utfs.io') && // uploadthing 이미지 URL 제외
+        !url.includes('blob.vercel-storage.com') && // vercel blob 이미지 URL 제외
         !imgUrls.has(url) && // img 태그 안의 URL 제외
         true // 모든 URL 처리 (YouTube 포함)
       );
