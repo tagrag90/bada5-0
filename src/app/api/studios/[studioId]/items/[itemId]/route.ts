@@ -6,20 +6,21 @@ import { NextRequest } from "next/server";
 // PATCH /api/studios/[studioId]/items/[itemId]
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { studioId: string; itemId: string } }
+  { params }: { params: Promise<{ studioId: string; itemId: string }> }
 ) {
   try {
+    const { studioId, itemId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await requireStudioMember(user.id, params.studioId);
+    await requireStudioMember(user.id, studioId);
 
     const body = await req.json();
 
     const item = await prisma.studioItem.update({
-      where: { id: params.itemId },
+      where: { id: itemId },
       data: {
         ...(body.title && { title: body.title }),
         ...(body.content !== undefined && { content: body.content }),
@@ -45,18 +46,19 @@ export async function PATCH(
 // DELETE /api/studios/[studioId]/items/[itemId]
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { studioId: string; itemId: string } }
+  { params }: { params: Promise<{ studioId: string; itemId: string }> }
 ) {
   try {
+    const { studioId, itemId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await requireStudioMember(user.id, params.studioId);
+    await requireStudioMember(user.id, studioId);
 
     await prisma.studioItem.delete({
-      where: { id: params.itemId },
+      where: { id: itemId },
     });
 
     return Response.json({ message: "삭제되었습니다" });

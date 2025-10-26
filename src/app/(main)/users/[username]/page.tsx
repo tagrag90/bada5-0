@@ -8,7 +8,6 @@ import { formatNumber } from "@/lib/utils";
 import { formatDate } from "date-fns";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cache } from "react";
 import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
 import UserProfileMenu from "./UserProfileMenu";
@@ -26,10 +25,10 @@ import FollowingCount from "@/components/FollowingCount";
 import UserPlanetBox from "@/components/UserPlanetBox";
 
 interface PageProps {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }
 
-const getUser = cache(async (username: string, loggedInUserId: string) => {
+const getUser = async (username: string, loggedInUserId: string) => {
   const user = await prisma.user.findFirst({
     where: {
       username: {
@@ -43,11 +42,12 @@ const getUser = cache(async (username: string, loggedInUserId: string) => {
   if (!user) notFound();
 
   return user;
-});
+};
 
 export async function generateMetadata({
-  params: { username },
+  params,
 }: PageProps): Promise<Metadata> {
+  const { username } = await params;
   const { user: loggedInUser } = await validateRequest();
 
   if (!loggedInUser) return {};
@@ -59,7 +59,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params: { username } }: PageProps) {
+export default async function Page({ params }: PageProps) {
+  const { username } = await params;
   const { user: loggedInUser } = await validateRequest();
 
   if (!loggedInUser) {

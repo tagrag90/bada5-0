@@ -6,15 +6,17 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
-  
+
   // TestFlight 파라미터 확인
   const isTestFlight = req.nextUrl.searchParams.get('testflight') === 'true';
 
   const url = await google.createAuthorizationURL(state, codeVerifier, {
     scopes: ["profile", "email"],
   });
-  
-  cookies().set("state", state, {
+
+  const cookieStore = await cookies();
+
+  cookieStore.set("state", state, {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
     sameSite: "lax",
   });
 
-  cookies().set("code_verifier", codeVerifier, {
+  cookieStore.set("code_verifier", codeVerifier, {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
 
   // TestFlight 정보를 쿠키에 저장
   if (isTestFlight) {
-    cookies().set("testflight", "true", {
+    cookieStore.set("testflight", "true", {
       path: "/",
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,

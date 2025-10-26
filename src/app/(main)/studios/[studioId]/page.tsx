@@ -5,8 +5,9 @@ import StudioDetailContent from "./StudioDetailContent";
 export default async function StudioDetailPage({
   params,
 }: {
-  params: { studioId: string };
+  params: Promise<{ studioId: string }>;
 }) {
+  const { studioId } = await params;
   const { user } = await validateRequest();
 
   if (!user) {
@@ -16,7 +17,7 @@ export default async function StudioDetailPage({
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
-        <StudioDetailContent studioId={params.studioId} />
+        <StudioDetailContent studioId={studioId} />
       </div>
     </main>
   );

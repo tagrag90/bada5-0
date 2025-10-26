@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
-import { useUploadThing } from "@/lib/uploadthing";
+// UploadThing 제거 - Vercel Blob 사용
 import Image from "next/image";
 import Resizer from "react-image-file-resizer";
 import CropImageDialog from "@/components/CropImageDialog";
@@ -39,8 +39,24 @@ export default function EditStudioDialog({
   const [croppedBanner, setCroppedBanner] = useState<Blob | null>(null);
   const [imageToCrop, setImageToCrop] = useState<{ file: File; type: "avatar" | "banner" }>();
 
-  const { startUpload: startAvatarUpload } = useUploadThing("studioAvatar");
-  const { startUpload: startBannerUpload } = useUploadThing("studioBanner");
+  // Vercel Blob 업로드 함수들
+  const uploadToBlob = async (file: File, type: 'studio-avatar' | 'studio-banner') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  };
 
   useEffect(() => {
     if (studio) {
@@ -62,23 +78,22 @@ export default function EditStudioDialog({
         console.log("Cropped avatar size:", croppedAvatar.size);
         const avatarFile = new File([croppedAvatar], `studio_avatar_${studio.id}.webp`);
         console.log("Avatar file created:", avatarFile.name, avatarFile.size);
-        const uploadResult = await startAvatarUpload([avatarFile]);
+        const uploadResult = await uploadToBlob(avatarFile, 'studio-avatar');
         console.log("Upload result:", uploadResult);
-        if (uploadResult?.[0]?.serverData?.avatarUrl) {
-          finalAvatarUrl = uploadResult[0].serverData.avatarUrl;
+        if (uploadResult?.url) {
+          finalAvatarUrl = uploadResult.url;
           console.log("Avatar uploaded successfully:", finalAvatarUrl);
         } else {
-          console.error("Avatar upload failed - no serverData.avatarUrl:", uploadResult);
-          console.error("Full upload result:", JSON.stringify(uploadResult, null, 2));
+          console.error("Avatar upload failed:", uploadResult);
         }
       }
 
       if (croppedBanner) {
         console.log("Uploading banner...");
         const bannerFile = new File([croppedBanner], `studio_banner_${studio.id}.webp`);
-        const uploadResult = await startBannerUpload([bannerFile]);
-        if (uploadResult?.[0]?.serverData?.bannerUrl) {
-          finalBannerUrl = uploadResult[0].serverData.bannerUrl;
+        const uploadResult = await uploadToBlob(bannerFile, 'studio-banner');
+        if (uploadResult?.url) {
+          finalBannerUrl = uploadResult.url;
           console.log("Banner uploaded:", finalBannerUrl);
         } else {
           console.error("Banner upload failed:", uploadResult);

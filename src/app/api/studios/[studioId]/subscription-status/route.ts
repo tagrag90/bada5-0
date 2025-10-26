@@ -4,9 +4,10 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
 
     if (!user) {
@@ -17,7 +18,7 @@ export async function GET(
     const membership = await prisma.studioMember.findUnique({
       where: {
         studioId_userId: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: user.id,
         },
       },
@@ -31,7 +32,7 @@ export async function GET(
     const subscription = await prisma.studioSubscription.findUnique({
       where: {
         studioId_userId: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: user.id,
         },
       },

@@ -16,7 +16,7 @@ export default function UserAvatar({
   className,
 }: UserAvatarProps) {
   // 아바타 URL 결정: 사용자 지정 이미지 -> 랜덤 기본 이미지 -> 기본 플레이스홀더
-  const displayAvatar = avatarUrl || 
+  const displayAvatar = avatarUrl ||
     (userId ? getDefaultAvatar(userId) : avatarPlaceholder);
 
   return (

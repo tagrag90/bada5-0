@@ -6,19 +6,20 @@ import { NextRequest } from "next/server";
 // GET /api/studios/[studioId]/members - 멤버 목록
 export async function GET(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // 멤버 권한 확인
-    await requireStudioMember(user.id, params.studioId);
+    await requireStudioMember(user.id, studioId);
 
     const members = await prisma.studioMember.findMany({
-      where: { studioId: params.studioId },
+      where: { studioId: studioId },
       include: {
         user: {
           select: {
@@ -44,16 +45,17 @@ export async function GET(
 // POST /api/studios/[studioId]/members - 멤버 초대
 export async function POST(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // ADMIN 이상 권한 필요
-    await requireStudioMember(user.id, params.studioId, "ADMIN");
+    await requireStudioMember(user.id, studioId, "ADMIN");
 
     const body = await req.json();
     const { username, role } = body;
@@ -74,7 +76,7 @@ export async function POST(
     const existing = await prisma.studioMember.findUnique({
       where: {
         studioId_userId: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: invitedUser.id,
         },
       },
@@ -90,7 +92,7 @@ export async function POST(
     // 멤버 추가
     const member = await prisma.studioMember.create({
       data: {
-        studioId: params.studioId,
+        studioId: studioId,
         userId: invitedUser.id,
         role: role || "MEMBER",
       },
@@ -115,9 +117,10 @@ export async function POST(
 // PATCH /api/studios/[studioId]/members/[memberId] - 멤버 역할 업데이트
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -134,7 +137,7 @@ export async function PATCH(
     }
 
     // ADMIN 이상 권한 필요
-    await requireStudioMember(user.id, params.studioId, "ADMIN");
+    await requireStudioMember(user.id, studioId, "ADMIN");
 
     const body = await req.json();
     const { role } = body;
@@ -172,9 +175,10 @@ export async function PATCH(
 // DELETE /api/studios/[studioId]/members/[memberId]
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -191,7 +195,7 @@ export async function DELETE(
     }
 
     // ADMIN 이상 권한 필요
-    await requireStudioMember(user.id, params.studioId, "ADMIN");
+    await requireStudioMember(user.id, studioId, "ADMIN");
 
     await prisma.studioMember.delete({
       where: { id: memberId },

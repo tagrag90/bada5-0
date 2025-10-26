@@ -1,5 +1,4 @@
 import { useToast } from "@/components/ui/use-toast";
-import { useUploadThing } from "@/lib/uploadthing";
 import { useState } from "react";
 import Resizer from "react-image-file-resizer";
 import { getUserFriendlyMessage } from "@/lib/error-messages";
@@ -20,52 +19,25 @@ export default function useMediaUpload() {
 
   const [uploadProgress, setUploadProgress] = useState<number>();
 
-  const { startUpload, isUploading } = useUploadThing("attachment", {
-    onBeforeUploadBegin(files) {
-      const renamedFiles = files.map((file) => {
-        const extension = file.name.split(".").pop();
-        return new File(
-          [file],
-          `attachment_${crypto.randomUUID()}.${extension}`,
-          {
-            type: file.type,
-          },
-        );
-      });
+  const [isUploading, setIsUploading] = useState(false);
 
-      setAttachments((prev) => [
-        ...prev,
-        ...renamedFiles.map((file) => ({ file, isUploading: true })),
-      ]);
+  // Vercel Blob으로 파일 업로드
+  const uploadToBlob = async (file: File): Promise<{ url: string; mediaId: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-      return renamedFiles;
-    },
-    onUploadProgress: setUploadProgress,
-    onClientUploadComplete(res) {
-      setAttachments((prev) =>
-        prev.map((a) => {
-          const uploadResult = res.find((r) => r.name === a.file.name);
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
 
-          if (!uploadResult) return a;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
 
-          return {
-            ...a,
-            mediaId: uploadResult.serverData.mediaId,
-            url: uploadResult.url,
-            type: uploadResult.type,
-            isUploading: false,
-          };
-        }),
-      );
-    },
-    onUploadError(e) {
-      setAttachments((prev) => prev.filter((a) => !a.isUploading));
-      toast({
-        variant: "destructive",
-        description: getUserFriendlyMessage(e.message, 'upload'),
-      });
-    },
-  });
+    return response.json();
+  };
 
   // 이미지 압축 함수
   const compressImage = (file: File): Promise<File> => {
@@ -101,7 +73,7 @@ export default function useMediaUpload() {
     }
 
     // 지원하지 않는 파일 형식 검증
-    const unsupportedFiles = files.filter(file => 
+    const unsupportedFiles = files.filter(file =>
       !file.type.startsWith('image/') && !file.type.startsWith('video/')
     );
 
@@ -114,7 +86,7 @@ export default function useMediaUpload() {
     }
 
     // 비디오 파일 크기 검증 (압축 불가)
-    const oversizedVideos = files.filter(file => 
+    const oversizedVideos = files.filter(file =>
       file.type.startsWith('video/') && file.size > 32 * 1024 * 1024
     );
 
@@ -125,6 +97,8 @@ export default function useMediaUpload() {
       });
       return;
     }
+
+    setIsUploading(true);
 
     try {
       // 이미지 파일 자동 압축 처리
@@ -147,12 +121,61 @@ export default function useMediaUpload() {
         })
       );
 
-      startUpload(processedFiles);
+      // 파일들을 임시 attachments에 추가
+      const tempAttachments = processedFiles.map((file) => ({
+        file,
+        isUploading: true,
+        id: crypto.randomUUID(),
+      }));
+
+      setAttachments((prev) => [...prev, ...tempAttachments]);
+
+      // 각 파일을 순차적으로 업로드
+      for (const tempAttachment of tempAttachments) {
+        try {
+          const result = await uploadToBlob(tempAttachment.file);
+
+          // 업로드 성공 시 attachment 업데이트
+          setAttachments((prev) =>
+            prev.map((a) =>
+              a.id === tempAttachment.id
+                ? {
+                    ...a,
+                    url: result.url,
+                    mediaId: result.mediaId,
+                    type: tempAttachment.file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO',
+                    isUploading: false,
+                  }
+                : a
+            )
+          );
+
+          toast({
+            description: `${tempAttachment.file.name} 업로드 완료!`,
+          });
+
+        } catch (error) {
+          console.error('Upload error:', error);
+
+          // 실패한 파일 제거
+          setAttachments((prev) =>
+            prev.filter((a) => a.id !== tempAttachment.id)
+          );
+
+          toast({
+            variant: "destructive",
+            description: `${tempAttachment.file.name} 업로드 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+          });
+        }
+      }
+
     } catch (error) {
       toast({
         variant: "destructive",
         description: "이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
       });
+    } finally {
+      setIsUploading(false);
     }
   }
 

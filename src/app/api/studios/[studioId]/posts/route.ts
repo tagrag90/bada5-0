@@ -5,11 +5,11 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
-    const { studioId } = params;
 
     const posts = await prisma.post.findMany({
       where: {

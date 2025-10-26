@@ -5,15 +5,16 @@ import StudioWriteContent from "./StudioWriteContent";
 export default async function StudioWritePage({
   params,
 }: {
-  params: { studioId: string };
+  params: Promise<{ studioId: string }>;
 }) {
+  const { studioId } = await params;
   const { user } = await validateRequest();
 
   if (!user) {
     redirect("/login");
   }
 
-  return <StudioWriteContent studioId={params.studioId} />;
+  return <StudioWriteContent studioId={studioId} />;
 }
 
 

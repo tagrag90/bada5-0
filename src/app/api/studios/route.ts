@@ -1,6 +1,7 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getStudioDataSelect } from "@/lib/types";
+import { createStudioSchema } from "@/lib/validation";
 import { NextRequest } from "next/server";
 
 // GET /api/studios - 내 스튜디오 목록 조회
@@ -52,12 +53,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, slug, description, type } = body;
+    const validatedData = createStudioSchema.parse(body);
+    const { name, description, avatarUrl, bannerUrl, socialLinks, isPublic } = validatedData;
 
-    // 필수 필드 검증
-    if (!name || !slug) {
+    // slug는 별도 처리 (validation schema에 포함되지 않음)
+    const slug = body.slug;
+    if (!slug) {
       return Response.json(
-        { error: "이름과 슬러그는 필수입니다" },
+        { error: "슬러그는 필수입니다" },
         { status: 400 }
       );
     }
@@ -80,7 +83,11 @@ export async function POST(req: NextRequest) {
         name,
         slug,
         description,
-        type: type || "PERSONAL",
+        avatarUrl,
+        bannerUrl,
+        socialLinks,
+        isPublic: isPublic ?? true,
+        type: body.type || "PERSONAL",
         ownerId: user.id,
       },
       select: getStudioDataSelect(user.id),

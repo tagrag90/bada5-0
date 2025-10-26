@@ -12,8 +12,9 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
   const state = req.nextUrl.searchParams.get("state");
 
-  const storedState = cookies().get("state")?.value;
-  const storedCodeVerifier = cookies().get("code_verifier")?.value;
+  const cookieStore = await cookies();
+  const storedState = cookieStore.get("state")?.value;
+  const storedCodeVerifier = cookieStore.get("code_verifier")?.value;
 
   if (
     !code ||
@@ -48,17 +49,17 @@ export async function GET(req: NextRequest) {
     if (existingUser) {
       const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
+      cookieStore.set(
         sessionCookie.name,
         sessionCookie.value,
         sessionCookie.attributes,
       );
       // TestFlight 환경에서는 창을 닫고 부모 창에 메시지 전송
-      const isTestFlightCallback = cookies().get("testflight")?.value === 'true';
+      const isTestFlightCallback = cookieStore.get("testflight")?.value === 'true';
       
       if (isTestFlightCallback) {
         // TestFlight 쿠키 정리
-        cookies().delete("testflight");
+        cookieStore.delete("testflight");
         
         return new Response(`
           <html>
@@ -173,18 +174,18 @@ export async function GET(req: NextRequest) {
 
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
+    cookieStore.set(
       sessionCookie.name,
       sessionCookie.value,
       sessionCookie.attributes,
     );
 
     // TestFlight 환경에서는 창을 닫고 부모 창에 메시지 전송
-    const isTestFlightCallback = cookies().get("testflight")?.value === 'true';
-    
+    const isTestFlightCallback = cookieStore.get("testflight")?.value === 'true';
+
     if (isTestFlightCallback) {
       // TestFlight 쿠키 정리
-      cookies().delete("testflight");
+      cookieStore.delete("testflight");
       
       return new Response(`
         <html>

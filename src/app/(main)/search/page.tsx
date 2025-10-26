@@ -6,16 +6,18 @@ import { Loader2 } from "lucide-react";
 import SearchResults from "./SearchResults";
 
 interface PageProps {
-  searchParams: { q: string };
+  searchParams: Promise<{ q: string }>;
 }
 
-export function generateMetadata({ searchParams: { q } }: PageProps): Metadata {
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const { q } = await searchParams;
   return {
     title: q ? `Search results for "${q}"` : "Search",
   };
 }
 
-export default function Page({ searchParams: { q } }: PageProps) {
+export default async function Page({ searchParams }: PageProps) {
+  const { q } = await searchParams;
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0">

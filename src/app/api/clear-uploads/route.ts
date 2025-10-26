@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { UTApi } from "uploadthing/server";
+import { del } from '@vercel/blob';
 
 export async function GET(req: Request) {
   try {
@@ -29,13 +29,19 @@ export async function GET(req: Request) {
       },
     });
 
-    new UTApi().deleteFiles(
-      unusedMedia.map(
-        (m) =>
-          m.url.split(`/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/`)[1],
-      ),
+    // Vercel Blob 파일들 삭제
+    await Promise.all(
+      unusedMedia.map(async (media) => {
+        try {
+          await del(media.url);
+          console.log(`🗑️ Blob 파일 삭제됨: ${media.url}`);
+        } catch (error) {
+          console.error(`❌ Blob 파일 삭제 실패: ${media.url}`, error);
+        }
+      })
     );
 
+    // 데이터베이스에서 미디어 레코드 삭제
     await prisma.media.deleteMany({
       where: {
         id: {
@@ -43,6 +49,8 @@ export async function GET(req: Request) {
         },
       },
     });
+
+    console.log(`🧹 정리 완료: ${unusedMedia.length}개 미디어 파일 삭제됨`);
 
     return new Response();
   } catch (error) {

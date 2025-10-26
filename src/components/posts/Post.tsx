@@ -359,7 +359,19 @@ export default function Post({ post }: PostProps) {
 
 function ContentRenderer({ content }: { content: string }) {
   const transform = (node: any) => {
+    // <a> 태그 안의 텍스트 노드는 해시태그 처리하지 않음
     if (node.type === "text") {
+      // 부모가 <a> 태그인지 확인
+      let parent = node.parent;
+      while (parent) {
+        if (parent.name === "a") {
+          // <a> 태그 안의 텍스트는 그대로 반환
+          return node.data;
+        }
+        parent = parent.parent;
+      }
+
+      // <a> 태그 밖의 텍스트만 해시태그 처리
       const text = node.data;
       const hashtagRegex = /(#[a-zA-Z0-9가-힣]+)/g;
       const parts = text.split(hashtagRegex);

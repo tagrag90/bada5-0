@@ -1,9 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
-import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { extractRouterConfig } from "uploadthing/server";
-import { fileRouter } from "./api/uploadthing/core";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/react";
@@ -92,7 +89,6 @@ export default function RootLayout({
         className={`${pretendard.variable} ${geistSans.variable} ${geistMono.variable}`}
       >
         {/* 테마 스크립트 비활성화 */}
-        <NextSSRPlugin routerConfig={extractRouterConfig(fileRouter)} />
         <ReactQueryProvider>
           {children}
           <Toaster />

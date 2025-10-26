@@ -39,9 +39,31 @@ export const updateUserProfileSchema = z.object({
   displayName: requiredString,
   bio: z.string().max(1000, "Must be at most 1000 characters"),
   skills: z.array(z.string()).max(20, "최대 20개의 스킬까지 추가할 수 있습니다.").optional(),
+  avatarUrl: z.string().url().optional(), // 아바타 URL 추가
 });
 
 export type UpdateUserProfileValues = z.infer<typeof updateUserProfileSchema>;
+
+export const createStudioSchema = z.object({
+  name: requiredString.min(1, "스튜디오 이름은 필수입니다").max(50, "50자 이하여야 합니다"),
+  description: z.string().max(500, "500자 이하여야 합니다").optional(),
+  avatarUrl: z.string().url().optional(),
+  bannerUrl: z.string().url().optional(),
+  socialLinks: z.array(z.string().url()).optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export const updateStudioSchema = z.object({
+  name: requiredString.min(1, "스튜디오 이름은 필수입니다").max(50, "50자 이하여야 합니다").optional(),
+  description: z.string().max(500, "500자 이하여야 합니다").optional(),
+  avatarUrl: z.string().url().optional(),
+  bannerUrl: z.string().url().optional(),
+  socialLinks: z.array(z.string().url()).optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export type CreateStudioValues = z.infer<typeof createStudioSchema>;
+export type UpdateStudioValues = z.infer<typeof updateStudioSchema>;
 
 export const createCommentSchema = z.object({
   content: requiredString,

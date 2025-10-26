@@ -34,16 +34,25 @@ export async function updateUserProfile(values: Partial<UpdateUserProfileValues>
       select: getUserDataSelect(user.id),
     });
 
+    // Stream User 업데이트
+    const streamUpdateData: { name?: string; image?: string } = {};
     if (validatedValues.displayName) {
+      streamUpdateData.name = validatedValues.displayName;
+    }
+    if (validatedValues.avatarUrl) {
+      streamUpdateData.image = validatedValues.avatarUrl;
+    }
+
+    if (Object.keys(streamUpdateData).length > 0) {
       await streamServerClient.partialUpdateUser({
         id: user.id,
-        set: {
-          name: validatedValues.displayName,
-        },
+        set: streamUpdateData,
       });
     }
     return updatedUser;
   });
+
+  console.log('✅ updateUserProfile 완료:', { id: updatedUser.id, avatarUrl: updatedUser.avatarUrl });
 
   return updatedUser;
 }

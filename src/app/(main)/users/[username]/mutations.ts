@@ -1,7 +1,7 @@
 import { useToast } from "@/components/ui/use-toast";
 import { getUserFriendlyMessage } from "@/lib/error-messages";
 import { PostsPage } from "@/lib/types";
-import { useUploadThing } from "@/lib/uploadthing";
+// UploadThing 제거 - Vercel Blob 사용
 import { UpdateUserProfileValues } from "@/lib/validation";
 import {
   InfiniteData,
@@ -20,7 +20,24 @@ export function useUpdateProfileMutation() {
 
   const queryClient = useQueryClient();
 
-  const { startUpload: startAvatarUpload } = useUploadThing("avatar");
+  // Vercel Blob 아바타 업로드 함수
+  const uploadAvatarToBlob = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'avatar');
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  };
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -30,46 +47,27 @@ export function useUpdateProfileMutation() {
       values: Partial<UpdateUserProfileValues>;
       avatar?: File;
     }) => {
-      return Promise.all([
-        updateUserProfile(values),
-        avatar && startAvatarUpload([avatar]),
-      ]);
+      console.log('🔍 mutationFn 호출:', { hasAvatar: !!avatar, values });
+
+      // 아바타가 있으면 먼저 업로드하고 URL을 포함해서 프로필 업데이트
+      if (avatar) {
+        console.log('📤 아바타 업로드 시작');
+        const uploadResult = await uploadAvatarToBlob(avatar);
+        console.log('📥 아바타 업로드 완료:', uploadResult.url);
+
+        return updateUserProfile({
+          ...values,
+          avatarUrl: uploadResult.url,
+        });
+      }
+
+      // 아바타가 없으면 그냥 프로필 업데이트
+      console.log('📝 아바타 없이 프로필 업데이트');
+      return updateUserProfile(values);
     },
-    onSuccess: async ([updatedUser, uploadResult]) => {
-      const newAvatarUrl = uploadResult?.[0].serverData.avatarUrl;
-
-      const queryFilter = {
-        queryKey: ["post-feed"],
-        exact: true
-      };
-
-      await queryClient.cancelQueries({ queryKey: ["post-feed"] });
-
-      queryClient.setQueriesData<InfiniteData<PostsPage>>(
-        { queryKey: ["post-feed"] },
-        (oldData) => {
-          if (!oldData) return oldData;
-
-          return {
-            pageParams: oldData.pageParams,
-            pages: oldData.pages.map((page) => ({
-              nextCursor: page.nextCursor,
-              posts: page.posts.map((post) => {
-                if (post.user.id === updatedUser.id) {
-                  return {
-                    ...post,
-                    user: {
-                      ...updatedUser,
-                      avatarUrl: newAvatarUrl || updatedUser.avatarUrl,
-                    },
-                  };
-                }
-                return post;
-              }),
-            })),
-          };
-        }
-      );
+    onSuccess: async (updatedUser) => {
+      // Server component 캐시를 위해 페이지 새로고침
+      router.refresh();
 
       if (params.username && updatedUser.username !== params.username) {
         router.push(`/users/${updatedUser.username}`);

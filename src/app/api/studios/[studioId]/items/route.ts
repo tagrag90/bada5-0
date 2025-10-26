@@ -6,15 +6,16 @@ import { NextRequest } from "next/server";
 // GET /api/studios/[studioId]/items
 export async function GET(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await requireStudioMember(user.id, params.studioId);
+    await requireStudioMember(user.id, studioId);
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // NOTE, EVENT, TASK
@@ -22,7 +23,7 @@ export async function GET(
     const month = searchParams.get("month");
     const hasDate = searchParams.get("hasDate"); // 날짜 있는 아이템만
 
-    const where: any = { studioId: params.studioId };
+    const where: any = { studioId: studioId };
 
     if (type) {
       where.type = type;
@@ -66,15 +67,16 @@ export async function GET(
 // POST /api/studios/[studioId]/items
 export async function POST(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await requireStudioMember(user.id, params.studioId);
+    await requireStudioMember(user.id, studioId);
 
     const body = await req.json();
     const {
@@ -93,7 +95,7 @@ export async function POST(
 
     const item = await prisma.studioItem.create({
       data: {
-        studioId: params.studioId,
+        studioId: studioId,
         authorId: user.id,
         title,
         content,

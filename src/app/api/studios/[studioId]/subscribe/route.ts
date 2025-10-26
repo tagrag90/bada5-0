@@ -5,9 +5,10 @@ import { NextRequest } from "next/server";
 // POST /api/studios/[studioId]/subscribe - 스튜디오 구독
 export async function POST(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
 
     if (!user) {
@@ -16,7 +17,7 @@ export async function POST(
 
     // 스튜디오 존재 확인
     const studio = await prisma.studio.findUnique({
-      where: { id: params.studioId },
+      where: { id: studioId },
     });
 
     if (!studio) {
@@ -30,7 +31,7 @@ export async function POST(
     const existing = await prisma.studioSubscription.findUnique({
       where: {
         studioId_userId: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: user.id,
         },
       },
@@ -47,12 +48,12 @@ export async function POST(
     await prisma.$transaction([
       prisma.studioSubscription.create({
         data: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: user.id,
         },
       }),
       prisma.studio.update({
-        where: { id: params.studioId },
+        where: { id: studioId },
         data: {
           subscribersCount: {
             increment: 1,
@@ -74,9 +75,10 @@ export async function POST(
 // DELETE /api/studios/[studioId]/subscribe - 구독 취소
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { studioId: string } }
+  { params }: { params: Promise<{ studioId: string }> }
 ) {
   try {
+    const { studioId } = await params;
     const { user } = await validateRequest();
 
     if (!user) {
@@ -87,7 +89,7 @@ export async function DELETE(
     const subscription = await prisma.studioSubscription.findUnique({
       where: {
         studioId_userId: {
-          studioId: params.studioId,
+          studioId: studioId,
           userId: user.id,
         },
       },
@@ -105,13 +107,13 @@ export async function DELETE(
       prisma.studioSubscription.delete({
         where: {
           studioId_userId: {
-            studioId: params.studioId,
+            studioId: studioId,
             userId: user.id,
           },
         },
       }),
       prisma.studio.update({
-        where: { id: params.studioId },
+        where: { id: studioId },
         data: {
           subscribersCount: {
             decrement: 1,
