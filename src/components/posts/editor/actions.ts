@@ -24,6 +24,9 @@ export async function submitPost(input: {
   id?: string;
   studioId?: string;
 }) {
+  console.log("🔍 배포 디버깅 - Server Action submitPost 호출됨");
+  console.log("📦 배포 디버깅 - 입력값:", JSON.stringify(input, null, 2));
+
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");

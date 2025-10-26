@@ -402,27 +402,40 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
 
   const handleSubmit = async () => {
     try {
+      console.log("🔍 배포 디버깅 - handleSubmit 시작");
+
+      const payload = isEditMode && post ? {
+        id: post.id,
+        title: studio ? title : undefined,
+        content: editorInput,
+        mediaIds: studio ? [] : attachments
+          .map((a) => a.id || a.mediaId)
+          .filter(Boolean) as string[],
+      } : {
+        title: studio ? title : undefined,
+        content: editorInput,
+        mediaIds: studio ? [] : attachments
+          .map((a) => a.mediaId)
+          .filter(Boolean) as string[],
+        studioId,
+      };
+
+      console.log("📦 배포 디버깅 - payload:", JSON.stringify(payload, null, 2));
+
       if (isEditMode && post) {
-        await mutation.mutateAsync({
-          id: post.id,
-          title: studio ? title : undefined,
-          content: editorInput,
-          mediaIds: studio ? [] : attachments
-            .map((a) => a.id || a.mediaId)
-            .filter(Boolean) as string[],
-        });
+        await mutation.mutateAsync(payload);
       } else {
-        await mutation.mutateAsync({
-          title: studio ? title : undefined,
-          content: editorInput,
-          mediaIds: studio ? [] : attachments
-            .map((a) => a.mediaId)
-            .filter(Boolean) as string[],
-          studioId,
-        });
+        await mutation.mutateAsync(payload);
       }
+
+      console.log("✅ 배포 디버깅 - mutation 성공");
     } catch (error) {
-      console.error("Failed to submit post:", error);
+      console.error("❌ 배포 디버깅 - mutation 실패:", error);
+      console.error("❌ 배포 디버깅 - 에러 상세:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
     }
   };
 
