@@ -16,9 +16,9 @@ export function useSubmitPostMutation() {
   const user = useOptionalUser();
 
   const mutation = useMutation({
-    mutationFn: (input) => {
-      console.log("🔍 mutation 호출됨 - 입력값:", input);
-      return submitPost(input);
+    mutationFn: submitPost,
+    onMutate: (variables) => {
+      console.log("🔍 mutation 호출됨 - 입력값:", variables);
     },
     onSuccess: async (newPost) => {
       await queryClient.cancelQueries({
