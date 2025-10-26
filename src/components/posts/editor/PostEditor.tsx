@@ -58,6 +58,8 @@ interface PostEditorProps {
 }
 
 export default function PostEditor({ onSuccess, post, studioId, studio }: PostEditorProps) {
+  console.log("🔍 PostEditor 렌더링됨", { post: !!post, studioId, studio: !!studio });
+
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
   const [title, setTitle] = useState(post?.title || "");

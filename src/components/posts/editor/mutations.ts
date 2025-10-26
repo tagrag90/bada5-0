@@ -16,7 +16,10 @@ export function useSubmitPostMutation() {
   const user = useOptionalUser();
 
   const mutation = useMutation({
-    mutationFn: submitPost,
+    mutationFn: (input) => {
+      console.log("🔍 mutation 호출됨 - 입력값:", input);
+      return submitPost(input);
+    },
     onSuccess: async (newPost) => {
       await queryClient.cancelQueries({
         queryKey: ["post-feed"],
@@ -74,7 +77,12 @@ export function useSubmitPostMutation() {
       });
     },
     onError(error) {
-      console.error(error);
+      console.log("❌ useSubmitPostMutation 에러 발생:", error);
+      console.error("❌ 상세 에러:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined
+      });
       toast({
         variant: "destructive",
         description: getUserFriendlyMessage(error.message, 'post'),
@@ -121,7 +129,12 @@ export function useUpdatePostMutation() {
       });
     },
     onError(error) {
-      console.error(error);
+      console.log("❌ useSubmitPostMutation 에러 발생:", error);
+      console.error("❌ 상세 에러:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined
+      });
       toast({
         variant: "destructive",
         description: getUserFriendlyMessage(error.message, 'post'),
