@@ -42,10 +42,16 @@ export function useAIActionExecutor(onActionComplete: (result: any) => void) {
     // 게시물 작성
     createPost: async (content: string, mediaIds: string[] = []) => {
       try {
+        console.log("🔍 AI 디버깅 - 게시물 생성 시도:", { content, mediaIds });
+
         const result = await submitPostMutation.mutateAsync({
+          title: undefined, // 일반 게시물은 제목 없음
           content,
-          mediaIds
+          mediaIds,
+          studioId: undefined // 일반 게시물
         });
+
+        console.log("✅ AI 디버깅 - 게시물 생성 성공:", result);
         onActionComplete({ 
           action: 'createPost', 
           result, 
