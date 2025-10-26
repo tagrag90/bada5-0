@@ -47,29 +47,29 @@ export async function submitPost(input: {
 
   // linkPreviews가 있으면 content에서 해당 URL 하이퍼링크 주석처리 + 메타데이터 포함
   let finalContent = content || "";
-  
+
   if (linkPreviews && linkPreviews.length > 0) {
     // 각 링크 미리보기에 대해 해당 URL의 하이퍼링크를 주석처리
     for (const preview of linkPreviews) {
       const urlToHide = preview.url;
-      
+
       // <a> 태그로 된 하이퍼링크를 주석으로 변환
       const linkRegex = new RegExp(
         `<a[^>]*href=["']${urlToHide.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>.*?</a>`,
         'gi'
       );
-      
+
       finalContent = finalContent.replace(linkRegex, `<!-- HIDDEN_LINK: ${urlToHide} -->`);
-      
+
       // 일반 텍스트 URL도 주석처리
       const textUrlRegex = new RegExp(
         urlToHide.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
         'gi'
       );
-      
+
       finalContent = finalContent.replace(textUrlRegex, `<!-- HIDDEN_URL: ${urlToHide} -->`);
     }
-    
+
     // 링크 미리보기 메타데이터 추가
     finalContent += `<!-- LINK_PREVIEWS: ${JSON.stringify(linkPreviews)} -->`;
   }
@@ -124,29 +124,29 @@ export async function updatePost(input: {
 
   // linkPreviews가 있으면 content에서 해당 URL 하이퍼링크 주석처리 + 메타데이터 포함
   let finalContent = content || "";
-  
+
   if (linkPreviews && linkPreviews.length > 0) {
     // 각 링크 미리보기에 대해 해당 URL의 하이퍼링크를 주석처리
     for (const preview of linkPreviews) {
       const urlToHide = preview.url;
-      
+
       // <a> 태그로 된 하이퍼링크를 주석으로 변환
       const linkRegex = new RegExp(
         `<a[^>]*href=["']${urlToHide.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'][^>]*>.*?</a>`,
         'gi'
       );
-      
+
       finalContent = finalContent.replace(linkRegex, `<!-- HIDDEN_LINK: ${urlToHide} -->`);
-      
+
       // 일반 텍스트 URL도 주석처리
       const textUrlRegex = new RegExp(
         urlToHide.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
         'gi'
       );
-      
+
       finalContent = finalContent.replace(textUrlRegex, `<!-- HIDDEN_URL: ${urlToHide} -->`);
     }
-    
+
     // 링크 미리보기 메타데이터 추가
     finalContent += `<!-- LINK_PREVIEWS: ${JSON.stringify(linkPreviews)} -->`;
   }

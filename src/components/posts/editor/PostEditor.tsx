@@ -478,14 +478,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           studioId,
         });
       }
-
-      editor?.commands.clearContent();
-      resetMediaUploads();
-      setLinkPreviews([]); // 링크 미리보기 초기화
-      setEditorInput("");
-      setTitle("");
-      insertedImageUrls.current.clear(); // 삽입된 이미지 추적 초기화
-      onSuccess?.();
     } catch (error) {
       console.error("Failed to submit post:", error);
     }
@@ -862,7 +854,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           <div className="mt-2 flex justify-end">
             <LoadingButton
               onClick={handleSubmit}
-              loading={mutation.isPending}
+              loading={mutation.isPending || isUploading}
               disabled={!editorInput.trim() && attachments.length === 0}
               className="min-w-20"
             >
