@@ -39,7 +39,7 @@ import Link from "@tiptap/extension-link";
 import TiptapImage from "@tiptap/extension-image";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import LinkPreview from "./extensions/LinkPreview";
-import LinkPreviewComponent from "./LinkPreviewComponent";
+// import LinkPreviewComponent from "./LinkPreviewComponent"; // 링크 미리보기 기능 제거
 
 // 디바운스 함수 추가
 const debounce = (func: Function, delay: number) => {
@@ -68,15 +68,9 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
   const [isDragOver, setIsDragOver] = useState(false);
   const [dragCounter, setDragCounter] = useState(0);
   
-  // 링크 미리보기 상태 관리 (임시 비활성화)
-  const [linkPreviews, setLinkPreviews] = useState<Array<{
-    url: string;
-    title?: string;
-    description?: string;
-    image?: string;
-    id: string;
-  }>>([]);
-  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  // 링크 미리보기 기능 완전 제거
+  // const [linkPreviews, setLinkPreviews] = useState([]);
+  // const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const mutation = useSubmitPostMutation();
 
@@ -169,65 +163,26 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
   const [loadingUrls, setLoadingUrls] = useState<Set<string>>(new Set());
   const lastProcessedContent = useRef<string>("");
   
-  // 디바운스된 URL 감지 함수 - React StrictMode 대응
-  const detectAndPreviewUrls = useCallback(
-    debounce(async (content: string) => {
-      // 개발 모드에서만 중복 방지 (StrictMode 대응)
-      if (process.env.NODE_ENV === 'development') {
-        if (lastProcessedContent.current === content) return;
-        lastProcessedContent.current = content;
-      }
-      
-      // URL 패턴 감지 (http, https로 시작하는 URL)
-      const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/g;
-      const urls = content.match(urlRegex);
-      
-      if (!urls) return;
-      
-      // img 태그 안의 URL 추출 (제외용)
-      const imgSrcRegex = /<img[^>]+src=["']([^"']+)["']/g;
-      const imgUrls = new Set<string>();
-      let imgMatch;
-      while ((imgMatch = imgSrcRegex.exec(content)) !== null) {
-        imgUrls.add(imgMatch[1]);
-      }
-      
-      // 새로운 URL만 처리 (이미 미리보기가 생성된 URL 또는 로딩 중인 URL 제외)
-      const newUrls = urls.filter(url => 
-        !linkPreviews.some(preview => preview.url === url) &&
-        !loadingUrls.has(url) &&
-        !url.match(/\.(jpg|jpeg|png|gif|webp|mp4|avi|mov)$/i) && // 이미지/비디오 파일 제외
-        !url.includes('blob.vercel-storage.com') && // vercel blob 이미지 URL 제외
-        !imgUrls.has(url) && // img 태그 안의 URL 제외
-        true // 모든 URL 처리 (YouTube 포함)
-      );
-      
-      if (newUrls.length === 0) return;
-      
-      // 각 URL에 대해 미리보기 생성 (순차 처리로 중복 방지)
-      for (const url of newUrls.slice(0, 2)) { // 최대 2개로 제한
-        await fetchLinkPreview(url);
-      }
-    }, 1500), // 1.5초 디바운스로 충분한 지연
-    [linkPreviews, loadingUrls]
-  );
+  // 링크 미리보기 기능 완전 제거
+  // const detectAndPreviewUrls = useCallback(/* ... */);
 
-  // 링크 미리보기 데이터 가져오기 (완전한 중복 방지)
-  const fetchLinkPreview = async (url: string) => {
+  // 링크 미리보기 기능 완전 제거
+  /*
+  // const fetchLinkPreview = async (url: string) => {
     // URL별 중복 요청 방지
     if (loadingUrls.has(url)) {
       console.log(`이미 로딩 중인 URL: ${url}`);
       return;
     }
-    
+
     // 이미 존재하는 미리보기 확인
     if (linkPreviews.some(preview => preview.url === url)) {
       console.log(`이미 존재하는 미리보기: ${url}`);
       return;
     }
-    
+
     console.log(`새로운 링크 미리보기 생성 시작: ${url}`);
-    
+
     // 로딩 상태에 URL 추가
     setLoadingUrls(prev => {
       const newSet = new Set(prev);
@@ -235,17 +190,17 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       return newSet;
     });
     setIsLoadingPreview(true);
-    
+
     try {
       const response = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const metadata = await response.json();
       console.log(`링크 미리보기 데이터 수신:`, metadata);
-      
+
       // 미리보기 데이터 추가 (중복 체크 한번 더)
       setLinkPreviews(prev => {
         const exists = prev.some(preview => preview.url === url);
@@ -253,17 +208,17 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           console.log(`중복 방지: 이미 존재하는 URL ${url}`);
           return prev;
         }
-        
+
         // URL 제거 안내
         console.log(`✅ 링크 미리보기 생성 완료: ${url}`);
         console.log(`💡 게시 시 해당 URL은 자동으로 숨겨집니다.`);
-        
+
         return [...prev, {
           ...metadata,
           id: crypto.randomUUID()
         }];
       });
-      
+
     } catch (error) {
       console.error('링크 미리보기 생성 실패:', error);
     } finally {
@@ -273,7 +228,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         newSet.delete(url);
         return newSet;
       });
-      
+
       // 모든 로딩이 완료되면 전체 로딩 상태 해제
       setTimeout(() => {
         setLoadingUrls(current => {
@@ -285,11 +240,12 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       }, 100);
     }
   };
+  */
 
-  // 링크 미리보기 제거
-  const removeLinkPreview = (id: string) => {
-    setLinkPreviews(prev => prev.filter(preview => preview.id !== id));
-  };
+  // 링크 미리보기 기능 완전 제거
+  // const removeLinkPreview = (id: string) => {
+  //   setLinkPreviews(prev => prev.filter(preview => preview.id !== id));
+  // };
 
   const editor = useEditor({
     extensions: [
@@ -380,8 +336,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
     content: "",
     onUpdate: ({ editor }) => {
       setEditorInput(editor.getHTML());
-      // URL 감지 및 미리보기 생성 (개선된 중복 방지)
-      detectAndPreviewUrls(editor.getHTML());
+      // 링크 미리보기 기능 제거됨
     },
   });
 
@@ -391,17 +346,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       let cleanContent = post.content || "";
       let extractedPreviews: any[] = [];
       
-      // content에서 링크 미리보기 메타데이터 추출
-      const linkPreviewMatch = cleanContent.match(/<!-- LINK_PREVIEWS: (.*?) -->/);
-      if (linkPreviewMatch) {
-        try {
-          extractedPreviews = JSON.parse(linkPreviewMatch[1]);
-          setLinkPreviews(extractedPreviews);
-        } catch (error) {
-          console.error('링크 미리보기 파싱 오류:', error);
-        }
-      }
-      
+      // 링크 미리보기 기능 제거로 인한 간단 처리
       // 숨겨진 링크들을 다시 복원하여 에디터에 표시
       const restoredContent = cleanContent
         .replace(/<!-- LINK_PREVIEWS: .*? -->/g, '') // 메타데이터 제거
@@ -465,7 +410,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           mediaIds: studio ? [] : attachments
             .map((a) => a.id || a.mediaId)
             .filter(Boolean) as string[],
-          linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
         });
       } else {
         await mutation.mutateAsync({
@@ -474,7 +418,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           mediaIds: studio ? [] : attachments
             .map((a) => a.mediaId)
             .filter(Boolean) as string[],
-          linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
           studioId,
         });
       }
@@ -616,38 +559,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
           </div>
         )}
 
-        {/* 링크 미리보기 섹션 */}
-        {linkPreviews.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {linkPreviews.map((preview) => (
-              <LinkPreviewComponent
-                key={preview.id}
-                url={preview.url}
-                title={preview.title}
-                description={preview.description}
-                image={preview.image}
-                onRemove={() => removeLinkPreview(preview.id)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* 링크 미리보기 로딩 상태 */}
-        {isLoadingPreview && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>링크 미리보기 생성 중...</span>
-          </div>
-        )}
-
-        {/* URL 자동 숨김 안내 */}
-        {linkPreviews.length > 0 && (
-          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-700">
-              ✨ <strong>자동 처리:</strong> 링크 미리보기가 생성되었습니다. 게시 시 원본 URL은 자동으로 숨겨집니다.
-            </p>
-          </div>
-        )}
+        {/* 링크 미리보기 기능 완전 제거됨 */}
 
         {/* 하단 고정 툴바 (스튜디오용) + 호버 효과 */}
         {studio ? (
