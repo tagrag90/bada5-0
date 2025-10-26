@@ -39,35 +39,17 @@ export function useAIActionExecutor(onActionComplete: (result: any) => void) {
 
   // AI 액션 실행 함수들
   const executeAction = {
-    // 게시물 작성
+    // 게시물 작성 - 일시적으로 비활성화 (배포 문제 테스트용)
     createPost: async (content: string, mediaIds: string[] = []) => {
-      try {
-        console.log("🔍 AI 디버깅 - 게시물 생성 시도:", { content, mediaIds });
+      console.log("🚫 AI 게시물 작성 기능 일시적으로 비활성화됨");
 
-        const result = await submitPostMutation.mutateAsync({
-          title: undefined, // 일반 게시물은 제목 없음
-          content,
-          mediaIds,
-          studioId: undefined // 일반 게시물
-        });
+      onActionComplete({
+        action: 'createPost',
+        success: false,
+        message: 'AI 게시물 작성 기능이 일시적으로 비활성화되었습니다. 일반 UI를 사용해주세요.'
+      });
 
-        console.log("✅ AI 디버깅 - 게시물 생성 성공:", result);
-        onActionComplete({ 
-          action: 'createPost', 
-          result, 
-          success: true,
-          message: '게시물이 성공적으로 작성되었습니다!' 
-        });
-        return result;
-      } catch (error) {
-        onActionComplete({ 
-          action: 'createPost', 
-          error, 
-          success: false,
-          message: '게시물 작성 중 오류가 발생했습니다.' 
-        });
-        throw error;
-      }
+      return null;
     },
     
     // 팔로우/언팔로우
