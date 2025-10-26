@@ -2,14 +2,14 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { getCommentDataInclude, PostData } from "@/lib/types";
+import { getCommentDataInclude } from "@/lib/types";
 import { createCommentSchema } from "@/lib/validation";
 
 export async function submitComment({
-  post,
+  postId,
   content,
 }: {
-  post: PostData;
+  postId: string;
   content: string;
 }) {
   const { user } = await validateRequest();
@@ -18,22 +18,30 @@ export async function submitComment({
 
   const { content: contentValidated } = createCommentSchema.parse({ content });
 
+  // 게시물 정보 조회 (알림 발송용)
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { userId: true },
+  });
+
+  if (!post) throw new Error("Post not found");
+
   const [newComment] = await prisma.$transaction([
     prisma.comment.create({
       data: {
         content: contentValidated,
-        postId: post.id,
+        postId: postId,
         userId: user.id,
       },
       include: getCommentDataInclude(user.id),
     }),
-    ...(post.user.id !== user.id
+    ...(post.userId !== user.id
       ? [
           prisma.notification.create({
             data: {
               issuerId: user.id,
-              recipientId: post.user.id,
-              postId: post.id,
+              recipientId: post.userId,
+              postId: postId,
               type: "COMMENT",
             },
           }),
@@ -42,13 +50,13 @@ export async function submitComment({
   ]);
 
   // 푸시 알림 발송 (자신의 게시물이 아닐 때만)
-  if (post.user.id !== user.id) {
+  if (post.userId !== user.id) {
     try {
       console.log('Sending comment push notification:', {
-        postUserId: post.user.id,
+        postUserId: post.userId,
         currentUserId: user.id,
         displayName: user.displayName,
-        postId: post.id,
+        postId: postId,
         commentId: newComment.id
       });
 
@@ -60,10 +68,10 @@ export async function submitComment({
         body: JSON.stringify({
           title: 'Dive to Bada',
           body: `${user.displayName}님이 회원님의 게시물에 댓글을 남겼습니다`,
-          userIds: [post.user.id],
+          userIds: [post.userId],
           data: {
             type: 'comment',
-            postId: post.id,
+            postId: postId,
             commentId: newComment.id,
             issuerId: user.id
           }

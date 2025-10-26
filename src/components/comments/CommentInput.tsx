@@ -1,6 +1,6 @@
 "use client";
 
-import { PostData } from "@/lib/types";
+// import { PostData } from "@/lib/types"; // 더 이상 사용하지 않음
 import { Loader2, SendHorizonal } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
@@ -8,7 +8,7 @@ import { Input } from "../ui/input";
 import { useSubmitCommentMutation } from "./mutations";
 
 interface CommentInputProps {
-  post: PostData;
+  post: { id: string };
 }
 
 export default function CommentInput({ post }: CommentInputProps) {
@@ -23,7 +23,7 @@ export default function CommentInput({ post }: CommentInputProps) {
 
     mutation.mutate(
       {
-        post,
+        postId: post.id,
         content: input,
       },
       {
