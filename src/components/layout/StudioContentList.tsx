@@ -116,7 +116,8 @@ export default function StudioContentList({
           <>
             <Separator />
             <div className="space-y-1">
-              <Link href={`/studios/${studioId}/write`}>
+              {/* 스튜디오 글쓰기 기능 제거됨 */}
+              {/* <Link href={`/studios/${studioId}/write`}>
                 <Button
                   variant="ghost"
                   className="w-full justify-start"

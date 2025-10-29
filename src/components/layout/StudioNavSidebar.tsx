@@ -113,8 +113,9 @@ export default function StudioNavSidebar({
           <>
             <Separator />
             <div className="space-y-1">
-              <Link href={`/studios/${studioId}/write`}>
-                <Button 
+              {/* 스튜디오 글쓰기 기능 제거됨 */}
+              {/* <Link href={`/studios/${studioId}/write`}>
+                <Button
                   variant={isWritePage ? "default" : "ghost"}
                   className="w-full justify-start"
                   size="sm"
@@ -122,7 +123,7 @@ export default function StudioNavSidebar({
                   <Edit3 className="h-4 w-4 mr-2" />
                   새 글 쓰기
                 </Button>
-              </Link>
+              </Link> */}
               <NavItem
                 icon={Users}
                 label="멤버 관리"
