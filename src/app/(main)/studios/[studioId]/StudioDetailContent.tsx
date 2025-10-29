@@ -203,15 +203,15 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
         </>
       )}
 
-      {/* 중앙 하단 Floating 글쓰기 버튼 (관리자 권한만) */}
-      {isAdmin && (
+      {/* 스튜디오 글쓰기 기능 제거됨 */}
+      {/* {isAdmin && (
         <Link href={`/studios/${studioId}/write`}>
           <button className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-black text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2 font-medium">
             <span className="text-xl">✏️</span>
             <span>글쓰기</span>
           </button>
         </Link>
-      )}
+      )} */}
     </div>
   );
 }

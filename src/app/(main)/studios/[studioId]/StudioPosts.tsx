@@ -51,11 +51,12 @@ export default function StudioPosts({
                 첫 번째 포스트를 작성해보세요
               </p>
             </div>
-            {isOwner && (
+            {/* 스튜디오 글쓰기 기능 제거됨 */}
+            {/* {isOwner && (
               <Link href={`/studios/${studioId}/write`}>
                 <Button size="lg">포스트 작성하기</Button>
               </Link>
-            )}
+            )} */}
           </div>
         </Card>
       )}

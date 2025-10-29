@@ -16,7 +16,6 @@ import { useSession } from "@/app/(main)/SessionProvider";
 import homeIcon from "@/assets/feed.png";
 import writeIcon from "@/assets/write.png";
 import MessagesButton from "./MessagesButton";
-import AIToggleButton from "@/components/ai/AIToggleButton";
 
 interface MenuBarClientProps {
   className?: string;
@@ -105,10 +104,6 @@ export function MenuBarClient({
         />
         {/* <MessagesButton initialState={{ unreadCount: unreadMessagesCount }} /> */}
 
-        {/* 5. AI Assistant - 임시 숨김 */}
-        {/* <div className="hidden sm:block">
-          <AIToggleButton />
-        </div> */}
 
         {/* 6. 유저 */}
         <Button

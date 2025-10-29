@@ -37,14 +37,7 @@ const experiments = [
 ];
 
 const uiExperiments = [
-  {
-    name: "Cosmos",
-    description: "2D ↔ 3D 전환 가능한 우주 탐험",
-    icon: Sparkles,
-    href: "/ui-lab/cosmos",
-    status: "live",
-    statusColor: "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 text-white font-bold",
-  },
+  // 코스모스 기능 제거됨
 ];
 
 export default function LabHome() {
@@ -92,48 +85,7 @@ export default function LabHome() {
         </div>
       </div>
 
-      <div>
-        <h2>🌌 Cosmos - 새로운 우주 탐험</h2>
-        <p className="text-muted-foreground mt-2 mb-6">
-          Studio_bada의 새로운 인터페이스입니다. Studio와 User를 행성으로 표현합니다.
-        </p>
-        <div className="grid gap-4">
-          {uiExperiments.map((experiment) => (
-            <Link
-              key={experiment.name}
-              href={experiment.href}
-              className="block p-8 border-2 rounded-xl hover:border-primary hover:bg-primary/5 transition-all group"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <experiment.icon className="h-8 w-8 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-bold">
-                      {experiment.name}
-                    </h3>
-                    <span className={`px-3 py-1 text-sm rounded-full ${experiment.statusColor}`}>
-                      {experiment.status}
-                    </span>
-                  </div>
-                  <p className="text-base text-muted-foreground">
-                    {experiment.description}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded-lg border-2 border-purple-300 dark:border-purple-700">
-          <p className="text-sm font-semibold mb-2">
-            🌌 <strong>Cosmos</strong>는 실제 데이터와 연결된 라이브 환경입니다!
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Studio와 User를 행성으로 표현한 새로운 탐험 경험을 제공합니다. 2D/3D 전환이 가능합니다.
-          </p>
-        </div>
-      </div>
+      {/* 코스모스 기능 제거됨 */}
 
       <div>
         <h2>실험실 이용 안내</h2>

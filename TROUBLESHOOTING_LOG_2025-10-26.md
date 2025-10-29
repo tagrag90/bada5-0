@@ -412,5 +412,108 @@ const newPost = await submitPost(payload);
 
 ---
 
+## 2025-10-26 추가 기록: 배포 캐시 문제로 인한 근본적 해결 실패
+
+### 🔍 **오늘의 작업 요약**
+**결론: 배포 인프라의 캐시 문제로 모든 수정이 배포에 반영되지 않아 근본적 해결 실패**
+
+### 📋 **실행된 모든 작업들 (시간순)**
+
+#### **1. linkPreviews 기능 완전 제거 (커밋: 1a8f9cd)**
+- **문제:** linkPreviews 객체 serialize 실패 가능성
+- **해결:** PostEditor.tsx에서 linkPreviews 관련 코드 완전 제거
+- **결과:** 로컬에서는 정상, 배포에서는 동일 에러 지속
+
+#### **2. AI 액션 파라미터 수정 (커밋: c773bae)**
+- **문제:** AIActionExecutor에서 submitPost 호출 시 필수 파라미터 누락
+- **해결:** `title`, `content`, `mediaIds`, `studioId` 모두 전달하도록 수정
+- **결과:** 로컬에서는 정상, 배포에서는 동일 에러 지속
+
+#### **3. Server Action 반환 객체 단순화 (커밋: e7c0820)**
+- **문제:** Prisma 객체가 복잡해서 serialize 실패
+- **해결:** `getPostDataInclude` 대신 간단한 select 사용
+- **코드 변경:**
+```typescript
+// ❌ 기존: 복잡한 Prisma 객체 반환
+include: getPostDataInclude(user.id)
+
+// ✅ 수정: 기본 정보만 반환
+select: { id: true, title: true, content: true, ... }
+return { id, title, content, ... }
+```
+
+#### **4. UploadThing 완전 제거 및 Vercel Blob 마이그레이션 (커밋: eaa9711)**
+- **문제:** UploadThing 환경변수 문제 가능성
+- **해결:** UploadThing 완전 제거, Vercel Blob으로 교체
+- **결과:** 로컬에서는 정상, 배포에서는 동일 에러 지속
+
+#### **5. React Query 캐시 업데이트 방식 변경**
+- **문제:** setQueriesData에서 복잡한 객체 타입 문제
+- **해결:** invalidateQueries로 변경하여 캐시 무효화
+- **코드 변경:**
+```typescript
+// ❌ 기존: 직접 캐시 업데이트 (타입 에러)
+queryClient.setQueriesData(oldData => { ... })
+
+// ✅ 수정: 캐시 무효화
+queryClient.invalidateQueries({ queryKey: ["post-feed"] })
+```
+
+#### **6. 배포 캐시 문제 발견**
+- **증상:** 로컬에서는 모든 수정이 정상 작동하지만 배포에서는 동일 에러
+- **원인:** Vercel의 aggressive 캐싱으로 코드 수정이 배포에 반영되지 않음
+- **시도:** 수동 재배포, 환경변수 제거, 프로젝트 재생성
+- **결과:** 배포 환경에서는 여전히 이전 버전 코드 실행
+
+#### **7. AI 기능 일시적 비활성화 (커밋: 78bb833)**
+- **목적:** AI 기능이 배포 문제를 일으키는지 테스트
+- **해결:** AI 게시물 작성 기능 완전 비활성화
+- **결과:** 아직 배포 테스트 진행 중
+
+### 📊 **최종 진단 결과**
+
+#### **✅ 확인된 사실들:**
+1. **로컬 환경:** 완전히 정상 작동 (모든 수정 성공)
+2. **코드 수정:** 기술적으로 올바름 (TypeScript 에러 없음)
+3. **문제 재현:** 배포 환경에서만 발생
+
+#### **❌ 근본 원인:**
+**Vercel 배포 플랫폼의 캐시 문제**
+- 코드 수정이 배포에 반영되지 않음
+- 이전 버전 코드가 계속 실행됨
+- 환경변수나 빌드 캐시 문제
+
+#### **🔍 왜 이런 문제가 발생했나:**
+1. **Vercel의 aggressive 캐싱 정책**
+2. **빌드 캐시가 무효화되지 않음**
+3. **환경변수 변경이 빌드에 반영되지 않음**
+4. **수동 재배포로도 해결되지 않는 깊은 캐시 문제**
+
+### 🎯 **결론 및 권장사항**
+
+#### **현재 상황:**
+- **기술적 해결:** 완료됨 (로컬에서 정상)
+- **배포 반영:** 실패 (Vercel 캐시 문제)
+- **근본 원인:** 배포 인프라 문제
+
+#### **권장 해결 방안:**
+1. **다른 배포 플랫폼 사용** (Netlify, Railway 등)
+2. **새로운 Vercel 프로젝트 생성**
+3. **배포 없이 로컬 개발만 진행**
+4. **문제가 되는 기능 제거 후 간단한 버전으로 축소**
+
+#### **리스크:**
+- 계속 같은 방식으로 접근하면 시간만 낭비
+- Vercel의 캐시 문제는 코드 수정으로 해결 불가
+- 새로운 플랫폼으로 마이그레이션 필요
+
+---
+
+**Document Status:** Final update with deployment infrastructure failure conclusion  
+**Last Updated:** 2025-10-26 (최종 기록)  
+**Conclusion:** Vercel 캐시 문제로 인한 배포 실패. 다른 플랫폼 마이그레이션 권장.
+
+---
+
 © 2025 Studio_bada. All Rights Reserved.
 

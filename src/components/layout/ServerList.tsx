@@ -69,22 +69,6 @@ export default function ServerList({
           </button>
         </Link>
 
-        {/* Cosmos 우주 탐험 버튼 */}
-        <Link href="/ui-lab/cosmos">
-          <button
-            className="group relative mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#1a1d2e] transition-all hover:scale-110 shadow-lg overflow-hidden"
-            title="Cosmos 🌌"
-          >
-            <Image
-              src="/cosmos-icon.png"
-              alt="Cosmos"
-              width={56}
-              height={56}
-              className="h-14 w-14 object-contain"
-            />
-          </button>
-        </Link>
-
         {/* 찾기 버튼 */}
         <Link href="/explore">
           <button

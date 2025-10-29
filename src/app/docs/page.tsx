@@ -30,15 +30,7 @@ export default function DocsHome() {
             <div className="p-4 font-mono text-sm">
               {/* 업데이트 목록 */}
               <div className="space-y-3 text-slate-200">
-                <div className="flex items-start justify-between">
-                  <span className="flex-1 text-green-400">🌌 Cosmos우주탐험기능추가 + 유저행성표시 + 피드백페이지</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.25</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">cosmos우주탐험기능추가25.10.24.</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.24</span>
-                </div>
+                {/* 코스모스 기능 제거됨 */}
 
                 <div className="flex items-start justify-between">
                   <span className="flex-1">사소한요소수정25.10.10.</span>

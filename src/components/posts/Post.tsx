@@ -25,7 +25,7 @@ import PostMoreButton from "./PostMoreButton";
 import PostEditorModal from "./editor/PostEditorModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import ReactHtmlParser from "react-html-parser";
+// import ReactHtmlParser from "react-html-parser"; // react-html-parser 제거로 인한 교체
 import LinkPreviewComponent from "./editor/LinkPreviewComponent";
 import StudioBadge from "../StudioBadge";
 
@@ -441,7 +441,8 @@ function ContentRenderer({ content }: { content: string }) {
   // 먼저 YouTube 링크를 HTML 태그로 변환
   const contentWithYoutubeLinks = convertYouTubeLinks(cleanContent);
 
-  return <>{ReactHtmlParser(contentWithYoutubeLinks, options)}</>;
+  // react-html-parser 대신 dangerouslySetInnerHTML 사용 (해시태그 처리 제거됨)
+  return <div dangerouslySetInnerHTML={{ __html: contentWithYoutubeLinks }} />;
 }
 
 interface MediaSliderProps {
