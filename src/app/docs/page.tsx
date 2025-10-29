@@ -30,7 +30,15 @@ export default function DocsHome() {
             <div className="p-4 font-mono text-sm">
               {/* 업데이트 목록 */}
               <div className="space-y-3 text-slate-200">
-                {/* 코스모스 기능 제거됨 */}
+                <div className="flex items-start justify-between">
+                  <span className="flex-1 text-green-400">🗑️ 코스모스 기능 완전 제거 + UI Lab 정리</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.29</span>
+                </div>
+
+                <div className="flex items-start justify-between">
+                  <span className="flex-1">Next.js 15.1.2 + React 18.3.1 버전 고정 적용</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.10.29</span>
+                </div>
 
                 <div className="flex items-start justify-between">
                   <span className="flex-1">사소한요소수정25.10.10.</span>
