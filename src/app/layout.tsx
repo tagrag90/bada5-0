@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -93,6 +94,7 @@ export default function RootLayout({
           {children}
           <Toaster />
           <Analytics />
+          <SpeedInsights />
         </ReactQueryProvider>
       </body>
     </html>
