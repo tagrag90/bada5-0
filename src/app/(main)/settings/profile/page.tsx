@@ -32,47 +32,75 @@ import { useForm } from "react-hook-form";
 import Resizer from "react-image-file-resizer";
 import { useUpdateProfileMutation } from "@/app/(main)/users/[username]/mutations";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import { useQuery } from "@tanstack/react-query";
+
+interface FullUserData {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  skills: string[];
+}
 
 export default function ProfileSettingsPage() {
   const { user } = useSession();
   const router = useRouter();
   const { setSidebar } = useSidebar();
 
-  // 설정 페이지 사이드바 활성화
-  useEffect(() => {
-    setSidebar('discord', { activeTab: 'profile' });
-  }, [setSidebar]);
+  // 전체 사용자 정보 가져오기 (bio, skills 포함)
+  const { data: fullUser } = useQuery<FullUserData>({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const res = await fetch("/api/users/me");
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
-
+  // 모든 hooks는 최상위 레벨에서 호출해야 함
   const form = useForm<UpdateUserProfileValues>({
     resolver: zodResolver(updateUserProfileSchema),
     defaultValues: {
-      username: user.username,
-      displayName: user.displayName,
-      bio: user.bio || "",
-      skills: user.skills || [],
+      username: "",
+      displayName: "",
+      bio: "",
+      skills: [],
     },
   });
 
   const mutation = useUpdateProfileMutation();
 
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
-  const [userSkills, setUserSkills] = useState<string[]>(user.skills || []);
+  const [userSkills, setUserSkills] = useState<string[]>([]);
   const [skillSearchTerm, setSkillSearchTerm] = useState("");
 
+  // 설정 페이지 사이드바 활성화
   useEffect(() => {
-    form.reset({
-      username: user.username,
-      displayName: user.displayName,
-      bio: user.bio || "",
-      skills: user.skills || [],
-    });
-    setUserSkills(user.skills || []);
-  }, [user, form]);
+    setSidebar('discord', { activeTab: 'profile' });
+  }, [setSidebar]);
+
+  // user가 없으면 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  // fullUser 데이터가 로드되면 폼 업데이트
+  useEffect(() => {
+    if (fullUser) {
+      form.reset({
+        username: fullUser.username,
+        displayName: fullUser.displayName,
+        bio: fullUser.bio || "",
+        skills: fullUser.skills || [],
+      });
+      setUserSkills(fullUser.skills || []);
+    }
+  }, [fullUser, form]);
 
   const handleAddSkill = (skillName: string) => {
     if (!userSkills.includes(skillName)) {
@@ -90,13 +118,15 @@ export default function ProfileSettingsPage() {
   );
 
   async function onSubmitProfile(values: UpdateUserProfileValues) {
+    if (!fullUser) return;
+
     const newAvatarFile = croppedAvatar
-      ? new File([croppedAvatar], `avatar_${user.id}.webp`)
+      ? new File([croppedAvatar], `avatar_${fullUser.id}.webp`)
       : undefined;
 
     let mutationValues: Partial<UpdateUserProfileValues> = { ...values }; 
 
-    if (mutationValues.username === user.username) {
+    if (mutationValues.username === fullUser.username) {
       delete mutationValues.username;
     }
 
@@ -115,6 +145,10 @@ export default function ProfileSettingsPage() {
     );
   }
 
+  if (!user || !fullUser) {
+    return null;
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4">
       <Card className="p-6">
@@ -126,7 +160,7 @@ export default function ProfileSettingsPage() {
             src={
               croppedAvatar
                 ? URL.createObjectURL(croppedAvatar)
-                : user.avatarUrl || avatarPlaceholder
+                : fullUser.avatarUrl || avatarPlaceholder
             }
             onImageCropped={setCroppedAvatar}
           />
