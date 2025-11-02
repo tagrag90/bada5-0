@@ -1,86 +1,57 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useSidebar } from "@/components/layout/SidebarContext";
-import StudioNavSidebar from "@/components/layout/StudioNavSidebar";
 import DocsNavSidebar from "@/components/layout/DocsNavSidebar";
 import DiscordStyleSidebar from "@/components/layout/DiscordStyleSidebar";
+import { usePathname } from "next/navigation";
 
 interface LeftSidebarProps {
   children?: React.ReactNode;
 }
 
 export default function LeftSidebar({ children }: LeftSidebarProps) {
-  const [width, setWidth] = useState(256);
-  const [isResizing, setIsResizing] = useState(false);
+  // 고정 폭 설정 (우측 칼럼을 1.5배 키우기 위해 전체 사이드바 폭 증가)
+  // 좌측 칼럼 80px + 우측 칼럼 기본 약 176px -> 우측 칼럼을 1.5배하면 약 264px
+  // 전체 사이드바: 80px + 264px = 344px
+  const width = 400; // 최대 폭으로 고정 (우측 칼럼이 넓게 보이도록)
   const sidebarRef = useRef<HTMLElement>(null);
-  const { sidebarType, sidebarData, discordData } = useSidebar();
+  const { sidebarType, discordData } = useSidebar();
+  const pathname = usePathname();
+  const isSettingsPage = pathname?.startsWith('/settings');
 
-  // localStorage에서 저장된 너비 불러오기
-  useEffect(() => {
-    const savedWidth = localStorage.getItem("sidebar-width");
-    if (savedWidth) {
-      setWidth(parseInt(savedWidth));
-    }
-  }, []);
-
-  // 리사이징 시작
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  // 리사이징 중
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const newWidth = e.clientX;
-      // 최소 200px, 최대 400px
-      if (newWidth >= 200 && newWidth <= 400) {
-        setWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isResizing) {
-        setIsResizing(false);
-        // localStorage에 저장
-        localStorage.setItem("sidebar-width", width.toString());
-      }
-    };
-
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "ew-resize";
-      document.body.style.userSelect = "none";
-    }
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-  }, [isResizing, width]);
-
-  // 부모 컴포넌트에 너비 전달
+  // 부모 컴포넌트에 너비 전달 (고정값)
   useEffect(() => {
     document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
   }, [width]);
 
-  // sidebarType 변경 시 패딩 조정
+  // sidebarType 변경 시 패딩 조정 (설정 페이지는 항상 표시)
   useEffect(() => {
-    if (sidebarType !== 'none') {
+    // 설정 페이지이거나 사이드바가 활성화된 경우
+    if (sidebarType !== 'none' || isSettingsPage) {
       document.documentElement.style.setProperty("--has-sidebar", `${width}px`);
     } else {
       document.documentElement.style.setProperty("--has-sidebar", `0px`);
     }
-  }, [sidebarType, width]);
+  }, [sidebarType, width, isSettingsPage]);
 
-  // 사이드바가 필요 없으면 null
-  if (sidebarType === 'none') {
+  // 설정 페이지인 경우 강제로 사이드바 활성화
+  useEffect(() => {
+    if (isSettingsPage && sidebarType === 'none') {
+      // 설정 페이지에서는 사이드바를 강제로 표시
+      document.documentElement.style.setProperty("--has-sidebar", `${width}px`);
+    }
+  }, [isSettingsPage, sidebarType, width]);
+
+  // 사이드바가 필요 없으면 null (단, 설정 페이지는 항상 표시)
+  if (sidebarType === 'none' && !isSettingsPage) {
+    return null;
+  }
+
+  // 설정 페이지는 항상 표시
+  const shouldShowSidebar = sidebarType !== 'none' || isSettingsPage;
+
+  if (!shouldShowSidebar) {
     return null;
   }
 
@@ -91,31 +62,26 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
         className="fixed left-0 top-0 h-screen bg-card border-r border-border overflow-y-auto hidden xl:flex xl:flex-col z-30"
         style={{ width: `${width}px` }}
       >
-        {/* 독스 페이지를 제외한 모든 페이지에서 디스코드 사이드바 사용 */}
+        {/* 독스 페이지 */}
         {sidebarType === 'docs' && (
           <DocsNavSidebar />
         )}
 
-        {(sidebarType === 'studio' || sidebarType === 'discord') && discordData && (
+        {/* 스튜디오/디스코드 사이드바 (설정 페이지도 포함) - discordData가 없어도 기본 사이드바 표시 */}
+        {(sidebarType === 'studio' || sidebarType === 'discord' || isSettingsPage) && (
           <DiscordStyleSidebar
-            selectedStudioId={discordData.selectedStudioId || undefined}
-            selectedChannel={discordData.selectedChannel}
-            onStudioSelect={discordData.onStudioSelect || (() => {})}
-            onChannelSelect={discordData.onChannelSelect || (() => {})}
-            isOwner={discordData.isOwner || false}
-            studioName={discordData.studioName || ""}
-            studio={discordData.studio}
+            selectedStudioId={discordData?.selectedStudioId || undefined}
+            selectedChannel={discordData?.selectedChannel || 'posts'}
+            onStudioSelect={discordData?.onStudioSelect || (() => {})}
+            onChannelSelect={discordData?.onChannelSelect || (() => {})}
+            isOwner={discordData?.isOwner || false}
+            studioName={discordData?.studioName || ""}
+            studio={discordData?.studio}
           />
         )}
 
 
-        {/* 리사이즈 핸들 */}
-        <div
-          className={`absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize hover:w-1.5 transition-all ${
-            isResizing ? "bg-blue-500 w-1.5" : "bg-transparent hover:bg-blue-400"
-          }`}
-          onMouseDown={startResizing}
-        />
+        {/* 리사이즈 기능 제거됨 - 고정 폭 유지 */}
       </aside>
     </>
   );

@@ -44,12 +44,12 @@ export default function MainContent() {
     setSelectedChannel(channel);
   };
 
-  // 디스코드 사이드바 활성화
+  // 디스코드 사이드바 활성화 (로그인 시 즉시 실행)
   useEffect(() => {
     if (isLoggedIn) {
       setDiscordSidebar({
-        selectedStudioId,
-        selectedChannel,
+        selectedStudioId: selectedStudioId || null,
+        selectedChannel: selectedChannel || 'posts',
         onStudioSelect: handleStudioSelect,
         onChannelSelect: handleChannelSelect,
         studioName: "",

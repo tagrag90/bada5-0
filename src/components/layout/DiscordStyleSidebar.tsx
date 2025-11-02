@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import ServerList from "./ServerList";
 import StudioContentList from "./StudioContentList";
 import CreateStudioDialog from "@/app/(main)/studios/CreateStudioDialog";
 import UserProfileButton from "@/components/UserProfileButton";
 import BrandSidebar from "@/components/BrandSidebar";
+import SettingsSidebar from "./SettingsSidebar";
 import Link from "next/link";
 
 interface Studio {
@@ -42,6 +44,8 @@ export default function DiscordStyleSidebar({
   studio,
 }: DiscordStyleSidebarProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const pathname = usePathname();
+  const isSettingsPage = pathname?.startsWith('/settings');
 
   const handleCreateStudio = () => {
     setShowCreateDialog(true);
@@ -50,7 +54,7 @@ export default function DiscordStyleSidebar({
   return (
     <div className="relative flex h-full w-full bg-white text-black">
       {/* 좌측 칼럼: 서버 목록 (항상 표시) */}
-      <div className="flex w-20 flex-col items-center border-r border-gray-200 bg-gray-50">
+      <div className="flex w-20 flex-col items-center border-r border-gray-200 bg-gray-50 flex-shrink-0">
         <ServerList
           selectedStudioId={selectedStudioId}
           onStudioSelect={onStudioSelect}
@@ -58,9 +62,13 @@ export default function DiscordStyleSidebar({
         />
       </div>
 
-      {/* 우측 칼럼: 채널 목록 (항상 표시) */}
-      <div className="flex flex-1 flex-col">
-        {selectedStudioId ? (
+      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (1.5배 확대) */}
+      <div className="flex flex-col" style={{ width: '320px', flexShrink: 0 }}>
+        {isSettingsPage ? (
+          /* 설정 페이지일 때 설정 사이드바 표시 */
+          <SettingsSidebar />
+        ) : selectedStudioId ? (
+          /* 스튜디오 선택 시 채널 목록 */
           <StudioContentList
             studioId={selectedStudioId || ""}
             studioName={studioName}

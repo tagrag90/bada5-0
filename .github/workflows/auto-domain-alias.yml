@@ -1,0 +1,69 @@
+name: Auto Domain Alias After Deployment
+
+on:
+  # Vercel 배포 완료 후 트리거 (수동 실행도 가능)
+  workflow_dispatch:
+  # 또는 main 브랜치에 푸시 시 (배포 완료 후 약간의 딜레이)
+  push:
+    branches:
+      - main
+
+jobs:
+  connect-domain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Vercel deployment
+        run: sleep 60  # 배포 완료 대기
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+        
+      - name: Get latest production deployment
+        id: get-deploy
+        run: |
+          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          export VERCEL_ORG_ID="${{ secrets.VERCEL_ORG_ID }}"
+          export VERCEL_PROJECT_ID="${{ secrets.VERCEL_PROJECT_ID }}"
+          
+          LATEST_DEPLOY=$(vercel ls --scope tagrag90s-projects bada5-0 --prod --json | jq -r '.[0] | select(.state == "READY" and .target == "production") | .url' | head -1)
+          
+          if [ -z "$LATEST_DEPLOY" ]; then
+            echo "No deployment found"
+            exit 1
+          fi
+          
+          echo "DEPLOY_URL=$LATEST_DEPLOY" >> $GITHUB_OUTPUT
+          echo "Latest deployment: $LATEST_DEPLOY"
+          
+      - name: Connect www.divetobada.com
+        run: |
+          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          export VERCEL_ORG_ID="${{ secrets.VERCEL_ORG_ID }}"
+          export VERCEL_PROJECT_ID="${{ secrets.VERCEL_PROJECT_ID }}"
+          
+          vercel alias set "${{ steps.get-deploy.outputs.DEPLOY_URL }}" www.divetobada.com
+          
+      - name: Connect divetobada.com
+        run: |
+          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          export VERCEL_ORG_ID="${{ secrets.VERCEL_ORG_ID }}"
+          export VERCEL_PROJECT_ID="${{ secrets.VERCEL_PROJECT_ID }}"
+          
+          vercel alias set "${{ steps.get-deploy.outputs.DEPLOY_URL }}" divetobada.com
+          
+      - name: Verify domain connection
+        run: |
+          export VERCEL_TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          export VERCEL_ORG_ID="${{ secrets.VERCEL_ORG_ID }}"
+          export VERCEL_PROJECT_ID="${{ secrets.VERCEL_PROJECT_ID }}"
+          
+          echo "Checking www.divetobada.com..."
+          vercel inspect www.divetobada.com --json | jq -r '.url'
+          echo "Checking divetobada.com..."
+          vercel inspect divetobada.com --json | jq -r '.url'
+
