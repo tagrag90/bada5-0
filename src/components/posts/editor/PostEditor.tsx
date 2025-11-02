@@ -365,6 +365,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         const initialAttachments: Attachment[] = post.attachments.map(
           (attachment) => ({
             id: attachment.id,
+            mediaId: attachment.id, // 기존 첨부파일의 id를 mediaId로도 설정
             url: attachment.url,
             type: attachment.type,
             file: new File([], "placeholder.jpg"),
