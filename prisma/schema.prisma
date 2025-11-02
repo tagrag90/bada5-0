@@ -10,37 +10,35 @@ datasource db {
 }
 
 model User {
-  id                    String                 @id
-  username              String                 @unique
-  displayName           String
-  email                 String?                @unique
-  passwordHash          String?
-  googleId              String?                @unique
-  avatarUrl             String?
-  bio                   String?
-  skills                String[]               @default([])
-  createdAt             DateTime               @default(now())
-  
+  id           String   @id
+  username     String   @unique
+  displayName  String
+  email        String?  @unique
+  passwordHash String?
+  googleId     String?  @unique
+  avatarUrl    String?
+  bio          String?
+  skills       String[] @default([])
+  createdAt    DateTime @default(now())
+
   // 기존 관계
-  board_members         board_members[]
-  boards                boards[]
   bookmarks             Bookmark[]
-  cards                 cards[]
   comments              Comment[]
-  following             Follow[]               @relation("Following")
-  followers             Follow[]               @relation("Followers")
+  following             Follow[]       @relation("Following")
+  followers             Follow[]       @relation("Followers")
   likes                 Like[]
-  issuedNotifications   Notification[]         @relation("Issuer")
-  receivedNotifications Notification[]         @relation("Recipient")
+  issuedNotifications   Notification[] @relation("Issuer")
+  receivedNotifications Notification[] @relation("Recipient")
   posts                 Post[]
   sessions              Session[]
-  
+
   // Studio 관계
-  ownedStudios          Studio[]               @relation("OwnedStudios")
-  studioMemberships     StudioMember[]
-  studioSubscriptions   StudioSubscription[]
-  tickets               Ticket[]
-  studioItems           StudioItem[]
+  ownedStudios        Studio[]             @relation("OwnedStudios")
+  studioMemberships   StudioMember[]
+  studioSubscriptions StudioSubscription[]
+  tickets             Ticket[]
+  studioItems         StudioItem[]
+  projectNodes        ProjectNode[]
 
   @@map("users")
 }
@@ -143,56 +141,6 @@ model Notification {
   @@map("notifications")
 }
 
-model board_members {
-  id       String    @id
-  boardId  String
-  userId   String
-  role     BoardRole @default(MEMBER)
-  joinedAt DateTime  @default(now())
-  boards   boards    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  users    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([boardId, userId])
-}
-
-model boards {
-  id            String          @id
-  title         String
-  description   String?
-  ownerId       String
-  isPublic      Boolean         @default(false)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime
-  board_members board_members[]
-  users         User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  lists         lists[]
-}
-
-model cards {
-  id          String    @id
-  title       String
-  description String?
-  position    Int
-  listId      String
-  assigneeId  String?
-  dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime
-  users       User?     @relation(fields: [assigneeId], references: [id])
-  lists       lists     @relation(fields: [listId], references: [id], onDelete: Cascade)
-}
-
-model lists {
-  id        String   @id
-  title     String
-  position  Int
-  boardId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  cards     cards[]
-  boards    boards   @relation(fields: [boardId], references: [id], onDelete: Cascade)
-}
-
 enum MediaType {
   IMAGE
   VIDEO
@@ -204,55 +152,50 @@ enum NotificationType {
   COMMENT
 }
 
-enum BoardRole {
-  OWNER
-  ADMIN
-  MEMBER
-  VIEWER
-}
-
 // ============= Studio System Models =============
 
 model Studio {
-  id               String               @id @default(cuid())
-  name             String
-  slug             String               @unique
-  description      String?
-  type             StudioType           @default(PERSONAL)
-  
-  ownerId          String
-  owner            User                 @relation("OwnedStudios", fields: [ownerId], references: [id], onDelete: Cascade)
-  
-  avatarUrl        String?
-  bannerUrl        String?
-  socialLinks      String[]             @default([])
-  isPublic         Boolean              @default(true)
-  isVerified       Boolean              @default(false)
-  
-  subscribersCount Int                  @default(0)
-  
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  
-  members          StudioMember[]
-  subscriptions    StudioSubscription[]
-  events           Event[]
-  items            StudioItem[]
-  posts            Post[]             @relation("StudioPosts")
-  
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  type        StudioType @default(PERSONAL)
+
+  ownerId String
+  owner   User   @relation("OwnedStudios", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  avatarUrl   String?
+  bannerUrl   String?
+  socialLinks String[] @default([])
+  isPublic    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+
+  subscribersCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members       StudioMember[]
+  subscriptions StudioSubscription[]
+  events        Event[]
+  items         StudioItem[]
+  posts         Post[]               @relation("StudioPosts")
+  nodes         ProjectNode[]
+  edges         NodeEdge[]
+
   @@map("studios")
 }
 
 model StudioMember {
-  id        String      @id @default(cuid())
-  studioId  String
-  userId    String
-  role      StudioRole  @default(MEMBER)
-  joinedAt  DateTime    @default(now())
-  
-  studio    Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id       String     @id @default(cuid())
+  studioId String
+  userId   String
+  role     StudioRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+
+  studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([studioId, userId])
   @@map("studio_members")
 }
@@ -262,10 +205,10 @@ model StudioSubscription {
   studioId     String
   userId       String
   subscribedAt DateTime @default(now())
-  
-  studio       Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  studio Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([studioId, userId])
   @@map("studio_subscriptions")
 }
@@ -285,67 +228,67 @@ enum StudioRole {
 // ============= Ticketing System Models =============
 
 model Event {
-  id          String      @id @default(cuid())
-  studioId    String
-  studio      Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
   title       String
   description String?
-  slug        String      @unique
+  slug        String   @unique
   location    String?
   startDate   DateTime
   endDate     DateTime
   imageUrl    String?
-  
-  status      EventStatus @default(DRAFT)
-  isPublic    Boolean     @default(true)
-  viewCount   Int         @default(0)
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
+
+  status    EventStatus @default(DRAFT)
+  isPublic  Boolean     @default(true)
+  viewCount Int         @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   ticketTypes TicketType[]
   tickets     Ticket[]
-  
+
   @@map("events")
 }
 
 model TicketType {
-  id          String  @id @default(cuid())
-  eventId     String
-  event       Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   name        String
   description String?
   totalCount  Int
   issuedCount Int     @default(0)
   price       Int     @default(0)
   color       String?
-  
-  tickets     Ticket[]
-  
+
+  tickets Ticket[]
+
   @@map("ticket_types")
 }
 
 model Ticket {
-  id          String       @id @default(cuid())
-  eventId     String
-  typeId      String
-  userId      String
-  
-  qrCode      String       @unique
+  id      String @id @default(cuid())
+  eventId String
+  typeId  String
+  userId  String
+
+  qrCode      String @unique
   qrSignature String
-  
-  status      TicketStatus @default(VALID)
-  
-  issuedAt    DateTime     @default(now())
+
+  status TicketStatus @default(VALID)
+
+  issuedAt    DateTime  @default(now())
   usedAt      DateTime?
   checkedInBy String?
-  
-  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  type        TicketType   @relation(fields: [typeId], references: [id], onDelete: Cascade)
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  event Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type  TicketType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("tickets")
 }
 
@@ -367,40 +310,155 @@ enum TicketStatus {
 // ============= Studio Unified Item System (Notion-style) =============
 
 model StudioItem {
-  id          String       @id @default(cuid())
-  studioId    String
-  studio      Studio       @relation(fields: [studioId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
   // 공통 필드
-  title       String
-  content     String
-  type        StudioItemType @default(NOTE)
-  
+  title   String
+  content String
+  type    StudioItemType @default(NOTE)
+
   // 선택적 필드 (타입에 따라 사용)
-  date        DateTime?
-  time        String?
-  duration    String?
-  location    String?
-  attendees   String[]     @default([])
-  tags        String[]     @default([])
-  
+  date      DateTime?
+  time      String?
+  duration  String?
+  location  String?
+  attendees String[]  @default([])
+  tags      String[]  @default([])
+
   // 메타데이터
-  isPinned    Boolean      @default(false)
-  category    String?
-  color       String?
-  
+  isPinned Boolean @default(false)
+  category String?
+  color    String?
+
   // 작성자
-  authorId    String
-  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("studio_items")
 }
 
 enum StudioItemType {
-  NOTE      // 메모
-  EVENT     // 일정/이벤트
-  TASK      // 할 일 (추후 확장)
+  NOTE // 메모
+  EVENT // 일정/이벤트
+  TASK // 할 일 (추후 확장)
+}
+
+// ============= Workspace Node System Models =============
+
+model ProjectNode {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  // 노드 위치 및 크기
+  x      Float
+  y      Float
+  width  Float @default(300)
+  height Float @default(200)
+
+  // 노드 타입 및 실행 가능 여부
+  type    NodeType
+  title   String
+  content String? // JSON (데이터 또는 설정)
+
+  // 실행 관련 필드 (SDK/자동화용 - Phase 3+)
+  isExecutable  Boolean        @default(false) // 실행 가능한 노드인지
+  executionType ExecutionType? // CODE, WORKFLOW, SDK_PLUGIN
+  codeFileUrl   String? // AI 생성 코드 파일 URL (Vercel Blob)
+  codeLanguage  String? // js, ts, python 등
+  pluginId      String? // SDK 플러그인 ID
+
+  // 입출력 포트 정의 (스크래치/블록 코딩 스타일 - Phase 2+)
+  inputPorts  Json? // [{ id, name, type, required }]
+  outputPorts Json? // [{ id, name, type }]
+
+  // 노드 상태 및 실행 (Phase 3+)
+  status              NodeStatus @default(IDLE) // IDLE, RUNNING, SUCCESS, ERROR
+  lastExecutionResult Json? // 마지막 실행 결과
+  lastExecutedAt      DateTime?
+
+  // 연결 관계
+  fromEdges NodeEdge[] @relation("FromNode")
+  toEdges   NodeEdge[] @relation("ToNode")
+
+  // 메타데이터
+  emoji       String? // 노션 스타일 이모지 (타이틀 앞에 표시)
+  color       String?
+  isCollapsed Boolean @default(false)
+  config      Json? // 노드별 설정 (UI 설정 등)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("project_nodes")
+}
+
+model NodeEdge {
+  id       String      @id @default(cuid())
+  studioId String
+  studio   Studio      @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  fromId   String
+  fromNode ProjectNode @relation("FromNode", fields: [fromId], references: [id], onDelete: Cascade)
+  toId     String
+  toNode   ProjectNode @relation("ToNode", fields: [toId], references: [id], onDelete: Cascade)
+
+  // 데이터 흐름 정의 (Phase 2+)
+  fromPort String? // 연결 시작 포트 ID
+  toPort   String? // 연결 끝 포트 ID
+
+  type  EdgeType @default(ARROW)
+  label String?
+  color String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, toId, fromPort, toPort]) // 같은 포트 중복 연결 방지
+  @@map("node_edges")
+}
+
+enum NodeType {
+  // 기본 노드 타입 (Phase 1)
+  IDEA // 아이디어
+  PLANNING // 기획
+  NOTE // 메모
+  SCHEDULE // 일정관리
+  RESULT // 결과물
+  RESOURCE // 자료공유
+
+  // 자동화 노드 타입 (Phase 3+)
+  TRIGGER // 트리거 노드 (시작점)
+  ACTION // 액션 노드 (실행)
+  CONDITION // 조건 노드 (if/else)
+  LOOP // 반복 노드
+  TRANSFORM // 데이터 변환 노드
+
+  // SDK 커스텀 타입 (Phase 4+)
+  CUSTOM // SDK 플러그인으로 만들어진 노드
+}
+
+enum ExecutionType {
+  CODE // 직접 코드 실행
+  WORKFLOW // 워크플로우 실행
+  SDK_PLUGIN // SDK 플러그인 실행
+}
+
+enum NodeStatus {
+  IDLE // 대기
+  RUNNING // 실행 중
+  SUCCESS // 성공
+  ERROR // 에러
+}
+
+enum EdgeType {
+  ARROW // 화살표 (기본)
+  DASHED // 점선
+  DOTTED // 점점선
 }

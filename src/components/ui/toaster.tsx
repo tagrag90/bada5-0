@@ -22,15 +22,35 @@ export function Toaster() {
             {...props} 
             className="bg-white"
             style={{
-              backgroundColor: props.variant === "destructive" ? "#ef4444" : undefined,
-              borderColor: props.variant === "destructive" ? "#dc2626" : undefined,
-              color: props.variant === "destructive" ? "#ffffff" : undefined,
+              backgroundColor: props.variant === "destructive" 
+                ? "#ef4444" 
+                : "#22c55e", // default, success 모두 초록색
+              borderColor: props.variant === "destructive" 
+                ? "#dc2626" 
+                : "#16a34a", // default, success 모두 초록색
+              color: props.variant === "destructive"
+                ? "#ffffff"
+                : "#ffffff", // default, success 모두 흰색
             }}
           >
             <div className="grid gap-1">
-              {title && <ToastTitle style={{ color: props.variant === "destructive" ? "#ffffff" : undefined }}>{title}</ToastTitle>}
+              {title && (
+                <ToastTitle 
+                  style={{ 
+                    color: "#ffffff" // 모든 토스트 흰색 텍스트 (에러 제외는 초록 배경)
+                  }}
+                >
+                  {title}
+                </ToastTitle>
+              )}
               {description && (
-                <ToastDescription style={{ color: props.variant === "destructive" ? "#ffffff" : undefined }}>{description}</ToastDescription>
+                <ToastDescription 
+                  style={{ 
+                    color: "#ffffff" // 모든 토스트 흰색 텍스트
+                  }}
+                >
+                  {description}
+                </ToastDescription>
               )}
             </div>
             {action}

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Calendar, StickyNote, Edit3, Users, Settings, ChevronDown } from "lucide-react";
+import { FileText, Calendar, StickyNote, Edit3, Users, Settings, ChevronDown, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import Link from "next/link";
@@ -108,6 +108,12 @@ export default function StudioContentList({
             label="메모"
             active={selectedTab === "notes"}
             onClick={() => onTabSelect("notes")}
+          />
+          <NavItem
+            icon={Network}
+            label="워크스페이스"
+            active={selectedTab === "workspace"}
+            onClick={() => onTabSelect("workspace")}
           />
         </nav>
 

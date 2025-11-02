@@ -12,6 +12,7 @@ import MembersDialog from "./MembersDialog";
 import StudioCalendar from "./StudioCalendar";
 import StudioNotes from "./StudioNotes";
 import StudioPosts from "./StudioPosts";
+import StudioWorkspace from "./StudioWorkspace";
 import Image from "next/image";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
@@ -143,48 +144,13 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   }
 
   return (
-    <div className="w-full min-w-0 space-y-5">
-      {/* 간단한 스튜디오 헤더 (Reddit 스타일) */}
-      <div className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex-shrink-0">
-              <Image
-                key={studio.avatarUrl || "default"}
-                src={studio.avatarUrl || "/logo-bada.png"}
-                alt={studio.name}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-              />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">{studio.name}</h1>
-          <p className="text-muted-foreground">@{studio.slug}</p>
-        </div>
-        {isOwner && (
-          <div className="ml-auto flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditDialog(true)}
-            >
-              설정
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowMembersDialog(true)}
-            >
-              멤버
-            </Button>
-          </div>
-        )}
-      </div>
-
+    <div className="w-full min-w-0">
       {/* 스튜디오 콘텐츠 - 디스코드 사이드바 우측 칼럼과 연동 */}
-      <div className="mt-6">
+      <div className={currentTab === "workspace" ? "w-full h-full" : ""}>
         {currentTab === "posts" && <StudioPosts studioId={studioId} isOwner={isOwner} />}
         {currentTab === "calendar" && <StudioCalendar studioId={studioId} />}
         {currentTab === "notes" && <StudioNotes studioId={studioId} />}
+        {currentTab === "workspace" && <StudioWorkspace studioId={studioId} />}
       </div>
 
       {/* 다이얼로그들 */}
