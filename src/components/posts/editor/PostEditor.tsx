@@ -431,6 +431,22 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       }
 
       console.log("✅ 배포 디버깅 - mutation 성공");
+
+      // 성공 시 에디터 상태 초기화
+      if (editor) {
+        editor.commands.clearContent();
+        setEditorInput("");
+        if (studio) {
+          setTitle("");
+        }
+      }
+      resetMediaUploads();
+      insertedImageUrls.current.clear();
+
+      // onSuccess 콜백 호출 (모달 닫기 등)
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("❌ 배포 디버깅 - mutation 실패:", error);
       console.error("❌ 배포 디버깅 - 에러 상세:", {
