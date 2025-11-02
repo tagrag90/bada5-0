@@ -52,7 +52,7 @@ export default function DiscordStyleSidebar({
   };
 
   return (
-    <div className="relative flex h-full w-full bg-white text-black">
+    <div className="relative flex h-full bg-white text-black" style={{ width: '100%' }}>
       {/* 좌측 칼럼: 서버 목록 (항상 표시) */}
       <div className="flex w-20 flex-col items-center border-r border-gray-200 bg-gray-50 flex-shrink-0">
         <ServerList
@@ -63,7 +63,7 @@ export default function DiscordStyleSidebar({
       </div>
 
       {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (1.5배 확대) */}
-      <div className="flex flex-col" style={{ width: '320px', flexShrink: 0 }}>
+      <div className="flex flex-col flex-1" style={{ minWidth: 0 }}>
         {isSettingsPage ? (
           /* 설정 페이지일 때 설정 사이드바 표시 */
           <SettingsSidebar />
