@@ -1,4 +1,4 @@
-import { Lightbulb, FileText, Calendar, Package, Share2 } from "lucide-react";
+import { Lightbulb, FileText, Calendar, Package, Share2, FileImage } from "lucide-react";
 
 // 노드 타입별 아이콘
 export const nodeTypeIcons: Record<string, any> = {
@@ -8,6 +8,7 @@ export const nodeTypeIcons: Record<string, any> = {
   SCHEDULE: Calendar,
   RESULT: Package,
   RESOURCE: Share2,
+  POST: FileImage,
 };
 
 // 노드 타입별 라벨
@@ -17,6 +18,7 @@ export const nodeTypeLabels: Record<string, string> = {
   NOTE: "메모",
   SCHEDULE: "일정관리",
   RESULT: "결과물",
-  RESOURCE: "자료공유",
+  RESOURCE: "드라이브",
+  POST: "게시물",
 };
 

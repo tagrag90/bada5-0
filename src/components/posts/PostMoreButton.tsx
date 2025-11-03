@@ -1,7 +1,7 @@
 "use client";
 
 import { PostData } from "@/lib/types";
-import { MoreHorizontal, Trash, Pencil } from "lucide-react";
+import { MoreHorizontal, Trash, Pencil, Share2 } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DeletePostDialog from "./DeletePostDialog";
+import AddToNodeDialog from "./AddToNodeDialog";
 import { useState } from "react";
 
 interface PostMoreButtonProps {
@@ -19,6 +20,7 @@ interface PostMoreButtonProps {
 
 export default function PostMoreButton({ post, onEditClick }: PostMoreButtonProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddToNodeDialogOpen, setIsAddToNodeDialogOpen] = useState(false);
 
   return (
     <>
@@ -38,6 +40,13 @@ export default function PostMoreButton({ post, onEditClick }: PostMoreButtonProp
             수정
           </DropdownMenuItem>
           <DropdownMenuItem 
+            onClick={() => setIsAddToNodeDialogOpen(true)} 
+            className="cursor-pointer"
+          >
+            <Share2 className="mr-2 h-4 w-4" />
+            노드로 추가
+          </DropdownMenuItem>
+          <DropdownMenuItem 
             onClick={() => setIsDeleteDialogOpen(true)} 
             className="cursor-pointer text-destructive focus:text-destructive"
           >
@@ -51,6 +60,12 @@ export default function PostMoreButton({ post, onEditClick }: PostMoreButtonProp
         post={post}
         open={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
+      />
+      
+      <AddToNodeDialog
+        post={post}
+        open={isAddToNodeDialogOpen}
+        onClose={() => setIsAddToNodeDialogOpen(false)}
       />
     </>
   );

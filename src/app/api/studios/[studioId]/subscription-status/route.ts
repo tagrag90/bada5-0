@@ -14,8 +14,23 @@ export async function GET(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 멤버십 상태 확인
-    const membership = await prisma.studioMember.findUnique({
+    // 스튜디오 정보 확인 (소유자 체크용)
+    const studio = await prisma.studio.findUnique({
+      where: { id: studioId },
+      select: {
+        ownerId: true,
+      },
+    });
+
+    if (!studio) {
+      return Response.json({ error: "Studio not found" }, { status: 404 });
+    }
+
+    // 소유자인 경우
+    const isOwner = studio.ownerId === user.id;
+
+    // 멤버십 상태 확인 (소유자가 아닌 경우에만)
+    const membership = isOwner ? null : await prisma.studioMember.findUnique({
       where: {
         studioId_userId: {
           studioId: studioId,
@@ -28,8 +43,8 @@ export async function GET(
       },
     });
 
-    // 구독 상태 확인 (멤버가 아닌 경우에만)
-    const subscription = await prisma.studioSubscription.findUnique({
+    // 구독 상태 확인 (소유자가 아닌 경우에만)
+    const subscription = isOwner ? null : await prisma.studioSubscription.findUnique({
       where: {
         studioId_userId: {
           studioId: studioId,
@@ -42,8 +57,10 @@ export async function GET(
     });
 
     return Response.json({
-      isMember: !!membership,
-      memberRole: membership?.role,
+      userId: user.id,
+      isOwner,
+      isMember: isOwner || !!membership,
+      memberRole: isOwner ? "OWNER" : membership?.role,
       memberSince: membership?.joinedAt,
       isSubscribed: !!subscription,
       subscribedAt: subscription?.subscribedAt,

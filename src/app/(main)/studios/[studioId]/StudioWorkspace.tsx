@@ -6,7 +6,6 @@ import { Loader2, Plus } from "lucide-react";
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   Node,
   Edge,
   addEdge,
@@ -29,6 +28,7 @@ import {
 import CustomNode from "@/components/workspace/CustomNode";
 import { nodeTypeLabels, nodeTypeIcons } from "@/components/workspace/nodeConfig";
 import NodeSidebar from "@/components/workspace/NodeSidebar";
+import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
 
 interface StudioWorkspaceProps {
   studioId: string;
@@ -36,6 +36,7 @@ interface StudioWorkspaceProps {
 
 function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   const { toast } = useToast();
+  const [isAddPostDialogOpen, setIsAddPostDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -154,6 +155,19 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   // ReactFlow를 위한 노드/연결선 변환
   const initialNodes: Node[] = nodesData?.map((node: any) => {
+    // POST 타입일 때 content에서 postId 추출
+    let postId: string | undefined;
+    if (node.type === "POST" && node.content) {
+      try {
+        const parsed = JSON.parse(node.content);
+        postId = parsed.postId;
+        console.log("StudioWorkspace: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
+      } catch (error) {
+        console.error("StudioWorkspace: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
+        // JSON 파싱 실패 시 무시
+      }
+    }
+    
     return {
       id: node.id,
       type: "custom",
@@ -163,11 +177,11 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         content: node.content,
         type: node.type,
         emoji: node.emoji,
+        postId,
         onEdit: handleNodeEdit,
       },
       style: {
         width: node.width,
-        minHeight: node.height,
         backgroundColor: "#fff",
         border: "2px solid #000",
         borderRadius: "8px",
@@ -219,6 +233,18 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   useEffect(() => {
     if (nodesData) {
       const newNodes: Node[] = nodesData.map((node: any) => {
+        // POST 타입일 때 content에서 postId 추출
+        let postId: string | undefined;
+        if (node.type === "POST" && node.content) {
+          try {
+            const parsed = JSON.parse(node.content);
+            postId = parsed.postId;
+            console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
+          } catch (error) {
+            console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
+          }
+        }
+        
         return {
           id: node.id,
           type: "custom",
@@ -228,11 +254,11 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
             content: node.content,
             type: node.type,
             emoji: node.emoji,
+            postId,
             onEdit: handleNodeEdit,
           },
           style: {
             width: node.width,
-            minHeight: node.height,
             backgroundColor: "#fff",
             border: "2px solid #000",
             borderRadius: "8px",
@@ -295,6 +321,12 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   // 노드 추가 핸들러
   const handleAddNode = useCallback(
     (type: string) => {
+      // POST 타입은 게시물 선택 다이얼로그 표시
+      if (type === "POST") {
+        setIsAddPostDialogOpen(true);
+        return;
+      }
+
       // 기본 좌표 (뷰포트 중심 또는 기본값)
       let x = 250;
       let y = 250;
@@ -416,7 +448,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       style={{ 
         zIndex: 1, 
         left: "400px",
-        width: sidebarOpen ? "calc(100% - 400px - 384px)" : "calc(100% - 400px)", // 사이드바 열림 시 너비 조정
+        width: "calc(100% - 400px)", // 사이드바와 무관하게 고정 크기 유지
         backgroundColor: "#E5E5E5"
       }}
     >
@@ -450,7 +482,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         style={{ backgroundColor: "#E5E5E5" }}
       >
         <Background 
-          color="#ffffff" 
+          color="#999999" 
           gap={16}
           size={2}
         />
@@ -459,13 +491,6 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
             backgroundColor: "#2a2a2a",
             border: "1px solid #3a3a3a"
           }}
-        />
-        <MiniMap 
-          style={{ 
-            backgroundColor: "#2a2a2a",
-            border: "1px solid #3a3a3a"
-          }}
-          nodeColor={() => "#fff"}
         />
         
         {/* 노드 추가 패널 */}
@@ -497,7 +522,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       </ReactFlow>
 
       {/* 노드 편집 사이드바 */}
-      {sidebarOpen && selectedNodeId && nodesData && (
+      {selectedNodeId && nodesData && (
         <NodeSidebar
           nodeId={selectedNodeId}
           initialTitle={
@@ -509,10 +534,21 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           initialEmoji={
             nodesData.find((n: any) => n.id === selectedNodeId)?.emoji || ""
           }
+          nodeType={
+            nodesData.find((n: any) => n.id === selectedNodeId)?.type || "NOTE"
+          }
+          isOpen={sidebarOpen}
           onClose={handleSidebarClose}
           onSave={handleNodeSave}
         />
       )}
+
+      {/* 게시물 노드 추가 다이얼로그 */}
+      <AddToNodeDialog
+        open={isAddPostDialogOpen}
+        onClose={() => setIsAddPostDialogOpen(false)}
+        studioId={studioId}
+      />
     </div>
   );
 }

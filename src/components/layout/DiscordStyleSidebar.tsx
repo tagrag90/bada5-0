@@ -8,6 +8,7 @@ import CreateStudioDialog from "@/app/(main)/studios/CreateStudioDialog";
 import UserProfileButton from "@/components/UserProfileButton";
 import BrandSidebar from "@/components/BrandSidebar";
 import SettingsSidebar from "./SettingsSidebar";
+import StudioSettingsSidebar from "./StudioSettingsSidebar";
 import Link from "next/link";
 
 interface Studio {
@@ -46,6 +47,7 @@ export default function DiscordStyleSidebar({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const pathname = usePathname();
   const isSettingsPage = pathname?.startsWith('/settings');
+  const isStudioSettingsPage = pathname?.includes('/studios/') && pathname?.includes('/settings');
 
   const handleCreateStudio = () => {
     setShowCreateDialog(true);
@@ -67,6 +69,9 @@ export default function DiscordStyleSidebar({
         {isSettingsPage ? (
           /* 설정 페이지일 때 설정 사이드바 표시 */
           <SettingsSidebar />
+        ) : isStudioSettingsPage && selectedStudioId ? (
+          /* 스튜디오 설정 페이지일 때 스튜디오 설정 사이드바 표시 */
+          <StudioSettingsSidebar studioId={selectedStudioId} />
         ) : selectedStudioId ? (
           /* 스튜디오 선택 시 채널 목록 */
           <StudioContentList

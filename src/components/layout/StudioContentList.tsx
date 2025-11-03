@@ -17,6 +17,7 @@ interface Studio {
   description?: string;
   avatarUrl?: string;
   bannerUrl?: string;
+  ownerId?: string;
   _count: {
     members: number;
     events: number;
@@ -79,18 +80,27 @@ export default function StudioContentList({
     enabled: !!studioId && !!currentUser,
   });
 
+  // 소유자 확인 (prop 또는 membershipStatus 확인)
+  const actualIsOwner: boolean = isOwner || membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id) || false;
+  
   // 관리자 권한 확인 (소유자이거나 ADMIN 멤버)
-  const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
+  const isAdmin = actualIsOwner || membershipStatus?.memberRole === "ADMIN";
 
   return (
     <div className="flex h-full w-full flex-col bg-white text-black">
       {/* 스튜디오 정보 카드 컴포넌트 */}
-      <StudioInfoCard studio={studio} studioName={studioName} isOwner={isOwner} isAdmin={isAdmin} />
+      <StudioInfoCard studio={studio} studioName={studioName} isOwner={actualIsOwner} isAdmin={isAdmin} />
 
       <div className="space-y-4 p-4 pb-20">
 
         {/* 네비게이션 메뉴 */}
         <nav className="space-y-1">
+          <NavItem
+            icon={Network}
+            label="워크스페이스"
+            active={selectedTab === "workspace"}
+            onClick={() => onTabSelect("workspace")}
+          />
           <NavItem
             icon={FileText}
             label="포스트"
@@ -108,12 +118,6 @@ export default function StudioContentList({
             label="메모"
             active={selectedTab === "notes"}
             onClick={() => onTabSelect("notes")}
-          />
-          <NavItem
-            icon={Network}
-            label="워크스페이스"
-            active={selectedTab === "workspace"}
-            onClick={() => onTabSelect("workspace")}
           />
         </nav>
 
@@ -134,8 +138,7 @@ export default function StudioContentList({
                 icon={Settings}
                 label="설정"
                 onClick={() => {
-                  const event = new CustomEvent('openSettingsDialog');
-                  window.dispatchEvent(event);
+                  window.location.href = `/studios/${studioId}/settings`;
                 }}
               />
             </div>

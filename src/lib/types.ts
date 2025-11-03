@@ -161,6 +161,7 @@ export function getStudioDataSelect(loggedInUserId: string) {
     isPublic: true,
     isVerified: true,
     subscribersCount: true,
+    order: true,
     createdAt: true,
     updatedAt: true,
     ownerId: true,

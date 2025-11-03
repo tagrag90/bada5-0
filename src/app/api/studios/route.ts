@@ -28,9 +28,14 @@ export async function GET(req: NextRequest) {
         ],
       },
       select: getStudioDataSelect(user.id),
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        {
+          order: "asc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
     });
 
     return Response.json(studios);

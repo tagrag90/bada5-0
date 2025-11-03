@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 export default function StudioDetailContent({ studioId }: { studioId: string }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState("workspace");
   const { setSidebar, discordData, setDiscordSidebar } = useSidebar();
 
   const { data: studio, isLoading } = useQuery({
@@ -52,8 +52,6 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   // 디스코드 사이드바에서 선택된 채널 사용 (우선순위)
   const currentTab = discordData?.selectedChannel || activeTab;
 
-  const isOwner = currentUser && studio && studio.ownerId === currentUser.id;
-
   // 멤버십 상태 확인
   const { data: membershipStatus } = useQuery({
     queryKey: ["studio-membership", studioId],
@@ -66,6 +64,9 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
     enabled: !!studioId && !!currentUser,
   });
 
+  // 소유자 확인 (membershipStatus 또는 직접 비교)
+  const isOwner = membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id);
+
   // 관리자 권한 확인 (소유자이거나 ADMIN 멤버)
   const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
 
@@ -75,7 +76,7 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   const handleStudioSelect = (studioId: string | null) => {
     setSelectedStudioId(studioId);
-    setSelectedChannel('posts');
+    setSelectedChannel('workspace');
   };
 
   const handleChannelSelect = (channel: string) => {

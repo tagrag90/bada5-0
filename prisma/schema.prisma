@@ -171,6 +171,7 @@ model Studio {
   isVerified  Boolean  @default(false)
 
   subscribersCount Int @default(0)
+  order            Int? // 드래그 정렬 순서
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -432,6 +433,7 @@ enum NodeType {
   SCHEDULE // 일정관리
   RESULT // 결과물
   RESOURCE // 자료공유
+  POST // 게시물
 
   // 자동화 노드 타입 (Phase 3+)
   TRIGGER // 트리거 노드 (시작점)
