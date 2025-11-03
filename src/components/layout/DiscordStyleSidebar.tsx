@@ -33,6 +33,7 @@ interface DiscordStyleSidebarProps {
   isOwner?: boolean;
   studioName?: string;
   studio?: Studio;
+  whoToFollowSlot?: React.ReactNode; // 서버 컴포넌트를 children으로 받음
 }
 
 export default function DiscordStyleSidebar({
@@ -43,6 +44,7 @@ export default function DiscordStyleSidebar({
   isOwner = false,
   studioName = "",
   studio,
+  whoToFollowSlot,
 }: DiscordStyleSidebarProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const pathname = usePathname();
@@ -83,13 +85,19 @@ export default function DiscordStyleSidebar({
             isOwner={isOwner}
           />
         ) : (
-          /* 스튜디오 미선택 시 상단 빈 공간 + 하단 컴포넌트들 */
+          /* 스튜디오 미선택 시 상단 WhoToFollow + 하단 컴포넌트들 */
           <>
-            {/* 상단 빈 공간 */}
-            <div className="flex-1 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <div className="text-4xl mb-2">🎬</div>
-                <div className="text-sm">스튜디오를 선택하세요</div>
+            {/* 상단: WhoToFollow 컴포넌트 */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4">
+                {whoToFollowSlot || (
+                  <div className="flex items-center justify-center py-8 text-gray-400">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">🎬</div>
+                      <div className="text-sm">스튜디오를 선택하세요</div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

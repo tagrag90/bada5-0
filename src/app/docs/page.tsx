@@ -31,6 +31,10 @@ export default function DocsHome() {
               {/* 업데이트 목록 */}
               <div className="space-y-3 text-slate-200">
                 <div className="flex items-start justify-between">
+                  <span className="flex-1 text-green-400">게시물 표시 개선, 사이드바 WhoToFollow 추가, 화이트보드 크기 동적 조절</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.11.03</span>
+                </div>
+                <div className="flex items-start justify-between">
                   <span className="flex-1 text-green-400">🗑️ 코스모스 기능 완전 제거 + UI Lab 정리</span>
                   <span className="text-slate-400 shrink-0 ml-4">2025.10.29</span>
                 </div>

@@ -14,7 +14,7 @@ export default function StudioBadgePage() {
       <div>
         <h2>기본</h2>
         <ComponentPreview
-          component={<StudioBadge />}
+          component={<StudioBadge studioId="example" studioName="예제 스튜디오" />}
           code={`<StudioBadge />`}
         />
       </div>
@@ -24,14 +24,14 @@ export default function StudioBadgePage() {
         <ComponentPreview
           component={
             <div className="flex items-center gap-4">
-              <StudioBadge size="sm" />
-              <StudioBadge size="md" />
-              <StudioBadge size="lg" />
+              <StudioBadge studioId="example" studioName="스튜디오 A" size="sm" />
+              <StudioBadge studioId="example" studioName="스튜디오 B" size="md" />
+              <StudioBadge studioId="example" studioName="스튜디오 C" size="lg" />
             </div>
           }
-          code={`<StudioBadge size="sm" />
-<StudioBadge size="md" />
-<StudioBadge size="lg" />`}
+          code={`<StudioBadge studioId="example" studioName="스튜디오 A" size="sm" />
+<StudioBadge studioId="example" studioName="스튜디오 B" size="md" />
+<StudioBadge studioId="example" studioName="스튜디오 C" size="lg" />`}
         />
       </div>
 

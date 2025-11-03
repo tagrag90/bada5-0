@@ -7,6 +7,7 @@ import LeftSidebar from "@/components/LeftSidebar";
 import TrendsSidebar from "@/components/TrendsSidebar";
 import FeedRightSidebar from "@/components/FeedRightSidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
+import WhoToFollowSlot from "@/components/WhoToFollowSlot";
 
 // import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
@@ -25,7 +26,7 @@ export default async function Layout({
         <div className="flex min-h-screen flex-col md:h-auto">
           {/* 좌측 사이드바 - 스튜디오/Docs에서만 표시 (Context로 제어) */}
           {isLoggedIn && (
-            <LeftSidebar>
+            <LeftSidebar whoToFollowSlot={<WhoToFollowSlot />}>
               <TrendsSidebar className="!static !w-full" />
             </LeftSidebar>
           )}

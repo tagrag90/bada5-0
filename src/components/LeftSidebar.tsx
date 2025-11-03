@@ -8,13 +8,14 @@ import { usePathname } from "next/navigation";
 
 interface LeftSidebarProps {
   children?: React.ReactNode;
+  whoToFollowSlot?: React.ReactNode; // 서버 컴포넌트를 props로 받음
 }
 
-export default function LeftSidebar({ children }: LeftSidebarProps) {
+export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarProps) {
   // 고정 폭 설정 (우측 칼럼을 1.5배 키우기 위해 전체 사이드바 폭 증가)
   // 좌측 칼럼 80px + 우측 칼럼 기본 약 176px -> 우측 칼럼을 1.5배하면 약 264px
   // 전체 사이드바: 80px + 264px = 344px
-  const width = 400; // 최대 폭으로 고정 (우측 칼럼이 넓게 보이도록)
+  const width = 500; // 최대 폭으로 고정 (우측 칼럼이 넓게 보이도록)
   const sidebarRef = useRef<HTMLElement>(null);
   const { sidebarType, discordData } = useSidebar();
   const pathname = usePathname();
@@ -77,6 +78,11 @@ export default function LeftSidebar({ children }: LeftSidebarProps) {
             isOwner={discordData?.isOwner || false}
             studioName={discordData?.studioName || ""}
             studio={discordData?.studio}
+            whoToFollowSlot={
+              !discordData?.selectedStudioId && !isSettingsPage
+                ? whoToFollowSlot
+                : undefined
+            }
           />
         )}
 

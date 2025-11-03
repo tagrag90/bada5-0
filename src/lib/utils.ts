@@ -7,18 +7,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatRelativeDate(from: Date) {
+export function formatRelativeDate(from: Date | string) {
+  // Date 객체가 아니면 변환
+  const date = from instanceof Date ? from : new Date(from);
+  
+  // 유효한 Date인지 확인
+  if (isNaN(date.getTime())) {
+    console.warn("formatRelativeDate: Invalid date", from);
+    return "날짜 없음";
+  }
+  
   const currentDate = new Date();
-  if (currentDate.getTime() - from.getTime() < 24 * 60 * 60 * 1000) {
-    return formatDistanceToNowStrict(from, {
+  if (currentDate.getTime() - date.getTime() < 24 * 60 * 60 * 1000) {
+    return formatDistanceToNowStrict(date, {
       addSuffix: true,
       locale: ko,
     });
   } else {
-    if (currentDate.getFullYear() === from.getFullYear()) {
-      return formatDate(from, "M월 d일", { locale: ko });
+    if (currentDate.getFullYear() === date.getFullYear()) {
+      return formatDate(date, "M월 d일", { locale: ko });
     } else {
-      return formatDate(from, "yyyy년 M월 d일", { locale: ko });
+      return formatDate(date, "yyyy년 M월 d일", { locale: ko });
     }
   }
 }

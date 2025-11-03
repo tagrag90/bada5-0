@@ -13,7 +13,7 @@ import UserPosts from "./UserPosts";
 import UserProfileMenu from "./UserProfileMenu";
 import { Instagram, Link2, Users, Settings } from "lucide-react";
 import Link from "next/link";
-import { SkillList } from "@/components/SkillBadge";
+import UserStudioBadges from "@/components/UserStudioBadges";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -107,8 +107,8 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
     following: user._count.following || 0,
   };
 
-  // 실제 사용자 스킬 데이터 사용
-  const userSkills = user.skills || [];
+  // 스튜디오 ID 배열 (skills 필드 재활용)
+  const displayStudioIds = user.skills || [];
 
   return (
     <div
@@ -140,13 +140,6 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           />
         </div>
 
-        {/* {user.bio && (
-          <Linkify>
-            <div className="overflow-hidden whitespace-pre-line break-words">
-              {user.bio}
-            </div>
-          </Linkify>
-        )} */}
         <div className="flex items-center gap-8 text-sm">
           <div className="flex flex-col items-center">
             <span className="text-xl font-bold">
@@ -169,12 +162,8 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
         </div>
 
-        {/* 스킬 배지 - 팔로잉/팔로워 바로 아래 */}
-        {userSkills.length > 0 && (
-          <div className="mt-4">
-            <SkillList skills={userSkills} />
-          </div>
-        )}
+        {/* 스튜디오 뱃지 - 팔로잉/팔로워 바로 아래 */}
+        <UserStudioBadges studioIds={displayStudioIds} />
         <div className="flex items-center gap-4">
           <div className="flex gap-2">
             <TooltipProvider>

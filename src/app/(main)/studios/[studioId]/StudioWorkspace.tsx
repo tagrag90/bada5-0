@@ -231,7 +231,35 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   // 노드 데이터가 업데이트되면 반영
   useEffect(() => {
-    if (nodesData) {
+    if (nodesData && edgesData) {
+      // 기획노드에 연결된 모든 노드 ID 집합 생성 (재귀적으로)
+      const planningNodeIds = new Set<string>(
+        nodesData.filter((n: any) => n.type === "PLANNING").map((n: any) => n.id as string)
+      );
+      
+      const connectedToPlanning = new Set<string>();
+      
+      // 각 기획노드에 대해 재귀적으로 모든 연결된 노드 찾기
+      planningNodeIds.forEach((planningId) => {
+        const visited = new Set<string>();
+        const findConnected = (nodeId: string) => {
+          if (visited.has(nodeId)) return;
+          visited.add(nodeId);
+          
+          edgesData.forEach((edge: any) => {
+            if (edge.fromId === nodeId && !visited.has(edge.toId)) {
+              connectedToPlanning.add(edge.toId);
+              findConnected(edge.toId);
+            } else if (edge.toId === nodeId && !visited.has(edge.fromId)) {
+              connectedToPlanning.add(edge.fromId);
+              findConnected(edge.fromId);
+            }
+          });
+        };
+        
+        findConnected(planningId);
+      });
+      
       const newNodes: Node[] = nodesData.map((node: any) => {
         // POST 타입일 때 content에서 postId 추출
         let postId: string | undefined;
@@ -245,6 +273,9 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           }
         }
         
+        const isPlanning = node.type === "PLANNING";
+        const isConnectedToPlanning = connectedToPlanning.has(node.id);
+        
         return {
           id: node.id,
           type: "custom",
@@ -256,11 +287,13 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
             emoji: node.emoji,
             postId,
             onEdit: handleNodeEdit,
+            isPlanning,
+            isConnectedToPlanning,
           },
           style: {
             width: node.width,
             backgroundColor: "#fff",
-            border: "2px solid #000",
+            border: isPlanning ? "2px solid #9333ea" : "2px solid #000",
             borderRadius: "8px",
             padding: "12px",
           },
@@ -268,7 +301,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       });
       setNodes(newNodes);
     }
-  }, [nodesData, setNodes, handleNodeEdit]);
+  }, [nodesData, edgesData, setNodes, handleNodeEdit]);
 
   useEffect(() => {
     if (edgesData) {
@@ -401,37 +434,164 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   // 노드 위치 업데이트 디바운스 타이머 (useRef 사용)
   const positionUpdateTimers = useRef<Record<string, NodeJS.Timeout>>({});
+  
+  // 드래그 시작 시 모든 노드의 초기 위치 저장 (그룹 이동용)
+  const dragStartPositions = useRef<Record<string, { x: number; y: number }>>({});
+  const connectedNodesGroup = useRef<string[]>([]);
+
+  // 기획노드와 연결된 모든 노드 찾기 (DFS) - 재귀적으로 모든 연결 찾기
+  const getConnectedNodes = useCallback((nodeId: string, visited: Set<string> = new Set()): string[] => {
+    if (visited.has(nodeId)) return [];
+    visited.add(nodeId);
+    
+    const connected: string[] = [nodeId];
+    
+    // 이 노드와 연결된 모든 노드 찾기
+    edges.forEach((edge) => {
+      if (edge.source === nodeId && !visited.has(edge.target)) {
+        connected.push(...getConnectedNodes(edge.target, visited));
+      } else if (edge.target === nodeId && !visited.has(edge.source)) {
+        connected.push(...getConnectedNodes(edge.source, visited));
+      }
+    });
+    
+    return connected;
+  }, [edges]);
+
+  // 기획노드 드래그 핸들러 (연결된 노드들도 함께 이동)
+  const onNodeDragStart = useCallback(
+    (_: any, node: Node) => {
+      // 기획노드가 아니면 기본 동작
+      if (node.data.type !== "PLANNING") return;
+
+      // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
+      const connectedNodeIds = getConnectedNodes(node.id);
+      connectedNodesGroup.current = connectedNodeIds;
+      
+      connectedNodeIds.forEach((connectedId) => {
+        const connectedNode = nodes.find((n) => n.id === connectedId);
+        if (connectedNode && !dragStartPositions.current[connectedId]) {
+          dragStartPositions.current[connectedId] = {
+            x: connectedNode.position.x,
+            y: connectedNode.position.y,
+          };
+        }
+      });
+    },
+    [nodes, edges, getConnectedNodes]
+  );
+
+  const onNodeDrag = useCallback(
+    (_: any, node: Node) => {
+      // 기획노드가 아니면 기본 동작
+      if (node.data.type !== "PLANNING") return;
+
+      // 기획노드의 초기 위치
+      const planningStartPos = dragStartPositions.current[node.id];
+      if (!planningStartPos) {
+        // 아직 저장되지 않았다면 저장
+        dragStartPositions.current[node.id] = {
+          x: node.position.x,
+          y: node.position.y,
+        };
+        return;
+      }
+
+      // 기획노드의 이동 거리 계산
+      const deltaX = node.position.x - planningStartPos.x;
+      const deltaY = node.position.y - planningStartPos.y;
+
+      // 연결된 모든 노드들을 초기 위치 기준으로 이동
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (connectedNodesGroup.current.includes(n.id) && n.id !== node.id) {
+            const startPos = dragStartPositions.current[n.id];
+            if (startPos) {
+              return {
+                ...n,
+                position: {
+                  x: startPos.x + deltaX,
+                  y: startPos.y + deltaY,
+                },
+              };
+            }
+          }
+          return n;
+        })
+      );
+    },
+    [setNodes]
+  );
 
   // 노드 위치 업데이트 (디바운싱)
   const onNodeDragStop = useCallback(
     (_: any, node: Node) => {
-      // 기존 타이머가 있으면 취소
-      if (positionUpdateTimers.current[node.id]) {
-        clearTimeout(positionUpdateTimers.current[node.id]);
+      // 기획노드인 경우 연결된 노드들도 함께 업데이트
+      const nodeIdsToUpdate: string[] = [];
+      
+      if (node.data.type === "PLANNING") {
+        // 연결된 모든 노드 ID 수집
+        const connectedNodeIds = connectedNodesGroup.current.length > 0 
+          ? connectedNodesGroup.current 
+          : getConnectedNodes(node.id);
+        nodeIdsToUpdate.push(...connectedNodeIds);
+        
+        // 초기 위치 초기화
+        connectedNodeIds.forEach((nId) => {
+          delete dragStartPositions.current[nId];
+        });
+        connectedNodesGroup.current = [];
+      } else {
+        nodeIdsToUpdate.push(node.id);
+        delete dragStartPositions.current[node.id];
       }
+
+      // 기존 타이머가 있으면 취소
+      nodeIdsToUpdate.forEach((nId) => {
+        if (positionUpdateTimers.current[nId]) {
+          clearTimeout(positionUpdateTimers.current[nId]);
+        }
+      });
 
       // 새로운 타이머 설정 (300ms 디바운스)
       const timer = setTimeout(async () => {
         try {
-          await fetch(`/api/studios/${studioId}/nodes/${node.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              x: node.position.x,
-              y: node.position.y,
-            }),
-          });
-          
+          // 배치 업데이트
+          const updates = nodeIdsToUpdate.map((nId) => {
+            const updatedNode = nodes.find((n) => n.id === nId);
+            if (updatedNode) {
+              return {
+                id: nId,
+                x: updatedNode.position.x,
+                y: updatedNode.position.y,
+              };
+            }
+            return null;
+          }).filter(Boolean);
+
+          if (updates.length > 0) {
+            await fetch(`/api/studios/${studioId}/nodes/batch`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nodes: updates }),
+            });
+          }
+
           // 성공 후 타이머 제거
-          delete positionUpdateTimers.current[node.id];
+          nodeIdsToUpdate.forEach((nId) => {
+            delete positionUpdateTimers.current[nId];
+          });
         } catch (error: any) {
-          console.error("Failed to update node position:", error);
+          console.error("Failed to update node positions:", error);
         }
       }, 300);
 
-      positionUpdateTimers.current[node.id] = timer;
+      // 각 노드에 타이머 할당
+      nodeIdsToUpdate.forEach((nId) => {
+        positionUpdateTimers.current[nId] = timer;
+      });
     },
-    [studioId]
+    [studioId, nodes, getConnectedNodes]
   );
 
   if (isLoadingNodes || isLoadingEdges) {
@@ -447,8 +607,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       className="h-screen fixed top-0 right-0 bottom-0" 
       style={{ 
         zIndex: 1, 
-        left: "400px",
-        width: "calc(100% - 400px)", // 사이드바와 무관하게 고정 크기 유지
+        left: "var(--has-sidebar, 0px)",
+        width: "calc(100% - var(--has-sidebar, 0px))", // 사이드바 크기에 맞춰 동적 조절
         backgroundColor: "#E5E5E5"
       }}
     >
@@ -469,6 +629,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           onEdgesChange(changes);
         }}
         onConnect={onConnect}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onInit={setReactFlowInstance}
         onNodeContextMenu={(event, node) => {

@@ -11,13 +11,9 @@ import StarterKit from "@tiptap/starter-kit";
 import HardBreak from "@tiptap/extension-hard-break";
 import {
   Bold,
-  CodeIcon,
   HighlighterIcon,
   ImagesIcon,
-  ItalicIcon,
   Loader2,
-  StrikethroughIcon,
-  UnderlineIcon,
   X,
   YoutubeIcon as _YoutubeIcon,
 } from "lucide-react";
@@ -29,16 +25,14 @@ import "./DragHandle.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
 import MediaReorderableGrid from "./MediaReorderableGrid";
 // import { YouTube } from "./extensions/YouTube"; // YouTube 별도 임베드 기능 제거
-import { PostData } from "@/lib/types";
-import Italic from "@tiptap/extension-italic";
-import Underline from "@tiptap/extension-underline";
-import Strike from "@tiptap/extension-strike";
-import Code from "@tiptap/extension-code";
+import { PostData, StudioData } from "@/lib/types";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import TiptapImage from "@tiptap/extension-image";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import LinkPreview from "./extensions/LinkPreview";
+import { useQuery } from "@tanstack/react-query";
+import StudioBadge from "@/components/StudioBadge";
 // import LinkPreviewComponent from "./LinkPreviewComponent"; // 링크 미리보기 기능 제거
 
 // 디바운스 함수 추가
@@ -63,8 +57,20 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
   const [title, setTitle] = useState(post?.title || "");
+  const [selectedStudioId, setSelectedStudioId] = useState<string | null>(post?.studioId || null);
   const isEditMode = !!post;
   const placeholderText = studio ? "이야기를 시작하세요..." : "무슨 일이 일어나고 있나요?";
+  
+  // 멤버 이상 권한이 있는 스튜디오 목록 조회 (일반 유저 글쓰기일 때만)
+  const { data: availableStudios } = useQuery<StudioData[]>({
+    queryKey: ["studios"],
+    queryFn: async () => {
+      const res = await fetch("/api/studios");
+      if (!res.ok) throw new Error("Failed to fetch studios");
+      return res.json();
+    },
+    enabled: !studio && !isEditMode, // 스튜디오 글쓰기나 수정 모드가 아닐 때만
+  });
   
   // 드래그 앤 드롭 상태 관리
   const [isDragOver, setIsDragOver] = useState(false);
@@ -308,10 +314,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       //     class: "w-full aspect-video rounded-xl overflow-hidden",
       //   },
       // }),
-      Italic,
-      Underline,
-      Strike,
-      Code,
       Highlight.configure({ multicolor: true }),
       Link.configure({
         autolink: true,
@@ -420,7 +422,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         mediaIds: studio ? [] : attachments
           .map((a) => a.mediaId)
           .filter(Boolean) as string[],
-        studioId,
+        studioId: studio ? studio.id : selectedStudioId || undefined,
       };
 
       console.log("📦 배포 디버깅 - payload:", JSON.stringify(payload, null, 2));
@@ -527,6 +529,53 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         </div>
       )}
 
+      {/* 스튜디오 선택 (일반 유저 글쓰기만) */}
+      {!studio && !isEditMode && availableStudios && availableStudios.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-gray-700">스튜디오 추가</div>
+          <div className="flex flex-wrap gap-2">
+            {availableStudios.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSelectedStudioId(selectedStudioId === s.id ? null : s.id)}
+                className={`transition-all ${
+                  selectedStudioId === s.id 
+                    ? "ring-2 ring-primary ring-offset-2" 
+                    : ""
+                }`}
+              >
+                <StudioBadge
+                  studioId={s.id}
+                  studioName={s.name}
+                  studioAvatarUrl={s.avatarUrl}
+                  size="sm"
+                  showLink={false}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 선택된 스튜디오 표시 */}
+      {!studio && !isEditMode && selectedStudioId && availableStudios && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">선택된 스튜디오:</span>
+          {(() => {
+            const selectedStudio = availableStudios.find((s) => s.id === selectedStudioId);
+            return selectedStudio ? (
+              <StudioBadge
+                studioId={selectedStudio.id}
+                studioName={selectedStudio.name}
+                studioAvatarUrl={selectedStudio.avatarUrl}
+                size="sm"
+                showLink={false}
+              />
+            ) : null;
+          })()}
+        </div>
+      )}
+
       <div className={cn("flex flex-col", studio ? "flex-1" : "")}>
         <div 
           className={cn(
@@ -611,32 +660,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
                   <Bold className="h-4 w-4" />
                 </Button>
 
-                {/* 이탈릭체 버튼 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
-                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                  disabled={!editor.can().chain().focus().toggleItalic().run()}
-                  data-active={editor.isActive("italic")}
-                  title="기울임꼴"
-                >
-                  <ItalicIcon className="h-4 w-4" />
-                </Button>
-
-                {/* 취소선 버튼 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
-                  onClick={() => editor.chain().focus().toggleStrike().run()}
-                  disabled={!editor.can().chain().focus().toggleStrike().run()}
-                  data-active={editor.isActive("strike")}
-                  title="취소선"
-                >
-                  <StrikethroughIcon className="h-4 w-4" />
-                </Button>
-
                 {/* 하이라이트 버튼 */}
                 <Button
                   variant="ghost"
@@ -648,19 +671,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
                   title="하이라이트"
                 >
                   <HighlighterIcon className="h-4 w-4" />
-                </Button>
-
-                {/* 코드 버튼 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn("rounded-full h-9 w-9", editorActiveStyle)}
-                  onClick={() => editor.chain().focus().toggleCode().run()}
-                  disabled={!editor.can().chain().focus().toggleCode().run()}
-                  data-active={editor.isActive("code")}
-                  title="코드"
-                >
-                  <CodeIcon className="h-4 w-4" />
                 </Button>
 
                 {/* 구분선 */}
@@ -721,32 +731,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
               <ImagesIcon className="h-5 w-5" />
             </Button>
 
-            {/* 이탈릭체 버튼 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("rounded-full", editorActiveStyle)}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              disabled={!editor.can().chain().focus().toggleItalic().run()}
-              data-active={editor.isActive("italic")}
-              title="기울임꼴"
-            >
-              <ItalicIcon className="h-5 w-5" />
-            </Button>
-
-            {/* 취소선 버튼 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("rounded-full", editorActiveStyle)}
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              disabled={!editor.can().chain().focus().toggleStrike().run()}
-              data-active={editor.isActive("strike")}
-              title="취소선"
-            >
-              <StrikethroughIcon className="h-5 w-5" />
-            </Button>
-
             {/* 하이라이트 버튼 */}
             <Button
               variant="ghost"
@@ -758,19 +742,6 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
               title="하이라이트"
             >
               <HighlighterIcon className="h-5 w-5" />
-            </Button>
-
-            {/* 코드 버튼 */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("rounded-full", editorActiveStyle)}
-              onClick={() => editor.chain().focus().toggleCode().run()}
-              disabled={!editor.can().chain().focus().toggleCode().run()}
-              data-active={editor.isActive("code")}
-              title="코드"
-            >
-              <CodeIcon className="h-5 w-5" />
             </Button>
           </div>
         )}

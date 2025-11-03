@@ -33,7 +33,12 @@ export default function BlogPostCard({ post }: BlogPostCardProps) {
             >
               {post.studio.name}
             </Link>
-            <StudioBadge size="sm" />
+            <StudioBadge 
+              studioId={post.studio.id} 
+              studioName={post.studio.name} 
+              studioAvatarUrl={post.studio.avatarUrl}
+              size="sm" 
+            />
           </div>
         </div>
       )}

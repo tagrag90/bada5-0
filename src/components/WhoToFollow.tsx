@@ -23,6 +23,9 @@ export default async function WhoToFollow() {
       },
     },
     select: getUserDataSelect(user.id),
+    orderBy: {
+      createdAt: "desc", // 최근 가입한 순서로 정렬
+    },
     take: 5,
   });
 

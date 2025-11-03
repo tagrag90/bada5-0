@@ -19,6 +19,8 @@ interface CustomNodeData {
   emoji?: string;
   postId?: string;
   onEdit?: (nodeId: string) => void;
+  isPlanning?: boolean;
+  isConnectedToPlanning?: boolean;
 }
 
 export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
@@ -48,6 +50,10 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
     retry: 1,
   });
 
+  const isPlanning = data.isPlanning || data.type === "PLANNING";
+  const isConnectedToPlanning = data.isConnectedToPlanning || false;
+  const handleColor = isPlanning || isConnectedToPlanning ? '#9333ea' : '#000';
+
   return (
     <div className="custom-node relative group">
       {/* 입력 연결점 - 좌측 (보더 위에 위치) */}
@@ -60,7 +66,7 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
           transform: 'translateY(-50%)',
           width: '12px',
           height: '12px',
-          border: '2px solid #000',
+          border: `2px solid ${handleColor}`,
           backgroundColor: '#fff',
           zIndex: 10,
         }}
@@ -244,7 +250,7 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
           transform: 'translateY(-50%)',
           width: '12px',
           height: '12px',
-          border: '2px solid #000',
+          border: `2px solid ${handleColor}`,
           backgroundColor: '#fff',
           zIndex: 10,
         }}

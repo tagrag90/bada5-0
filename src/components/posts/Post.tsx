@@ -76,27 +76,40 @@ export default function Post({ post }: PostProps) {
         <article className="w-full bg-white">
           {/* 미니멀 메타 정보 */}
           <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-6 leading-tight">{post.title}</h1>
+            <h1 className="text-5xl font-bold mb-6 leading-tight">{post.title || "제목 없음"}</h1>
             <div className="flex items-center justify-center gap-3 text-muted-foreground">
               {post.studio ? (
                 <>
-                  <Link
-                    href={`/studios/${post.studio.id}`}
-                    className="hover:underline font-medium"
-                  >
-                    {post.studio.name}
-                  </Link>
-                  <span>·</span>
+                  {post.studio.id && post.studio.name && (
+                    <>
+                      <Link
+                        href={`/studios/${post.studio.id}`}
+                        className="hover:underline font-medium"
+                      >
+                        {post.studio.name}
+                      </Link>
+                      <span>·</span>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
-                  <Link
-                    href={`/users/${post.user.username}`}
-                    className="hover:underline font-medium"
-                  >
-                    {post.user.displayName}
-                  </Link>
-                  <span>·</span>
+                  {post.user ? (
+                    <>
+                      <Link
+                        href={`/users/${post.user.username}`}
+                        className="hover:underline font-medium"
+                      >
+                        {post.user.displayName}
+                      </Link>
+                      <span>·</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium">삭제된 사용자</span>
+                      <span>·</span>
+                    </>
+                  )}
                 </>
               )}
               <time suppressHydrationWarning>
@@ -150,22 +163,8 @@ export default function Post({ post }: PostProps) {
       )}
     >
       <div className="flex items-start">
-        {/* 스튜디오 포스트면 스튜디오 아바타, 아니면 유저 아바타 */}
-        {post.studio ? (
-          <Link
-            href={`/studios/${post.studio.id}`}
-            className="mr-3 flex-shrink-0"
-          >
-            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden relative">
-              <Image
-                src={post.studio.avatarUrl || "/logo-bada.png"}
-                alt={post.studio.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-          </Link>
-        ) : (
+        {/* 항상 유저 아바타 표시 */}
+        {post.user ? (
           <>
             {isLoggedIn ? (
               <UserTooltip user={post.user}>
@@ -185,22 +184,16 @@ export default function Post({ post }: PostProps) {
               </div>
             )}
           </>
+        ) : (
+          <div className="mr-3 flex-shrink-0">
+            <UserAvatar avatarUrl={null} userId={""} size={40} />
+          </div>
         )}
         <div className="min-w-0 flex-grow">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center space-x-2">
-              {/* 스튜디오 포스트면 스튜디오 이름, 아니면 유저 이름 */}
-              {post.studio ? (
-                <>
-                  <Link
-                    href={`/studios/${post.studio.id}`}
-                    className="truncate font-semibold hover:underline"
-                  >
-                    {post.studio.name}
-                  </Link>
-                  <StudioBadge size="sm" />
-                </>
-              ) : (
+              {/* 항상 유저 이름 표시 */}
+              {post.user ? (
                 <>
                   {isLoggedIn ? (
                     <UserTooltip user={post.user}>
@@ -220,12 +213,16 @@ export default function Post({ post }: PostProps) {
                     </span>
                   )}
                 </>
+              ) : (
+                <span className="truncate font-semibold text-gray-500">
+                  삭제된 사용자
+                </span>
               )}
               <span className="text-sm text-gray-500" suppressHydrationWarning>
                 · {formatRelativeDate(post.createdAt)}
               </span>
             </div>
-            {isLoggedIn && post.user.id === user?.id && (
+            {isLoggedIn && post.user && post.user.id === user?.id && (
               <PostMoreButton
                 post={post}
                 onEditClick={() => {
@@ -234,6 +231,18 @@ export default function Post({ post }: PostProps) {
               />
             )}
           </div>
+
+          {/* 스튜디오 뱃지 (일반 게시물에서 스튜디오가 선택된 경우) */}
+          {post.studio && !isBlogPost && post.studio.id && post.studio.name && (
+            <div className="mt-2 mb-2">
+              <StudioBadge
+                studioId={post.studio.id}
+                studioName={post.studio.name}
+                studioAvatarUrl={post.studio.avatarUrl}
+                size="sm"
+              />
+            </div>
+          )}
 
           {/* 포스트 내용 */}
           <div className="post-content break-words text-base">

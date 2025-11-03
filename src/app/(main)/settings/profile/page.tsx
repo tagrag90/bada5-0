@@ -23,10 +23,10 @@ import {
   UpdateUserProfileValues,
 } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, Plus, X, Search } from "lucide-react";
+import { Camera, Plus, X } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
-import { allSkills } from "@/components/SkillBadge";
-import SkillBadge from "@/components/SkillBadge";
+import StudioBadge from "@/components/StudioBadge";
+import { StudioData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import Resizer from "react-image-file-resizer";
@@ -41,7 +41,7 @@ interface FullUserData {
   email: string | null;
   avatarUrl: string | null;
   bio: string | null;
-  skills: string[];
+  skills: string[]; // 기존 필드, displayStudios로 재활용 예정
 }
 
 export default function ProfileSettingsPage() {
@@ -74,8 +74,18 @@ export default function ProfileSettingsPage() {
   const mutation = useUpdateProfileMutation();
 
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
-  const [userSkills, setUserSkills] = useState<string[]>([]);
-  const [skillSearchTerm, setSkillSearchTerm] = useState("");
+  const [selectedStudioIds, setSelectedStudioIds] = useState<string[]>([]);
+  
+  // 멤버 이상 권한이 있는 스튜디오 목록 조회
+  const { data: availableStudios } = useQuery<StudioData[]>({
+    queryKey: ["studios"],
+    queryFn: async () => {
+      const res = await fetch("/api/studios");
+      if (!res.ok) throw new Error("Failed to fetch studios");
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
   // 설정 페이지 사이드바 활성화
   useEffect(() => {
@@ -98,24 +108,18 @@ export default function ProfileSettingsPage() {
         bio: fullUser.bio || "",
         skills: fullUser.skills || [],
       });
-      setUserSkills(fullUser.skills || []);
+      // skills 필드를 displayStudios로 재활용 (스튜디오 ID 배열)
+      setSelectedStudioIds(fullUser.skills || []);
     }
   }, [fullUser, form]);
 
-  const handleAddSkill = (skillName: string) => {
-    if (!userSkills.includes(skillName)) {
-      setUserSkills([...userSkills, skillName]);
+  const handleToggleStudio = (studioId: string) => {
+    if (selectedStudioIds.includes(studioId)) {
+      setSelectedStudioIds(selectedStudioIds.filter(id => id !== studioId));
+    } else {
+      setSelectedStudioIds([...selectedStudioIds, studioId]);
     }
   };
-
-  const handleRemoveSkill = (skillName: string) => {
-    setUserSkills(userSkills.filter(skill => skill !== skillName));
-  };
-
-  const filteredAvailableSkills = allSkills.filter(skill => 
-    skill.toLowerCase().includes(skillSearchTerm.toLowerCase()) &&
-    !userSkills.includes(skill)
-  );
 
   async function onSubmitProfile(values: UpdateUserProfileValues) {
     if (!fullUser) return;
@@ -130,7 +134,8 @@ export default function ProfileSettingsPage() {
       delete mutationValues.username;
     }
 
-    mutationValues.skills = userSkills;
+    // displayStudios를 skills 필드에 저장 (임시)
+    mutationValues.skills = selectedStudioIds;
 
     mutation.mutate(
       {
@@ -212,68 +217,71 @@ export default function ProfileSettingsPage() {
               )}
             />
             
-            {/* 스킬 관리 섹션 */}
+            {/* 스튜디오 뱃지 관리 섹션 */}
             <div className="space-y-4 pt-4 border-t">
-              <Label>스킬 & 툴</Label>
+              <Label>표시할 스튜디오</Label>
               
               <div>
-                <p className="text-sm text-muted-foreground mb-2">내 스킬 ({userSkills.length})</p>
-                {userSkills.length > 0 ? (
+                <p className="text-sm text-muted-foreground mb-2">선택된 스튜디오 ({selectedStudioIds.length})</p>
+                {selectedStudioIds.length > 0 && availableStudios ? (
                   <div className="flex flex-wrap gap-2">
-                    {userSkills.map((skill) => (
-                      <div key={skill} className="flex items-center gap-1">
-                        <SkillBadge skillName={skill} size="sm" />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0 hover:bg-red-100"
-                          onClick={() => handleRemoveSkill(skill)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
+                    {selectedStudioIds.map((studioId) => {
+                      const studio = availableStudios.find(s => s.id === studioId);
+                      return studio ? (
+                        <div key={studioId} className="flex items-center gap-1">
+                          <StudioBadge
+                            studioId={studio.id}
+                            studioName={studio.name}
+                            studioAvatarUrl={studio.avatarUrl}
+                            size="sm"
+                            showLink={false}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 hover:bg-red-100"
+                            onClick={() => handleToggleStudio(studioId)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : null;
+                    })}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">아직 추가된 스킬이 없습니다</p>
+                  <p className="text-sm text-muted-foreground">선택된 스튜디오가 없습니다</p>
                 )}
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-2">스킬 추가</p>
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="스킬 검색..."
-                    value={skillSearchTerm}
-                    onChange={(e) => setSkillSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                <div className="max-h-32 overflow-y-auto border rounded-lg p-2">
-                  <div className="grid grid-cols-2 gap-1">
-                    {filteredAvailableSkills.slice(0, 20).map((skill) => (
-                      <Button
-                        key={skill}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start text-xs h-8 px-2"
-                        onClick={() => handleAddSkill(skill)}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        {skill}
-                      </Button>
-                    ))}
+                <p className="text-sm text-muted-foreground mb-2">스튜디오 추가</p>
+                {availableStudios && availableStudios.length > 0 ? (
+                  <div className="max-h-48 overflow-y-auto border rounded-lg p-2">
+                    <div className="flex flex-wrap gap-2">
+                      {availableStudios
+                        .filter(s => !selectedStudioIds.includes(s.id))
+                        .map((studio) => (
+                          <button
+                            key={studio.id}
+                            type="button"
+                            onClick={() => handleToggleStudio(studio.id)}
+                            className="transition-all"
+                          >
+                            <StudioBadge
+                              studioId={studio.id}
+                              studioName={studio.name}
+                              studioAvatarUrl={studio.avatarUrl}
+                              size="sm"
+                              showLink={false}
+                            />
+                          </button>
+                        ))}
+                    </div>
                   </div>
-                  {filteredAvailableSkills.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      {skillSearchTerm ? "검색 결과가 없습니다" : "추가할 수 있는 스킬이 없습니다"}
-                    </p>
-                  )}
-                </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">멤버 이상 권한을 가진 스튜디오가 없습니다</p>
+                )}
               </div>
             </div>
 

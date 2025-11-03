@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { PostData } from "@/lib/types";
+import Post from "@/components/posts/Post";
 import BlogPostCard from "@/components/posts/BlogPostCard";
+import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
 
 export default function StudioPosts({
   studioId,
@@ -26,22 +26,15 @@ export default function StudioPosts({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
+        <PostsLoadingSkeleton />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* 포스트 목록 */}
-      {posts && posts.length > 0 ? (
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <BlogPostCard key={post.id} post={post} />
-          ))}
-        </div>
-      ) : (
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
         <Card className="p-12 text-center">
           <div className="space-y-4">
             <div className="text-6xl">📝</div>
@@ -51,15 +44,33 @@ export default function StudioPosts({
                 첫 번째 포스트를 작성해보세요
               </p>
             </div>
-            {/* 스튜디오 글쓰기 기능 제거됨 */}
-            {/* {isOwner && (
-              <Link href={`/studios/${studioId}/write`}>
-                <Button size="lg">포스트 작성하기</Button>
-              </Link>
-            )} */}
           </div>
         </Card>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
+      {posts
+        .filter((post) => post && post.id) // 유효한 post만 필터링
+        .map((post) => {
+          // post.user가 없으면 렌더링 스킵
+          if (!post.user) {
+            console.warn(`StudioPosts: Post ${post.id} has no user data`);
+            return null;
+          }
+
+          const isBlogPost = !!post.title && !!post.studioId;
+          
+          if (isBlogPost) {
+            return <BlogPostCard key={post.id} post={post} />;
+          }
+          
+          return <Post key={post.id} post={post} />;
+        })
+        .filter(Boolean) // null 제거
+      }
     </div>
   );
 }
