@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "../../SessionProvider";
-import { Loader2 } from "lucide-react";
+import LoadingAnimation from "@/components/ui/loading-animation";
 
 /**
  * 외부 서비스에서 Divetobada로 SSO 로그인 요청 처리
@@ -72,20 +72,18 @@ export default function SSOAuthPage() {
   }, [user, service, redirectUrl, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center space-y-4">
-        <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-        <div>
-          <h2 className="text-xl font-semibold">
-            {user ? '연결 중...' : '로그인이 필요합니다'}
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            {user 
-              ? `${service}로 안전하게 이동하고 있습니다`
-              : '잠시 후 로그인 페이지로 이동합니다'
-            }
-          </p>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen gap-6">
+      <LoadingAnimation />
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-semibold">
+          {user ? '연결 중...' : '로그인이 필요합니다'}
+        </h2>
+        <p className="text-muted-foreground">
+          {user 
+            ? `${service}로 안전하게 이동하고 있습니다`
+            : '잠시 후 로그인 페이지로 이동합니다'
+          }
+        </p>
       </div>
     </div>
   );

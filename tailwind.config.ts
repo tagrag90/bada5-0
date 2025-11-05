@@ -77,11 +77,26 @@ const config = {
             transform: "rotate(-1deg)",
           },
         },
+        "progress-indeterminate": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(300%)" },
+        },
+        "progress-indeterminate-center": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(250%)" },
+        },
+        "skeleton-wave": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(200%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "tilt": "tilt 10s infinite ease-in-out",
+        "progress-indeterminate": "progress-indeterminate 2s ease-in-out infinite",
+        "progress-indeterminate-center": "progress-indeterminate-center 1.8s ease-in-out infinite",
+        "skeleton-wave": "skeleton-wave 1.5s ease-in-out infinite",
       },
     },
   },

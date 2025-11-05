@@ -30,7 +30,7 @@ alwaysApply: false
 | **Editor** | Tiptap |
 | **Icons** | lucide-icon *(use only when absolutely necessary)* |
 | **Auth** | Lucia |
-| **File Storage** | Uploadthing |
+| **File Storage** | Vercel Blob |
 | **Validation** | Zod |
 
 > These technologies define the official structure of Studio_bada projects.
@@ -66,7 +66,25 @@ alwaysApply: false
 
 ---
 
-## 6. Enforcement and Compliance
+## 6. Deployment & Domain Management
+
+### Vercel 배포 도메인 연결 문제
+- **문제**: GitHub 푸시 후 자동 배포가 성공해도 `www.divetobada.com`에 변경사항이 자동 반영되지 않을 수 있음
+- **해결 방법**: 최신 Production 배포를 찾아 도메인에 수동으로 연결해야 함
+  ```bash
+  # 1. 최신 Production 배포 확인
+  npx vercel ls bada5-0 | grep "Production" | head -1
+  
+  # 2. 최신 배포를 도메인에 연결
+  LATEST_DEPLOY=$(npx vercel ls bada5-0 | grep "Production" | head -1 | awk '{print $2}')
+  npx vercel alias set $LATEST_DEPLOY www.divetobada.com
+  npx vercel alias set $LATEST_DEPLOY divetobada.com
+  ```
+- **참고**: `bada5-0` 프로젝트에 도메인이 연결되어 있음
+
+---
+
+## 7. Enforcement and Compliance
 - This rule set is **mandatory**, not advisory.
 - Violations may result in loss of trust or project damage and are treated as critical incidents.
 - Every task must end with:

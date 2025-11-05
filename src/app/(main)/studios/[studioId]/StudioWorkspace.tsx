@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
+import { FigmaProgressBar } from "@/components/ui/figma-progress-bar";
 import ReactFlow, {
   Background,
   Controls,
@@ -29,6 +30,7 @@ import CustomNode from "@/components/workspace/CustomNode";
 import { nodeTypeLabels, nodeTypeIcons } from "@/components/workspace/nodeConfig";
 import NodeSidebar from "@/components/workspace/NodeSidebar";
 import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
+import NodeCreationToast from "@/components/workspace/NodeCreationToast";
 
 interface StudioWorkspaceProps {
   studioId: string;
@@ -80,6 +82,11 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
     custom: CustomNode,
   }), []);
 
+  // 가짜 진행률 상태
+  const [fakeProgress, setFakeProgress] = useState(0);
+  // 노드 생성 진행률 상태
+  const [nodeCreationProgress, setNodeCreationProgress] = useState(0);
+
   // 노드 및 연결선 조회
   const { data: nodesData, isLoading: isLoadingNodes } = useQuery({
     queryKey: ["studio-nodes", studioId],
@@ -98,6 +105,70 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       return res.json();
     },
   });
+
+  // 가짜 진행률 시뮬레이션
+  useEffect(() => {
+    if (isLoadingNodes || isLoadingEdges) {
+      setFakeProgress(0);
+      
+      // 불규칙한 진행률 시뮬레이션 (80%까지)
+      const intervals: NodeJS.Timeout[] = [];
+      let currentProgress = 0;
+      
+      // 초기 빠른 진행 (0-30%)
+      const interval1 = setInterval(() => {
+        const increment = Math.random() * 8 + 2; // 2-10%씩 증가
+        currentProgress = Math.min(currentProgress + increment, 30);
+        setFakeProgress(currentProgress);
+        if (currentProgress >= 30) {
+          clearInterval(interval1);
+        }
+      }, 100);
+      intervals.push(interval1);
+      
+      // 중간 느린 진행 (30-60%)
+      setTimeout(() => {
+        const interval2 = setInterval(() => {
+          const increment = Math.random() * 4 + 1; // 1-5%씩 증가
+          currentProgress = Math.min(currentProgress + increment, 60);
+          setFakeProgress(currentProgress);
+          if (currentProgress >= 60) {
+            clearInterval(interval2);
+          }
+        }, 150);
+        intervals.push(interval2);
+      }, 300);
+      
+      // 느린 진행 (60-80%)
+      setTimeout(() => {
+        const interval3 = setInterval(() => {
+          const increment = Math.random() * 2 + 0.5; // 0.5-2.5%씩 증가
+          currentProgress = Math.min(currentProgress + increment, 80);
+          setFakeProgress(currentProgress);
+          if (currentProgress >= 80) {
+            clearInterval(interval3);
+            setFakeProgress(80);
+          }
+        }, 200);
+        intervals.push(interval3);
+      }, 800);
+      
+      return () => {
+        intervals.forEach(interval => clearInterval(interval));
+      };
+    } else {
+      // 로딩 완료 시 부드럽게 100%로 이동 후 숨김
+      // CSS transition으로 부드럽게 처리하기 위해 즉시 100%로 설정
+      if (fakeProgress < 100) {
+        setFakeProgress(100);
+        // 100% 도달 후 300ms 뒤 숨김 (transition이 완료된 후)
+        const timer = setTimeout(() => {
+          setFakeProgress(0);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isLoadingNodes, isLoadingEdges]);
 
   // 노드 편집 핸들러
   const handleNodeEdit = useCallback((nodeId: string) => {
@@ -228,7 +299,10 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
     target: edge.toId,
     type: edge.type === "DASHED" ? "step" : "default",
     label: edge.label || undefined,
-    style: edge.color ? { stroke: edge.color } : undefined,
+    style: {
+      strokeWidth: 3,
+      ...(edge.color ? { stroke: edge.color } : {}),
+    },
   })) || [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -343,7 +417,10 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         target: edge.toId,
         type: edge.type === "DASHED" ? "step" : "default",
         label: edge.label || undefined,
-        style: edge.color ? { stroke: edge.color } : undefined,
+        style: {
+          strokeWidth: 3,
+          ...(edge.color ? { stroke: edge.color } : {}),
+        },
       }));
       setEdges(newEdges);
     }
@@ -372,6 +449,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         description: "새로운 노드가 추가되었습니다.",
         variant: "success",
       });
+      setNodeCreationProgress(0);
     },
     onError: (error: any) => {
       console.error("Node creation error:", error);
@@ -380,8 +458,71 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         description: error.message || "알 수 없는 오류가 발생했습니다.",
         variant: "destructive",
       });
+      setNodeCreationProgress(0);
     },
   });
+
+  // 노드 생성 진행률 시뮬레이션
+  useEffect(() => {
+    if (createNodeMutation.isPending) {
+      setNodeCreationProgress(0);
+      
+      // 불규칙한 진행률 시뮬레이션
+      const intervals: NodeJS.Timeout[] = [];
+      let currentProgress = 0;
+      
+      // 초기 빠른 진행 (0-40%)
+      const interval1 = setInterval(() => {
+        const increment = Math.random() * 10 + 3; // 3-13%씩 증가
+        currentProgress = Math.min(currentProgress + increment, 40);
+        setNodeCreationProgress(currentProgress);
+        if (currentProgress >= 40) {
+          clearInterval(interval1);
+        }
+      }, 80);
+      intervals.push(interval1);
+      
+      // 중간 진행 (40-70%)
+      setTimeout(() => {
+        const interval2 = setInterval(() => {
+          const increment = Math.random() * 5 + 2; // 2-7%씩 증가
+          currentProgress = Math.min(currentProgress + increment, 70);
+          setNodeCreationProgress(currentProgress);
+          if (currentProgress >= 70) {
+            clearInterval(interval2);
+          }
+        }, 100);
+        intervals.push(interval2);
+      }, 200);
+      
+      // 느린 진행 (70-90%)
+      setTimeout(() => {
+        const interval3 = setInterval(() => {
+          const increment = Math.random() * 2 + 0.5; // 0.5-2.5%씩 증가
+          currentProgress = Math.min(currentProgress + increment, 90);
+          setNodeCreationProgress(currentProgress);
+          if (currentProgress >= 90) {
+            clearInterval(interval3);
+            setNodeCreationProgress(90);
+          }
+        }, 150);
+        intervals.push(interval3);
+      }, 400);
+      
+      return () => {
+        intervals.forEach(interval => clearInterval(interval));
+      };
+    } else {
+      // 완료 시 100%로 이동 후 숨김
+      setNodeCreationProgress((prev) => {
+        if (prev < 100 && prev > 0) {
+          setTimeout(() => setNodeCreationProgress(0), 300);
+          return 100;
+        }
+        return prev;
+      });
+    }
+  }, [createNodeMutation.isPending]);
 
   // 노드 추가 핸들러
   const handleAddNode = useCallback(
@@ -657,8 +798,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   if (isLoadingNodes || isLoadingEdges) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen w-full">
+        <FigmaProgressBar variant="center" value={fakeProgress} />
       </div>
     );
   }
@@ -668,6 +809,12 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       className="h-screen fixed top-0 right-0 bottom-0" 
       style={workspaceStyle}
     >
+      {/* 노드 생성 중 토스트 팝업 */}
+      <NodeCreationToast
+        isVisible={createNodeMutation.isPending}
+        progress={nodeCreationProgress}
+      />
+      
       <ReactFlow
         nodes={nodes}
         edges={edges}

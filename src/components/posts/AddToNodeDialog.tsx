@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Search } from "lucide-react";
+import { FigmaProgressBar } from "@/components/ui/figma-progress-bar";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -104,8 +105,12 @@ export default function AddToNodeDialog({ post, open, onClose, studioId }: AddTo
   const posts = searchResults?.posts || [];
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
+    <>
+      {/* 노드 생성 중 프로그레스 바 */}
+      {createNodeMutation.isPending && <FigmaProgressBar variant="top" />}
+      
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>게시물 노드 추가</DialogTitle>
           <DialogDescription>
@@ -223,6 +228,7 @@ export default function AddToNodeDialog({ post, open, onClose, studioId }: AddTo
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
 

@@ -51,18 +51,61 @@ export default function useMediaUpload() {
     return response.json();
   };
 
-  // 이미지 압축 함수
-  const compressImage = (file: File): Promise<File> => {
+  // 이미지 압축 함수 (파일 크기에 따라 최적화된 설정 적용)
+  const compressImage = (file: File, originalSize: number): Promise<File> => {
     return new Promise((resolve) => {
+      // GIF 파일은 압축하지 않음 (애니메이션 유지)
+      if (file.type === 'image/gif') {
+        resolve(file);
+        return;
+      }
+
+      // 파일 크기에 따른 압축 설정
+      let maxWidth = 1920;
+      let maxHeight = 1920;
+      let quality = 85;
+
+      if (originalSize > 5 * 1024 * 1024) {
+        // 5MB 이상: 강한 압축
+        maxWidth = 1600;
+        maxHeight = 1600;
+        quality = 75;
+      } else if (originalSize > 2 * 1024 * 1024) {
+        // 2MB~5MB: 중간 압축
+        maxWidth = 1920;
+        maxHeight = 1920;
+        quality = 80;
+      } else if (originalSize > 500 * 1024) {
+        // 500KB~2MB: 가벼운 압축
+        maxWidth = 1920;
+        maxHeight = 1920;
+        quality = 85;
+      } else {
+        // 500KB 이하: 최소 압축 (품질 유지)
+        maxWidth = 1920;
+        maxHeight = 1920;
+        quality = 90;
+      }
+
       Resizer.imageFileResizer(
         file,
-        1920, // 최대 너비
-        1920, // 최대 높이
+        maxWidth,
+        maxHeight,
         "WEBP", // 포맷
-        85, // 품질
+        quality,
         0, // 회전
-        (uri) => resolve(uri as File),
-        "file"
+        (uri) => {
+          const compressedFile = uri as File;
+          // 압축 후에도 원본보다 큰 경우 원본 반환
+          if (compressedFile.size > originalSize) {
+            resolve(file);
+          } else {
+            resolve(compressedFile);
+          }
+        },
+        "file",
+        maxWidth,
+        maxHeight
       );
     });
   };
@@ -122,7 +165,7 @@ export default function useMediaUpload() {
       const fileSizeMB = (oversizedFile.size / (1024 * 1024)).toFixed(2);
       toast({
         variant: "destructive",
-        description: `이미지 파일 크기가 너무 큽니다. (${fileSizeMB}MB / 최대 8MB) 자동으로 압축을 시도하지만, 더 작은 파일을 권장합니다.`,
+        description: `이미지 파일 크기가 큽니다. (${fileSizeMB}MB) 자동으로 압축 중...`,
       });
       // 경고 후 계속 진행 (압축 시도)
     }
@@ -130,20 +173,34 @@ export default function useMediaUpload() {
     setIsUploading(true);
 
     try {
-      // 이미지 파일 자동 압축 처리
+      // 모든 이미지 파일 자동 압축 처리
       const processedFiles = await Promise.all(
         files.map(async (file) => {
           if (file.type.startsWith('image/')) {
-            // 8MB 이상의 이미지는 자동 압축
-            if (file.size > 8 * 1024 * 1024) {
-              toast({
-                description: `${file.name} 파일이 큽니다. 자동으로 압축 중...`,
-              });
-              return await compressImage(file);
+            const originalSize = file.size;
+            
+            // GIF는 압축하지 않음
+            if (file.type === 'image/gif') {
+              return file;
             }
-            // 2MB 이상의 이미지도 가벼운 압축 적용
-            if (file.size > 2 * 1024 * 1024) {
-              return await compressImage(file);
+
+            // 모든 이미지에 자동 압축 적용 (500KB 이상)
+            if (originalSize > 500 * 1024) {
+              try {
+                const compressedFile = await compressImage(file, originalSize);
+                const compressedSize = compressedFile.size;
+                const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+                
+                // 압축 효과가 있는 경우 (10% 이상 감소)
+                if (compressedSize < originalSize * 0.9) {
+                  console.log(`✅ 압축 완료: ${file.name} (${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(compressedSize / 1024 / 1024).toFixed(2)}MB, ${reduction}% 감소)`);
+                }
+                
+                return compressedFile;
+              } catch (error) {
+                console.error('압축 실패, 원본 사용:', error);
+                return file;
+              }
             }
           }
           return file;

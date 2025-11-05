@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Home, ArrowLeft, Palette, Users, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 export default function NotFound() {
@@ -19,13 +20,16 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center space-y-8">
-        {/* 404 디자인 */}
-        <div className="relative">
-          <div className="text-8xl md:text-9xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-            404
-          </div>
-          <div className="absolute -top-4 -right-4 text-4xl animate-bounce">
-            🎨
+        {/* 404 디자인 - 강아지 이미지 */}
+        <div className="relative flex justify-center">
+          <div className="relative w-64 h-64 md:w-80 md:h-80">
+            <Image
+              src="/404-dog.png"
+              alt="404 Not Found"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
         </div>
 
