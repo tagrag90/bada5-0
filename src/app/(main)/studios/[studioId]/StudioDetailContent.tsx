@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import EditStudioDialog from "./EditStudioDialog";
@@ -16,12 +16,33 @@ import StudioWorkspace from "./StudioWorkspace";
 import Image from "next/image";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
+import MobileStudioBottomSheet from "@/components/layout/MobileStudioBottomSheet";
+import TabletChannelSidebar from "@/components/layout/TabletChannelSidebar";
 
 export default function StudioDetailContent({ studioId }: { studioId: string }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("workspace");
+  const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
+  const [tabletButtonLeft, setTabletButtonLeft] = useState('1rem'); // 기본값: left-4
   const { setSidebar, discordData, setDiscordSidebar } = useSidebar();
+  
+  // 테블릿 사이즈에서 서버 사이드바 너비(80px) 고려하여 버튼 위치 조정
+  useEffect(() => {
+    const updateButtonPosition = () => {
+      const isTablet = window.innerWidth >= 768 && window.innerWidth < 1280;
+      if (isTablet) {
+        // 서버 사이드바(80px) + 여유 공간(16px) = 96px
+        setTabletButtonLeft('96px');
+      } else {
+        setTabletButtonLeft('1rem'); // 기본값
+      }
+    };
+    
+    updateButtonPosition();
+    window.addEventListener('resize', updateButtonPosition);
+    return () => window.removeEventListener('resize', updateButtonPosition);
+  }, []);
 
   const { data: studio, isLoading } = useQuery({
     queryKey: ["studio", studioId],
@@ -146,6 +167,21 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   return (
     <div className="w-full min-w-0">
+      {/* 테블릿: 좌측 상단 사이드바 버튼 (768px~1279px) */}
+      <div 
+        className="fixed top-4 z-40 hidden sm:flex xl:hidden"
+        style={{ left: tabletButtonLeft }}
+      >
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsTabletSidebarOpen(true)}
+          className="h-10 w-10 rounded-full bg-white shadow-lg"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
       {/* 스튜디오 콘텐츠 - 디스코드 사이드바 우측 칼럼과 연동 */}
       <div className={currentTab === "workspace" ? "w-full h-full" : ""}>
         {currentTab === "posts" && <StudioPosts studioId={studioId} isOwner={isOwner} />}
@@ -166,6 +202,28 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
             open={showMembersDialog}
             onOpenChange={setShowMembersDialog}
             studioId={studioId}
+          />
+
+          {/* 테블릿 채널 사이드바 (좌측 슬라이드, 768px~1279px) */}
+          <TabletChannelSidebar
+            open={isTabletSidebarOpen}
+            onOpenChange={setIsTabletSidebarOpen}
+            studioId={studioId}
+            studioName={studio.name}
+            studio={studio}
+            selectedTab={currentTab}
+            onTabSelect={handleChannelSelect}
+            isOwner={isOwner}
+          />
+
+          {/* 모바일 하단 바텀시트 (모바일만, 768px 미만) - 항상 표시 */}
+          <MobileStudioBottomSheet
+            studioId={studioId}
+            studioName={studio.name}
+            studio={studio}
+            selectedTab={currentTab}
+            onTabSelect={handleChannelSelect}
+            isOwner={isOwner}
           />
         </>
       )}

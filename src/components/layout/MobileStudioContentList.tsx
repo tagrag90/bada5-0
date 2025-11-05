@@ -1,0 +1,162 @@
+"use client";
+
+import { FileText, Calendar, StickyNote, Network, Users, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import { useOptionalUser } from "@/app/(main)/SessionProvider";
+import { formatNumber } from "@/lib/utils";
+
+interface Studio {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
+  ownerId?: string;
+  _count: {
+    members: number;
+    events: number;
+  };
+  subscribersCount: number;
+}
+
+interface MobileStudioContentListProps {
+  studioId: string;
+  studioName: string;
+  studio?: Studio;
+  selectedTab: string;
+  onTabSelect: (tab: string) => void;
+  isOwner?: boolean;
+}
+
+interface NavItemProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}
+
+function NavItem({ icon: Icon, label, active, onClick }: NavItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+        active
+          ? "bg-accent text-accent-foreground"
+          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  );
+}
+
+export default function MobileStudioContentList({
+  studioId,
+  studioName,
+  studio,
+  selectedTab = "posts",
+  onTabSelect,
+  isOwner = false,
+}: MobileStudioContentListProps) {
+  const currentUser = useOptionalUser();
+
+  // 멤버십 상태 확인
+  const { data: membershipStatus } = useQuery({
+    queryKey: ["studio-membership", studioId],
+    queryFn: async () => {
+      if (!studioId || !currentUser) return null;
+      const res = await fetch(`/api/studios/${studioId}/subscription-status`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!studioId && !!currentUser,
+  });
+
+  // 소유자 확인
+  const actualIsOwner: boolean = isOwner || membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id) || false;
+  
+  // 관리자 권한 확인 (소유자이거나 ADMIN 멤버)
+  const isAdmin = actualIsOwner || membershipStatus?.memberRole === "ADMIN";
+
+  return (
+    <div className="flex h-full w-full flex-col bg-white text-black">
+      <div className="space-y-4 p-4 pb-20">
+        {/* 통계 정보 */}
+        {studio && (
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-gray-50 rounded-lg p-2">
+              <div className="font-bold text-lg text-gray-900">{formatNumber(studio._count.members)}</div>
+              <div className="text-xs text-gray-600">멤버</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <div className="font-bold text-lg text-gray-900">{formatNumber(studio.subscribersCount)}</div>
+              <div className="text-xs text-gray-600">팔로워</div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-2">
+              <div className="font-bold text-lg text-gray-900">{formatNumber(studio._count.events)}</div>
+              <div className="text-xs text-gray-600">이벤트</div>
+            </div>
+          </div>
+        )}
+
+        {/* 네비게이션 메뉴 */}
+        <nav className="space-y-1">
+          <NavItem
+            icon={Network}
+            label="워크스페이스"
+            active={selectedTab === "workspace"}
+            onClick={() => onTabSelect("workspace")}
+          />
+          <NavItem
+            icon={FileText}
+            label="포스트"
+            active={selectedTab === "posts"}
+            onClick={() => onTabSelect("posts")}
+          />
+          <NavItem
+            icon={Calendar}
+            label="캘린더"
+            active={selectedTab === "calendar"}
+            onClick={() => onTabSelect("calendar")}
+          />
+          <NavItem
+            icon={StickyNote}
+            label="메모"
+            active={selectedTab === "notes"}
+            onClick={() => onTabSelect("notes")}
+          />
+        </nav>
+
+        {/* 관리자 전용 메뉴 */}
+        {isAdmin && (
+          <>
+            <Separator />
+            <div className="space-y-1">
+              <NavItem
+                icon={Users}
+                label="멤버 관리"
+                onClick={() => {
+                  const event = new CustomEvent('openMembersDialog');
+                  window.dispatchEvent(event);
+                }}
+              />
+              <NavItem
+                icon={Settings}
+                label="설정"
+                onClick={() => {
+                  window.location.href = `/studios/${studioId}/settings`;
+                }}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+

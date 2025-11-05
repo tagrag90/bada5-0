@@ -108,9 +108,9 @@ export default function StudioInfoCard({ studio, studioName, isOwner = false, is
 
   return (
     <div className="border-b border-gray-200 bg-white">
-      {/* 배너 영역 */}
+      {/* 배너 영역 - 모바일에서 숨김 */}
       {studio?.bannerUrl && (
-        <div className="relative w-full h-32 overflow-hidden">
+        <div className="relative w-full h-32 overflow-hidden hidden md:block">
           <Image
             src={studio.bannerUrl}
             alt={`${studio.name} banner`}

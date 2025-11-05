@@ -42,6 +42,38 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [workspaceStyle, setWorkspaceStyle] = useState<React.CSSProperties>({
+    zIndex: 1,
+    width: "100%",
+    left: "0px",
+    backgroundColor: "#E5E5E5",
+  });
+  
+  const [nodeButtonBottom, setNodeButtonBottom] = useState('80px'); // 기본값: 네비바 위
+  
+  // 모바일 네비바가 화이트보드에 덮이지 않도록 확인 및 노드 버튼 위치 조정
+  useEffect(() => {
+    // 모바일에서만 확인 (스튜디오 워크스페이스 페이지)
+    const checkMobile = () => {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // 화이트보드 z-index를 네비바(z-50 정도)보다 낮게 유지
+        setWorkspaceStyle(prev => ({
+          ...prev,
+          zIndex: 1, // 네비바는 z-50 이상이므로 충돌 없음
+        }));
+        // 모바일: 네비바(64px) + 여유공간(16px) = 80px
+        setNodeButtonBottom('80px');
+      } else {
+        // 데스크톱: 네비바(64px) + 여유공간(16px) = 80px
+        setNodeButtonBottom('80px');
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 기본 노드 타입 정의 (hooks 순서 유지를 위해 상단에 위치)
   const nodeTypes: NodeTypes = React.useMemo(() => ({
@@ -432,6 +464,35 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
     [studioId, setEdges, queryClient, toast]
   );
 
+  // 화면 크기에 따른 화이트보드 크기 조정
+  useEffect(() => {
+    const updateWorkspaceSize = () => {
+      const isMobileOrTablet = window.innerWidth < 1280; // xl 브레이크포인트
+      const sidebarWidth = isMobileOrTablet ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--has-sidebar') || '0', 10);
+      
+      setWorkspaceStyle({
+        zIndex: 1,
+        width: isMobileOrTablet ? "100%" : `calc(100% - ${sidebarWidth}px)`,
+        left: isMobileOrTablet ? "0px" : `${sidebarWidth}px`,
+        backgroundColor: "#E5E5E5",
+      });
+    };
+
+    // 초기 설정
+    updateWorkspaceSize();
+
+    // 리사이즈 이벤트 리스너
+    window.addEventListener('resize', updateWorkspaceSize);
+    
+    // CSS 변수 변경 감지 (ResizeObserver는 사용하지 않고, 짧은 간격으로 체크)
+    const interval = setInterval(updateWorkspaceSize, 100);
+    
+    return () => {
+      window.removeEventListener('resize', updateWorkspaceSize);
+      clearInterval(interval);
+    };
+  }, []);
+
   // 노드 위치 업데이트 디바운스 타이머 (useRef 사용)
   const positionUpdateTimers = useRef<Record<string, NodeJS.Timeout>>({});
   
@@ -605,12 +666,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   return (
     <div 
       className="h-screen fixed top-0 right-0 bottom-0" 
-      style={{ 
-        zIndex: 1, 
-        left: "var(--has-sidebar, 0px)",
-        width: "calc(100% - var(--has-sidebar, 0px))", // 사이드바 크기에 맞춰 동적 조절
-        backgroundColor: "#E5E5E5"
-      }}
+      style={workspaceStyle}
     >
       <ReactFlow
         nodes={nodes}
@@ -655,8 +711,18 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           }}
         />
         
-        {/* 노드 추가 패널 */}
-        <Panel position="top-left" className="m-4" style={{ zIndex: 50 }}>
+        {/* 노드 추가 패널 - 화면 하단 중앙 (네비바 위) */}
+        <Panel 
+          position="bottom-center" 
+          className="flex justify-center" 
+          style={{ 
+            zIndex: 50,
+            bottom: nodeButtonBottom,
+            paddingBottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="gap-2 bg-gray-800 hover:bg-gray-700 text-white border-gray-700">

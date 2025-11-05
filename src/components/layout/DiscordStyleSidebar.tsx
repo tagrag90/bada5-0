@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import ServerList from "./ServerList";
 import StudioContentList from "./StudioContentList";
@@ -47,9 +47,21 @@ export default function DiscordStyleSidebar({
   whoToFollowSlot,
 }: DiscordStyleSidebarProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   const pathname = usePathname();
   const isSettingsPage = pathname?.startsWith('/settings');
   const isStudioSettingsPage = pathname?.includes('/studios/') && pathname?.includes('/settings');
+
+  // 테블릿 사이즈 감지 (md 이상 xl 미만)
+  useEffect(() => {
+    const checkTablet = () => {
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1280);
+    };
+    
+    checkTablet();
+    window.addEventListener('resize', checkTablet);
+    return () => window.removeEventListener('resize', checkTablet);
+  }, []);
 
   const handleCreateStudio = () => {
     setShowCreateDialog(true);
@@ -66,8 +78,8 @@ export default function DiscordStyleSidebar({
         />
       </div>
 
-      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (1.5배 확대) */}
-      <div className="flex flex-col flex-1" style={{ minWidth: 0 }}>
+      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (테블릿에서는 숨김) */}
+      <div className={isTablet ? "hidden" : "flex flex-col flex-1"} style={{ minWidth: 0 }}>
         {isSettingsPage ? (
           /* 설정 페이지일 때 설정 사이드바 표시 */
           <SettingsSidebar />

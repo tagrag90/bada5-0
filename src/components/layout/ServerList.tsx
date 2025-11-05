@@ -126,7 +126,11 @@ export default function ServerList({
   const { toast } = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px 이상 이동해야 드래그 시작
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

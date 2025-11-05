@@ -59,12 +59,12 @@ export default async function Layout({
         
         {/* 모바일 하단 네비바 */}
         {isLoggedIn && (
-          <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 mobile-navbar sm:hidden flex-shrink-0" />
+          <MenuBar className="sticky bottom-0 z-[60] flex w-full justify-center gap-5 border-t bg-card p-3 mobile-navbar md:hidden flex-shrink-0" />
         )}
         
         {/* 데스크톱 하단 중앙 Floating 네비바 */}
         {isLoggedIn && (
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <MenuBar className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 flex gap-3 bg-white rounded-full shadow-xl px-6 py-3 border border-gray-200" />
           </div>
         )}
