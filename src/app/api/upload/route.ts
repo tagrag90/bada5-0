@@ -60,7 +60,17 @@ export async function POST(request: NextRequest) {
     };
 
     if (file.size > maxSizes[uploadType]) {
-      return NextResponse.json({ error: 'File too large' }, { status: 400 });
+      const maxSizeMB = maxSizes[uploadType] / (1024 * 1024);
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      const fileTypeLabel = file.type.startsWith('video/') ? '비디오' : '이미지';
+      
+      return NextResponse.json({ 
+        error: 'File too large',
+        message: `${fileTypeLabel} 파일 크기가 너무 큽니다. (${fileSizeMB}MB / 최대 ${maxSizeMB}MB)`,
+        maxSize: maxSizes[uploadType],
+        fileSize: file.size,
+        fileType: file.type.startsWith('video/') ? 'video' : 'image'
+      }, { status: 400 });
     }
 
     // Vercel Blob에 파일 업로드 (고유한 파일명 생성)
