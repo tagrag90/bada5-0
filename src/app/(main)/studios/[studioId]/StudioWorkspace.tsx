@@ -37,9 +37,10 @@ import { useOptionalUser } from "@/app/(main)/SessionProvider";
 
 interface StudioWorkspaceProps {
   studioId: string;
+  fileId?: string; // 파일 ID (선택적, 없으면 기존처럼 전체 노드 표시)
 }
 
-function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
+function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const { toast } = useToast();
   const { discordData } = useSidebar();
   const currentUser = useOptionalUser();
@@ -118,20 +119,26 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   // 노드 생성 진행률 상태
   const [nodeCreationProgress, setNodeCreationProgress] = useState(0);
 
-  // 노드 및 연결선 조회
+  // 노드 및 연결선 조회 (fileId가 있으면 필터링)
   const { data: nodesData, isLoading: isLoadingNodes } = useQuery({
-    queryKey: ["studio-nodes", studioId],
+    queryKey: ["studio-nodes", studioId, fileId],
     queryFn: async () => {
-      const res = await fetch(`/api/studios/${studioId}/nodes`);
+      const url = fileId
+        ? `/api/studios/${studioId}/nodes?fileId=${fileId}`
+        : `/api/studios/${studioId}/nodes`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch nodes");
       return res.json();
     },
   });
 
   const { data: edgesData, isLoading: isLoadingEdges } = useQuery({
-    queryKey: ["studio-edges", studioId],
+    queryKey: ["studio-edges", studioId, fileId],
     queryFn: async () => {
-      const res = await fetch(`/api/studios/${studioId}/edges`);
+      const url = fileId
+        ? `/api/studios/${studioId}/edges?fileId=${fileId}`
+        : `/api/studios/${studioId}/edges`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch edges");
       return res.json();
     },
@@ -240,7 +247,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         const updatedNode = await res.json();
         console.log("Node updated successfully:", updatedNode);
 
-        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId] });
+        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
         toast({
           title: "노드 업데이트 완료",
           description: "노드가 성공적으로 업데이트되었습니다.",
@@ -268,8 +275,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
         if (!res.ok) throw new Error("Failed to delete node");
 
-        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId] });
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId] });
+        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
         setSelectedNodeId(null);
         setSidebarOpen(false);
         toast({
@@ -387,7 +394,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         if (!res.ok) throw new Error("Failed to delete edge");
 
         setEdges((eds) => eds.filter((e) => e.id !== edgeId));
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId] });
+        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
         toast({
           title: "연결선 삭제 완료",
           description: "연결선이 삭제되었습니다.",
@@ -498,11 +505,15 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   // 노드 생성 뮤테이션
   const createNodeMutation = useMutation({
-    mutationFn: async (data: { type: string; title: string; x: number; y: number }) => {
-      const res = await fetch(`/api/studios/${studioId}/nodes`, {
+    mutationFn: async (data: { type: string; title: string; x: number; y: number; fileId?: string }) => {
+        const body: any = { ...data };
+        if (fileId) {
+          body.fileId = fileId;
+        }
+        const res = await fetch(`/api/studios/${studioId}/nodes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(body),
       });
       
       if (!res.ok) {
@@ -513,7 +524,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId] });
+      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
       toast({
         title: "노드 생성 완료",
         description: "새로운 노드가 추가되었습니다.",
@@ -631,6 +642,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         title: `${nodeTypeLabels[type]} 노드`,
         x: x,
         y: y,
+        fileId: fileId || undefined, // fileId가 있으면 포함
       });
     },
     [reactFlowInstance, createNodeMutation]
@@ -647,15 +659,19 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       try {
         console.log("onConnect: Creating edge", { source: params.source, target: params.target });
         
+        const edgeBody: any = {
+          fromId: params.source,
+          toId: params.target,
+          fromPort: params.sourceHandle || null,
+          toPort: params.targetHandle || null,
+        };
+        if (fileId) {
+          edgeBody.fileId = fileId;
+        }
         const res = await fetch(`/api/studios/${studioId}/edges`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fromId: params.source,
-            toId: params.target,
-            fromPort: params.sourceHandle || null,
-            toPort: params.targetHandle || null,
-          }),
+          body: JSON.stringify(edgeBody),
         });
 
         if (!res.ok) {
@@ -671,7 +687,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         setEdges((eds) => addEdge(params, eds));
 
         // 쿼리 무효화하여 새로고침
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId] });
+        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
         toast({
           title: "연결선 생성 성공",
           description: "노드가 연결되었습니다.",
@@ -685,7 +701,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, setEdges, queryClient, toast]
+    [studioId, fileId, setEdges, queryClient, toast]
   );
 
   // 화면 크기에 따른 화이트보드 크기 조정
