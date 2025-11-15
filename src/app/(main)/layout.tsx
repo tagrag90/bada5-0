@@ -3,11 +3,11 @@ import SessionProvider from "./SessionProvider";
 import RefreshIndicator from "@/components/RefreshIndicator";
 import LeftSidebar from "@/components/LeftSidebar";
 import TrendsSidebar from "@/components/TrendsSidebar";
-import FeedRightSidebar from "@/components/FeedRightSidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import WhoToFollowSlot from "@/components/WhoToFollowSlot";
 import LeftSidebarArea from "@/components/layout/LeftSidebarArea";
 import RightSidebarArea from "@/components/layout/RightSidebarArea";
+import FeedRightSidebar from "@/components/FeedRightSidebar";
 
 // import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
@@ -38,7 +38,6 @@ export default async function Layout({
           {/* 우측 사이드바 영역 */}
           {isLoggedIn && (
             <RightSidebarArea>
-              {/* 페이지별로 적절한 블록이 여기에 렌더링됩니다 */}
               <div className="sticky top-5 p-5">
                 <FeedRightSidebar />
               </div>

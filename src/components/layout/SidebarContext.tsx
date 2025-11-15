@@ -26,6 +26,17 @@ interface Studio {
   subscribersCount: number;
 }
 
+interface NodeEditData {
+  nodeId: string;
+  initialTitle: string;
+  initialContent?: string;
+  initialEmoji?: string;
+  nodeType?: string;
+  onSave?: (nodeId: string, title: string, content?: string, emoji?: string) => Promise<void>;
+  onDelete?: (nodeId: string) => Promise<void>;
+  onClose?: () => void;
+}
+
 interface DiscordSidebarData {
   selectedStudioId?: string | null;
   selectedChannel?: string;
@@ -35,6 +46,7 @@ interface DiscordSidebarData {
   studioName?: string;
   studio?: Studio;
   fileId?: string; // 화이트보드 파일 ID
+  nodeEditData?: NodeEditData | null; // 노드 편집 데이터
 }
 
 interface SidebarContextType {
@@ -44,6 +56,7 @@ interface SidebarContextType {
   sidebarsCollapsed: boolean;
   setSidebar: (type: SidebarType, data?: SidebarData) => void;
   setDiscordSidebar: (data: DiscordSidebarData) => void;
+  setNodeEditData: (data: NodeEditData | null) => void;
   toggleSidebars: () => void;
 }
 
@@ -65,6 +78,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     setDiscordData(data);
   }, []);
 
+  const setNodeEditData = useCallback((data: NodeEditData | null) => {
+    setDiscordData(prev => prev ? { ...prev, nodeEditData: data } : null);
+  }, []);
+
   const toggleSidebars = useCallback(() => {
     setSidebarsCollapsed(prev => !prev);
   }, []);
@@ -77,6 +94,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       sidebarsCollapsed,
       setSidebar,
       setDiscordSidebar,
+      setNodeEditData,
       toggleSidebars
     }}>
       {children}

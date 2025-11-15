@@ -6,7 +6,7 @@ export default function DocsHome() {
       <section>
         <h1 className="text-4xl font-bold mb-3">Documentation</h1>
         <p className="text-lg text-muted-foreground">
-          Dive to Bada 프로젝트 문서
+          Divetobada 프로젝트 문서
         </p>
       </section>
 
@@ -31,6 +31,10 @@ export default function DocsHome() {
               {/* 업데이트 목록 */}
               <div className="space-y-3 text-slate-200">
                 <div className="flex items-start justify-between">
+                  <span className="flex-1 text-green-400">독스 페이지 전면 개편 - 프로젝트 구조 및 아키텍처 가이드 추가</span>
+                  <span className="text-slate-400 shrink-0 ml-4">2025.01.15</span>
+                </div>
+                <div className="flex items-start justify-between">
                   <span className="flex-1 text-green-400">게시물 표시 개선, 사이드바 WhoToFollow 추가, 화이트보드 크기 동적 조절</span>
                   <span className="text-slate-400 shrink-0 ml-4">2025.11.03</span>
                 </div>
@@ -38,35 +42,9 @@ export default function DocsHome() {
                   <span className="flex-1 text-green-400">🗑️ 코스모스 기능 완전 제거 + UI Lab 정리</span>
                   <span className="text-slate-400 shrink-0 ml-4">2025.10.29</span>
                 </div>
-
                 <div className="flex items-start justify-between">
                   <span className="flex-1">Next.js 15.1.2 + React 18.3.1 버전 고정 적용</span>
                   <span className="text-slate-400 shrink-0 ml-4">2025.10.29</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">사소한요소수정25.10.10.</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.10</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">바다사이드바제작및팔로워확인기능구현25.10.10.</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.10</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">독스수정및잔잔바리정리 25.10.8.</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.8</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">Update SSO widget to use production URLs</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.6</span>
-                </div>
-
-                <div className="flex items-start justify-between">
-                  <span className="flex-1">Update .gitignore to exclude sample files</span>
-                  <span className="text-slate-400 shrink-0 ml-4">2025.10.6</span>
                 </div>
               </div>
             </div>
@@ -87,8 +65,62 @@ export default function DocsHome() {
       </section>
 
       <section>
+        <h2 className="text-2xl font-semibold mb-6">프로젝트 개요</h2>
+        <div className="space-y-3">
+          <Link href="/docs/architecture" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              아키텍처 가이드 →
+            </div>
+            <p className="text-sm text-muted-foreground">레이아웃, 사이드바, 라우팅 구조</p>
+          </Link>
+          <Link href="/docs/authentication" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              인증 시스템 →
+            </div>
+            <p className="text-sm text-muted-foreground">로그인, SSO, 세션 관리</p>
+          </Link>
+          <Link href="/docs/api" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              API 레퍼런스 →
+            </div>
+            <p className="text-sm text-muted-foreground">엔드포인트 문서 및 사용법</p>
+          </Link>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">주요 기능</h2>
+        <div className="space-y-3">
+          <Link href="/docs/social" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              소셜 기능 →
+            </div>
+            <p className="text-sm text-muted-foreground">게시물, 댓글, 팔로우 시스템</p>
+          </Link>
+          <Link href="/docs/studio" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              스튜디오 →
+            </div>
+            <p className="text-sm text-muted-foreground">크리에이터 블로그 공간</p>
+          </Link>
+          <Link href="/docs/workspace" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              워크스페이스 →
+            </div>
+            <p className="text-sm text-muted-foreground">노드 기반 화이트보드 시스템</p>
+          </Link>
+        </div>
+      </section>
+
+      <section>
         <h2 className="text-2xl font-semibold mb-6">컴포넌트</h2>
         <div className="space-y-3">
+          <Link href="/docs/components" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              컴포넌트 개요 →
+            </div>
+            <p className="text-sm text-muted-foreground">재사용 가능한 UI 컴포넌트</p>
+          </Link>
           <Link href="/docs/components/button" className="block group">
             <div className="text-lg font-medium group-hover:text-primary transition-colors">
               Button →
@@ -113,6 +145,12 @@ export default function DocsHome() {
       <section>
         <h2 className="text-2xl font-semibold mb-6">브랜드</h2>
         <div className="space-y-3">
+          <Link href="/docs/brand" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              브랜드 개요 →
+            </div>
+            <p className="text-sm text-muted-foreground">디자인 가이드라인 및 자산</p>
+          </Link>
           <Link href="/docs/brand/logo" className="block group">
             <div className="text-lg font-medium group-hover:text-primary transition-colors">
               로고 →
@@ -135,19 +173,19 @@ export default function DocsHome() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-6">기능</h2>
+        <h2 className="text-2xl font-semibold mb-6">통합</h2>
         <div className="space-y-3">
-          <Link href="/docs/studio" className="block group">
-            <div className="text-lg font-medium group-hover:text-primary transition-colors">
-              스튜디오 →
-            </div>
-            <p className="text-sm text-muted-foreground">크리에이터 블로그 공간</p>
-          </Link>
           <Link href="/docs/sso" className="block group">
             <div className="text-lg font-medium group-hover:text-primary transition-colors">
               SSO 통합 →
             </div>
             <p className="text-sm text-muted-foreground">Login with Divetobada</p>
+          </Link>
+          <Link href="/docs/sdk" className="block group">
+            <div className="text-lg font-medium group-hover:text-primary transition-colors">
+              SDK 가이드 →
+            </div>
+            <p className="text-sm text-muted-foreground">커스텀 노드 개발 (개발 예정)</p>
           </Link>
         </div>
       </section>
@@ -173,21 +211,8 @@ export default function DocsHome() {
             </div>
             <p className="text-sm text-muted-foreground">크리에이터 구독 시스템</p>
           </Link>
-          <Link href="/docs/lab/dashboard" className="block group">
-            <div className="text-lg font-medium group-hover:text-primary transition-colors">
-              크리에이터 대시보드 →
-            </div>
-            <p className="text-sm text-muted-foreground">콘텐츠 관리 도구</p>
-          </Link>
-          <Link href="/docs/lab/subscriptions" className="block group">
-            <div className="text-lg font-medium group-hover:text-primary transition-colors">
-              구독 관리 →
-            </div>
-            <p className="text-sm text-muted-foreground">사용자 구독 현황</p>
-          </Link>
         </div>
       </section>
     </div>
   );
 }
-

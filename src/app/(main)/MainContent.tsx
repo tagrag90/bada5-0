@@ -55,13 +55,19 @@ export default function MainContent() {
       {/* 피드 선택 버튼 (헤더 외부) */}
       <Tabs defaultValue="for-you" className="w-full">
         {/* 피드 선택 버튼 - 수평 배열 */}
-        <div className="flex justify-center px-4 py-3 border-b bg-background">
-          <TabsList className="h-auto p-0 bg-transparent">
-            <TabsTrigger value="for-you" className="px-6">
+        <div className="flex justify-center px-4 py-4 border-b border-border/40 bg-background">
+          <TabsList className="h-auto p-1 bg-muted rounded-lg gap-1">
+            <TabsTrigger 
+              value="for-you" 
+              className="px-8 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/80"
+            >
               전체
             </TabsTrigger>
             {isLoggedIn && (
-              <TabsTrigger value="following" className="px-6">
+              <TabsTrigger 
+                value="following" 
+                className="px-8 py-2.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/80"
+              >
                 팔로잉
               </TabsTrigger>
             )}

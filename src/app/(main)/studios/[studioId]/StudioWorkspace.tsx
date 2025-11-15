@@ -20,7 +20,6 @@ import "reactflow/dist/style.css";
 import { useToast } from "@/components/ui/use-toast";
 import CustomNode from "@/components/workspace/CustomNode";
 import { nodeTypeLabels, nodeTypeIcons } from "@/components/workspace/nodeConfig";
-import NodeSidebar from "@/components/workspace/NodeSidebar";
 import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
 import NodeCreationToast from "@/components/workspace/NodeCreationToast";
 import { useSidebar } from "@/components/layout/SidebarContext";
@@ -33,7 +32,7 @@ interface StudioWorkspaceProps {
 
 function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const { toast } = useToast();
-  const { discordData } = useSidebar();
+  const { discordData, setNodeEditData } = useSidebar();
   const currentUser = useOptionalUser();
   const [isAddPostDialogOpen, setIsAddPostDialogOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -193,17 +192,12 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     }
   }, [isLoadingNodes, isLoadingEdges]);
 
-  // 노드 편집 핸들러
-  const handleNodeEdit = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    setSidebarOpen(true);
-  }, []);
-
   // 사이드바 닫기 핸들러
   const handleSidebarClose = useCallback(() => {
     setSidebarOpen(false);
     setSelectedNodeId(null);
-  }, []);
+    setNodeEditData(null);
+  }, [setNodeEditData]);
 
   // 노드 저장 핸들러
   const handleNodeSave = useCallback(
@@ -247,7 +241,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         throw error;
       }
     },
-    [studioId, queryClient, toast]
+    [studioId, fileId, queryClient, toast]
   );
 
   // 노드 삭제 핸들러
@@ -264,6 +258,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
         setSelectedNodeId(null);
         setSidebarOpen(false);
+        setNodeEditData(null);
         toast({
           title: "노드 삭제 완료",
           description: "노드가 삭제되었습니다.",
@@ -276,8 +271,31 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, queryClient, toast]
+    [studioId, fileId, queryClient, toast]
   );
+
+  // 노드 편집 핸들러
+  const handleNodeEdit = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+    setSidebarOpen(true);
+    
+    // 노드 데이터를 사이드바 컨텍스트로 전달
+    if (nodesData) {
+      const node = nodesData.find((n: any) => n.id === nodeId);
+      if (node) {
+        setNodeEditData({
+          nodeId: node.id,
+          initialTitle: node.title || "",
+          initialContent: node.content || "",
+          initialEmoji: node.emoji || "",
+          nodeType: node.type || "NOTE",
+          onSave: handleNodeSave,
+          onDelete: handleNodeDelete,
+          onClose: handleSidebarClose,
+        });
+      }
+    }
+  }, [nodesData, handleNodeSave, handleNodeDelete, handleSidebarClose, setNodeEditData]);
 
   // ReactFlow를 위한 노드/연결선 변환
   const initialNodes: Node[] = nodesData?.map((node: any) => {
@@ -945,28 +963,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         />
       </ReactFlow>
 
-      {/* 노드 편집 사이드바 */}
-      {selectedNodeId && nodesData && (
-        <NodeSidebar
-          nodeId={selectedNodeId}
-          initialTitle={
-            nodesData.find((n: any) => n.id === selectedNodeId)?.title || ""
-          }
-          initialContent={
-            nodesData.find((n: any) => n.id === selectedNodeId)?.content || ""
-          }
-          initialEmoji={
-            nodesData.find((n: any) => n.id === selectedNodeId)?.emoji || ""
-          }
-          nodeType={
-            nodesData.find((n: any) => n.id === selectedNodeId)?.type || "NOTE"
-          }
-          isOpen={sidebarOpen}
-          onClose={handleSidebarClose}
-          onSave={handleNodeSave}
-          onDelete={handleNodeDelete}
-        />
-      )}
 
       {/* 게시물 노드 추가 다이얼로그 */}
       <AddToNodeDialog

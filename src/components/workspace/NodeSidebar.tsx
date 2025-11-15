@@ -299,10 +299,10 @@ export default function NodeSidebar({
   }
 
   return (
-    <div className="fixed right-4 top-4 bottom-4 w-96 bg-white border border-gray-200 rounded-xl shadow-xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="w-full bg-card border border-border rounded-xl shadow-sm flex flex-col h-full">
       {/* 헤더 */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 rounded-t-xl">
-        <h2 className="text-lg font-semibold text-black">노드 편집</h2>
+      <div className="flex items-center justify-between p-4 border-b border-border rounded-t-xl">
+        <h2 className="text-lg font-semibold">노드 편집</h2>
         <Button
           variant="ghost"
           size="icon"
@@ -600,7 +600,7 @@ export default function NodeSidebar({
       </div>
 
       {/* 푸터 */}
-      <div className="p-4 border-t border-gray-200 rounded-b-xl flex justify-between items-center">
+      <div className="p-4 border-t border-border rounded-b-xl flex justify-between items-center flex-shrink-0">
         {onDelete && (
           <Button
             variant="destructive"

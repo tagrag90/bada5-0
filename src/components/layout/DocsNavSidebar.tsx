@@ -11,18 +11,18 @@ interface DocsNavSidebarProps {
 }
 
 const navItems = [
+  { id: "overview", label: "프로젝트 개요" },
   { id: "getting-started", label: "시작하기" },
-  { id: "studio", label: "스튜디오 가이드" },
-  { id: "features", label: "주요 기능" },
-  { id: "services", label: "Team Bada 서비스" },
-  { id: "experimental", label: "실험실" },
-  { id: "channel", label: "공식 채널" },
-  { id: "faq", label: "자주 묻는 질문" },
+  { id: "architecture", label: "아키텍처 가이드" },
+  { id: "authentication", label: "인증 시스템" },
+  { id: "social", label: "소셜 기능" },
+  { id: "studio", label: "스튜디오 시스템" },
+  { id: "workspace", label: "워크스페이스" },
+  { id: "api", label: "API 레퍼런스" },
+  { id: "sdk", label: "SDK 가이드" },
+  { id: "beta", label: "베타 기능" },
+  { id: "faq", label: "FAQ" },
   { id: "guidelines", label: "커뮤니티 가이드라인" },
-  { id: "project-structure", label: "프로젝트 구조" },
-  { id: "nodes", label: "워크스페이스 노드" },
-  { id: "sdk-nodes", label: "SDK 커스텀 노드" },
-  { id: "sso", label: "Login with Divetobada" },
 ];
 
 export default function DocsNavSidebar({

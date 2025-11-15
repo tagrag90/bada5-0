@@ -21,6 +21,22 @@ const DOCS_NAV: NavItem[] = [
     href: "/docs/getting-started"
   },
   {
+    title: "프로젝트 개요",
+    items: [
+      { title: "아키텍처", href: "/docs/architecture" },
+      { title: "인증 시스템", href: "/docs/authentication" },
+      { title: "API 레퍼런스", href: "/docs/api" },
+    ]
+  },
+  {
+    title: "주요 기능",
+    items: [
+      { title: "소셜 기능", href: "/docs/social" },
+      { title: "스튜디오", href: "/docs/studio" },
+      { title: "워크스페이스", href: "/docs/workspace" },
+    ]
+  },
+  {
     title: "컴포넌트",
     items: [
       { title: "개요", href: "/docs/components" },
@@ -47,12 +63,11 @@ const DOCS_NAV: NavItem[] = [
     ]
   },
   {
-    title: "스튜디오",
-    href: "/docs/studio"
-  },
-  {
-    title: "SSO 통합",
-    href: "/docs/sso"
+    title: "통합",
+    items: [
+      { title: "SSO 통합", href: "/docs/sso" },
+      { title: "SDK 가이드", href: "/docs/sdk" },
+    ]
   },
   {
     title: "피드백",
@@ -66,7 +81,7 @@ interface DocsSidebarProps {
 
 export default function DocsSidebar({ user }: DocsSidebarProps) {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<string[]>(["컴포넌트", "브랜드"]);
+  const [openSections, setOpenSections] = useState<string[]>(["프로젝트 개요", "주요 기능", "컴포넌트", "브랜드", "통합"]);
 
   const toggleSection = (title: string) => {
     setOpenSections(prev =>

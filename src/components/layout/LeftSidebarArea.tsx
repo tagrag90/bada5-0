@@ -50,12 +50,13 @@ export default function LeftSidebarArea({ children }: LeftSidebarAreaProps) {
 
   return (
     <aside 
-      className="fixed left-4 bg-card border-2 border-black overflow-hidden hidden md:flex md:flex-col z-30 rounded-lg shadow-sm transition-all duration-300" 
+      className="fixed left-4 bg-card border-2 border-black overflow-hidden hidden md:flex md:flex-col z-30 shadow-sm transition-all duration-300" 
       style={{ 
         width: `${sidebarWidth}px`,
         top: '16px', // 항상 상단에 위치
         bottom: sidebarsCollapsed ? undefined : '16px',
-        height: sidebarsCollapsed ? '60px' : undefined
+        height: sidebarsCollapsed ? '60px' : undefined,
+        borderRadius: '22px'
       }}
     >
       {!sidebarsCollapsed && (
