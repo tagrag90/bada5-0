@@ -209,8 +209,9 @@ git status
 git add .
 git commit -m "백업: Phase X 시작 전"
 
-# 3. 백업 브랜치 생성
-git branch backup-phase-X-$(date +%Y%m%d_%H%M%S)
+# 3. 백업 커밋 생성 (브랜치 사용 금지)
+git add .
+git commit -m "백업: Phase X 시작 전 - $(date +%Y%m%d_%H%M%S)"
 ```
 
 ### 2. 각 Phase 후 필수 절차
@@ -232,7 +233,12 @@ git commit -m "feat: Phase X 완료 - [작업 내용]"
 ### 3. 문제 발생 시 대응
 1. **즉시 중단**
 2. **문제 파악**
-3. **백업 브랜치로 복구**
+3. **백업 커밋으로 복구** (브랜치 사용 금지)
+   ```bash
+   git reset --hard HEAD~1  # 마지막 커밋으로 복구 (주의: 사용자 확인 후)
+   # 또는 stash로 복구
+   git stash pop
+   ```
 4. **문제 해결 후 재시도**
 
 ### 4. 기존 기능 보존 원칙
