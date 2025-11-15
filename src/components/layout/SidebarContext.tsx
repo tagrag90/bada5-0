@@ -34,14 +34,17 @@ interface DiscordSidebarData {
   isOwner?: boolean;
   studioName?: string;
   studio?: Studio;
+  fileId?: string; // 화이트보드 파일 ID
 }
 
 interface SidebarContextType {
   sidebarType: SidebarType;
   sidebarData: SidebarData | null;
   discordData: DiscordSidebarData | null;
+  sidebarsCollapsed: boolean;
   setSidebar: (type: SidebarType, data?: SidebarData) => void;
   setDiscordSidebar: (data: DiscordSidebarData) => void;
+  toggleSidebars: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -50,6 +53,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [sidebarType, setSidebarType] = useState<SidebarType>('none');
   const [sidebarData, setSidebarData] = useState<SidebarData | null>(null);
   const [discordData, setDiscordData] = useState<DiscordSidebarData | null>(null);
+  const [sidebarsCollapsed, setSidebarsCollapsed] = useState(false);
 
   const setSidebar = useCallback((type: SidebarType, data?: SidebarData) => {
     setSidebarType(type);
@@ -61,13 +65,19 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     setDiscordData(data);
   }, []);
 
+  const toggleSidebars = useCallback(() => {
+    setSidebarsCollapsed(prev => !prev);
+  }, []);
+
   return (
     <SidebarContext.Provider value={{
       sidebarType,
       sidebarData,
       discordData,
+      sidebarsCollapsed,
       setSidebar,
-      setDiscordSidebar
+      setDiscordSidebar,
+      toggleSidebars
     }}>
       {children}
     </SidebarContext.Provider>

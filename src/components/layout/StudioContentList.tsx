@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Calendar, StickyNote, Edit3, Users, Settings, ChevronDown, Network } from "lucide-react";
+import { FileText, Calendar, StickyNote, Edit3, Settings, ChevronDown, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import Link from "next/link";
@@ -88,10 +88,8 @@ export default function StudioContentList({
 
   return (
     <div className="flex h-full w-full flex-col bg-white text-black">
-      {/* 스튜디오 정보 카드 컴포넌트 - 워크스페이스에서는 숨김 (호버 컴포넌트로 대체) */}
-      {selectedTab !== "workspace" && (
-        <StudioInfoCard studio={studio} studioName={studioName} isOwner={actualIsOwner} isAdmin={isAdmin} />
-      )}
+      {/* 스튜디오 정보 카드 컴포넌트 */}
+      <StudioInfoCard studio={studio} studioName={studioName} isOwner={actualIsOwner} isAdmin={isAdmin} />
 
       <div className="space-y-4 p-4 pb-20">
 
@@ -128,14 +126,6 @@ export default function StudioContentList({
           <>
             <Separator />
             <div className="space-y-1">
-              <NavItem
-                icon={Users}
-                label="멤버 관리"
-                onClick={() => {
-                  const event = new CustomEvent('openMembersDialog');
-                  window.dispatchEvent(event);
-                }}
-              />
               <NavItem
                 icon={Settings}
                 label="설정"

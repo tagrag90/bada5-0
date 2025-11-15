@@ -19,6 +19,9 @@ const navItems = [
   { id: "channel", label: "공식 채널" },
   { id: "faq", label: "자주 묻는 질문" },
   { id: "guidelines", label: "커뮤니티 가이드라인" },
+  { id: "project-structure", label: "프로젝트 구조" },
+  { id: "nodes", label: "워크스페이스 노드" },
+  { id: "sdk-nodes", label: "SDK 커스텀 노드" },
   { id: "sso", label: "Login with Divetobada" },
 ];
 

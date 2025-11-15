@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -14,13 +14,36 @@ import Resizer from "react-image-file-resizer";
 import CropImageDialog from "@/components/CropImageDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { validateRequest } from "@/auth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
+import InviteMemberDialog from "../InviteMemberDialog";
 
 export default function StudioSettingsPage() {
   const params = useParams<{ studioId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const studioId = params.studioId;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const defaultTab = searchParams.get("tab") === "members" ? "members" : "general";
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // URL 파라미터와 탭 동기화
+  useEffect(() => {
+    const tab = searchParams.get("tab") === "members" ? "members" : "general";
+    setActiveTab(tab);
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "members") {
+      router.push(`/studios/${studioId}/settings?tab=members`);
+    } else {
+      router.push(`/studios/${studioId}/settings`);
+    }
+  };
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -31,6 +54,7 @@ export default function StudioSettingsPage() {
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
   const [croppedBanner, setCroppedBanner] = useState<Blob | null>(null);
   const [imageToCrop, setImageToCrop] = useState<{ file: File; type: "avatar" | "banner" }>();
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   // 스튜디오 데이터 조회
   const { data: studio, isLoading } = useQuery({
@@ -76,6 +100,90 @@ export default function StudioSettingsPage() {
 
   const isOwner = membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id);
   const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
+
+  // 멤버 목록 조회
+  const { data: members, isLoading: membersLoading } = useQuery({
+    queryKey: ["studio-members", studioId],
+    queryFn: async () => {
+      const res = await fetch(`/api/studios/${studioId}/members`);
+      if (!res.ok) throw new Error("Failed to fetch members");
+      return res.json();
+    },
+    enabled: !!studioId,
+  });
+
+  // 역할 변경 뮤테이션
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ memberId, role }: { memberId: string; role: string }) => {
+      const res = await fetch(`/api/studios/${studioId}/members?memberId=${memberId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error("역할 변경 실패");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["studio-members", studioId] });
+      toast({
+        title: "역할 변경 완료",
+        description: "멤버의 역할이 변경되었습니다.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "역할 변경 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // 멤버 제거 뮤테이션
+  const removeMutation = useMutation({
+    mutationFn: async (memberId: string) => {
+      const res = await fetch(
+        `/api/studios/${studioId}/members?memberId=${memberId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error("Failed to remove member");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["studio-members", studioId] });
+      toast({
+        title: "멤버 제거 완료",
+        description: "멤버가 제거되었습니다.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "멤버 제거 실패",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      OWNER: "소유자",
+      ADMIN: "관리자",
+      MODERATOR: "중간관리자",
+      MEMBER: "멤버",
+    };
+    return labels[role] || role;
+  };
+
+  const getRoleColor = (role: string) => {
+    const colors: Record<string, string> = {
+      OWNER: "bg-red-100 text-red-800",
+      ADMIN: "bg-blue-100 text-blue-800",
+      MODERATOR: "bg-green-100 text-green-800",
+      MEMBER: "bg-gray-100 text-gray-800",
+    };
+    return colors[role] || "bg-gray-100 text-gray-800";
+  };
 
   // 권한 없으면 리다이렉트
   useEffect(() => {
@@ -224,9 +332,16 @@ export default function StudioSettingsPage() {
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4">
       <Card className="p-6">
-        <h2 className="text-2xl font-semibold mb-6">기본 설정</h2>
+        <h2 className="text-2xl font-semibold mb-6">스튜디오 설정</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="general">기본 설정</TabsTrigger>
+            <TabsTrigger value="members">멤버 관리</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <form onSubmit={handleSubmit} className="space-y-4">
           {/* 프로필 사진 */}
           <div className="space-y-2">
             <Label>프로필 사진</Label>
@@ -349,6 +464,108 @@ export default function StudioSettingsPage() {
             onClose={() => setImageToCrop(undefined)}
           />
         )}
+          </TabsContent>
+
+          <TabsContent value="members">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">팀 멤버</h3>
+                <Button size="sm" onClick={() => setShowInviteDialog(true)}>
+                  초대
+                </Button>
+              </div>
+
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {membersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : members && members.length > 0 ? (
+                  members.map((member: any) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={member.user.avatarUrl} />
+                          <AvatarFallback>
+                            {member.user.displayName?.[0] || member.user.username?.[0] || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{member.user.displayName || member.user.username}</p>
+                          <p className="text-sm text-muted-foreground">
+                            @{member.user.username}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {member.role !== "OWNER" ? (
+                          <div className="flex gap-1">
+                            <Button
+                              variant={member.role === "ADMIN" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "ADMIN" })}
+                              disabled={updateRoleMutation.isPending}
+                              className="text-xs px-2 py-1"
+                            >
+                              관리자
+                            </Button>
+                            <Button
+                              variant={member.role === "MODERATOR" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "MODERATOR" })}
+                              disabled={updateRoleMutation.isPending}
+                              className="text-xs px-2 py-1"
+                            >
+                              중간관리자
+                            </Button>
+                            <Button
+                              variant={member.role === "MEMBER" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateRoleMutation.mutate({ memberId: member.id, role: "MEMBER" })}
+                              disabled={updateRoleMutation.isPending}
+                              className="text-xs px-2 py-1"
+                            >
+                              멤버
+                            </Button>
+                          </div>
+                        ) : (
+                          <Badge className={getRoleColor(member.role)}>
+                            {getRoleLabel(member.role)}
+                          </Badge>
+                        )}
+                        {member.role !== "OWNER" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeMutation.mutate(member.id)}
+                            disabled={removeMutation.isPending}
+                            className="text-red-500"
+                          >
+                            제거
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    멤버가 없습니다
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* 멤버 초대 다이얼로그 */}
+        <InviteMemberDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          studioId={studioId}
+        />
       </Card>
     </div>
   );

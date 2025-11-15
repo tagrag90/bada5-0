@@ -1,6 +1,4 @@
 import { validateRequest } from "@/auth";
-import MenuBar from "./MenuBar";
-import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
 import RefreshIndicator from "@/components/RefreshIndicator";
 import LeftSidebar from "@/components/LeftSidebar";
@@ -8,6 +6,8 @@ import TrendsSidebar from "@/components/TrendsSidebar";
 import FeedRightSidebar from "@/components/FeedRightSidebar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import WhoToFollowSlot from "@/components/WhoToFollowSlot";
+import LeftSidebarArea from "@/components/layout/LeftSidebarArea";
+import RightSidebarArea from "@/components/layout/RightSidebarArea";
 
 // import ThemeSwitcher from "@/components/theme/ThemeSwitcher";
 
@@ -23,51 +23,41 @@ export default async function Layout({
     <SessionProvider value={session}>
       <SidebarProvider>
         <RefreshIndicator />
-        <div className="flex min-h-screen flex-col md:h-auto">
-          {/* 좌측 사이드바 - 스튜디오/Docs에서만 표시 (Context로 제어) */}
-          {isLoggedIn && (
-            <LeftSidebar whoToFollowSlot={<WhoToFollowSlot />}>
-              <TrendsSidebar className="!static !w-full" />
-            </LeftSidebar>
-          )}
         
-        {/* <Navbar /> */}
-        <div 
-          className="mx-auto flex w-full grow justify-center gap-6 px-0 py-0 md:p-5"
-        >
-          <style dangerouslySetInnerHTML={{
-            __html: `
-              @media (min-width: 1280px) {
-                .main-layout-container {
-                  padding-left: var(--has-sidebar, 0px) !important;
-                }
-              }
-            `
-          }} />
-          <div className="main-layout-container w-full flex justify-center gap-6">
-            {/* 중앙 피드 영역 */}
-            <div className="w-full min-w-0 max-w-3xl mobile-page-container md:pt-0">{children}</div>
-            
-            {/* 우측 사이드바 - Notice, 친구 찾기, 스튜디오 */}
-            {isLoggedIn && (
-              <div className="sticky top-5 hidden h-fit w-80 flex-none xl:block">
+        <div className="flex min-h-screen flex-col md:h-auto overflow-x-hidden">
+          {/* 좌측 사이드바 영역 */}
+          {isLoggedIn && (
+            <LeftSidebarArea>
+              {/* 페이지별로 적절한 블록이 여기에 렌더링됩니다 */}
+              <LeftSidebar whoToFollowSlot={<WhoToFollowSlot />}>
+                <TrendsSidebar className="!static !w-full" />
+              </LeftSidebar>
+            </LeftSidebarArea>
+          )}
+
+          {/* 우측 사이드바 영역 */}
+          {isLoggedIn && (
+            <RightSidebarArea>
+              {/* 페이지별로 적절한 블록이 여기에 렌더링됩니다 */}
+              <div className="sticky top-5 p-5">
                 <FeedRightSidebar />
               </div>
-            )}
+            </RightSidebarArea>
+          )}
+        
+        <div 
+          className="flex grow justify-center px-0 py-0 md:p-5"
+          style={{
+            marginLeft: 'var(--left-sidebar-width, 0px)',
+            marginRight: 'var(--right-sidebar-width, 0px)',
+            maxWidth: 'calc(100vw - var(--left-sidebar-width, 0px) - var(--right-sidebar-width, 0px))',
+          }}
+        >
+          {/* 중앙 피드 영역 - 항상 중앙 정렬 */}
+          <div className="w-full min-w-0 max-w-3xl mobile-page-container md:pt-0 flex flex-col items-center">
+            {children}
           </div>
         </div>
-        
-        {/* 모바일 하단 네비바 */}
-        {isLoggedIn && (
-          <MenuBar className="sticky bottom-0 z-[60] flex w-full justify-center gap-5 border-t bg-card p-3 mobile-navbar md:hidden flex-shrink-0" />
-        )}
-        
-        {/* 데스크톱 하단 중앙 Floating 네비바 */}
-        {isLoggedIn && (
-          <div className="hidden md:block">
-            <MenuBar className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 flex gap-3 bg-white rounded-full shadow-xl px-6 py-3 border border-gray-200" />
-          </div>
-        )}
         </div>
       </SidebarProvider>
     </SessionProvider>

@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { FigmaProgressBar } from "@/components/ui/figma-progress-bar";
 import ReactFlow, {
   Background,
@@ -15,23 +15,14 @@ import ReactFlow, {
   Connection,
   NodeTypes,
   ReactFlowProvider,
-  Panel,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import CustomNode from "@/components/workspace/CustomNode";
 import { nodeTypeLabels, nodeTypeIcons } from "@/components/workspace/nodeConfig";
 import NodeSidebar from "@/components/workspace/NodeSidebar";
 import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
 import NodeCreationToast from "@/components/workspace/NodeCreationToast";
-import StudioInfoHoverCard from "@/components/layout/StudioInfoHoverCard";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
 
@@ -57,7 +48,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     backgroundColor: "#E5E5E5",
   });
   
-  const [nodeButtonBottom, setNodeButtonBottom] = useState('80px'); // 기본값: 네비바 위
 
   // 스튜디오 정보 조회
   const { data: studio } = useQuery({
@@ -85,7 +75,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const isOwner = membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id);
   const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
   
-  // 모바일 네비바가 화이트보드에 덮이지 않도록 확인 및 노드 버튼 위치 조정
+  // 모바일 네비바가 화이트보드에 덮이지 않도록 확인
   useEffect(() => {
     // 모바일에서만 확인 (스튜디오 워크스페이스 페이지)
     const checkMobile = () => {
@@ -96,11 +86,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           ...prev,
           zIndex: 1, // 네비바는 z-50 이상이므로 충돌 없음
         }));
-        // 모바일: 네비바(64px) + 여유공간(16px) = 80px
-        setNodeButtonBottom('80px');
-      } else {
-        // 데스크톱: 네비바(64px) + 여유공간(16px) = 80px
-        setNodeButtonBottom('80px');
       }
     };
     
@@ -645,8 +630,20 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         fileId: fileId || undefined, // fileId가 있으면 포함
       });
     },
-    [reactFlowInstance, createNodeMutation]
+    [reactFlowInstance, createNodeMutation, fileId]
   );
+
+  // 사이드바에서 노드 추가 이벤트 리스너
+  useEffect(() => {
+    const handleAddNodeEvent = (event: CustomEvent<{ type: string }>) => {
+      handleAddNode(event.detail.type);
+    };
+
+    window.addEventListener('addWorkspaceNode' as any, handleAddNodeEvent as EventListener);
+    return () => {
+      window.removeEventListener('addWorkspaceNode' as any, handleAddNodeEvent as EventListener);
+    };
+  }, [handleAddNode]);
 
   // 연결선 추가
   const onConnect = useCallback(
@@ -704,33 +701,16 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     [studioId, fileId, setEdges, queryClient, toast]
   );
 
-  // 화면 크기에 따른 화이트보드 크기 조정
+  // 화이트보드가 전체 화면을 차지하도록 설정 (사이드바 뒤까지 포함)
   useEffect(() => {
-    const updateWorkspaceSize = () => {
-      const isMobileOrTablet = window.innerWidth < 1280; // xl 브레이크포인트
-      const sidebarWidth = isMobileOrTablet ? 0 : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--has-sidebar') || '0', 10);
-      
-      setWorkspaceStyle({
-        zIndex: 1,
-        width: isMobileOrTablet ? "100%" : `calc(100% - ${sidebarWidth}px)`,
-        left: isMobileOrTablet ? "0px" : `${sidebarWidth}px`,
-        backgroundColor: "#E5E5E5",
-      });
-    };
-
-    // 초기 설정
-    updateWorkspaceSize();
-
-    // 리사이즈 이벤트 리스너
-    window.addEventListener('resize', updateWorkspaceSize);
-    
-    // CSS 변수 변경 감지 (ResizeObserver는 사용하지 않고, 짧은 간격으로 체크)
-    const interval = setInterval(updateWorkspaceSize, 100);
-    
-    return () => {
-      window.removeEventListener('resize', updateWorkspaceSize);
-      clearInterval(interval);
-    };
+    setWorkspaceStyle({
+      zIndex: 1, // 사이드바(z-30)보다 낮게 설정하여 뒤에 위치
+      width: '100%',
+      left: '0px',
+      top: '0px',
+      bottom: '0px',
+      backgroundColor: "#E5E5E5",
+    });
   }, []);
 
   // 노드 위치 업데이트 디바운스 타이머 (useRef 사용)
@@ -908,19 +888,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       className="h-screen fixed top-0 right-0 bottom-0" 
       style={workspaceStyle}
     >
-      {/* 스튜디오 정보 호버 컴포넌트 - 좌측 상단 */}
-      {studio && (
-        <div className="fixed top-4 left-24 z-50">
-          <StudioInfoHoverCard
-            studio={studio}
-            studioName={discordData?.studioName || studio.name}
-            isOwner={isOwner}
-            isAdmin={isAdmin}
-            selectedChannel={discordData?.selectedChannel || "workspace"}
-            onChannelSelect={discordData?.onChannelSelect}
-          />
-        </div>
-      )}
 
       {/* 노드 생성 중 토스트 팝업 */}
       <NodeCreationToast
@@ -976,43 +943,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             border: "1px solid #3a3a3a"
           }}
         />
-        
-        {/* 노드 추가 패널 - 화면 하단 중앙 (네비바 위) */}
-        <Panel 
-          position="bottom-center" 
-          className="flex justify-center" 
-          style={{ 
-            zIndex: 50,
-            bottom: nodeButtonBottom,
-            paddingBottom: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gap-2 bg-gray-800 hover:bg-gray-700 text-white border-gray-700">
-                <Plus className="h-4 w-4" />
-                노드 추가
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48 bg-gray-800 border-gray-700">
-              {Object.entries(nodeTypeLabels).map(([type, label]) => {
-                const Icon = nodeTypeIcons[type];
-                return (
-                  <DropdownMenuItem
-                    key={type}
-                    onClick={() => handleAddNode(type)}
-                    className="flex items-center gap-2 text-white hover:bg-gray-700"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Panel>
       </ReactFlow>
 
       {/* 노드 편집 사이드바 */}

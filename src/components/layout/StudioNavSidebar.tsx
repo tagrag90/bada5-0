@@ -8,7 +8,6 @@ import {
   StickyNote, 
   Edit3, 
   Settings,
-  Users,
   Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -124,14 +123,6 @@ export default function StudioNavSidebar({
                   새 글 쓰기
                 </Button>
               </Link> */}
-              <NavItem
-                icon={Users}
-                label="멤버 관리"
-                onClick={() => {
-                  const event = new CustomEvent('openMembersDialog');
-                  window.dispatchEvent(event);
-                }}
-              />
               <NavItem
                 icon={Settings}
                 label="설정"

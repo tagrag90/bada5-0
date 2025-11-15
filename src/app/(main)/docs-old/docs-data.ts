@@ -1,7 +1,7 @@
 export const docsInfo = {
   serviceName: "Divetobada",
   version: "1.0",
-  lastUpdated: "2025년 10월 5일",
+  lastUpdated: "2025년 1월 15일",
 };
 
 export const gettingStarted = [
@@ -271,5 +271,367 @@ axios.post('/sso/divetobada', { token })
     "💡 프로덕션에서는 https://divetobada.com 사용"
   ],
   example: "현재 Vessel 블로그 플랫폼에서 성공적으로 작동 중"
+};
+
+// 프로젝트 구조
+export const projectStructure = {
+  title: "프로젝트 구조",
+  description: "Divetobada는 가변 사이드바 시스템을 가진 모던한 웹 애플리케이션입니다.",
+  layout: {
+    title: "레이아웃 구조",
+    description: "프로젝트는 좌우 가변 사이드바와 중앙 콘텐츠 영역으로 구성됩니다.",
+    components: [
+      {
+        name: "LeftSidebarArea",
+        description: "좌측 사이드바 영역 - 서버 리스트와 페이지별 콘텐츠 블록을 표시",
+        width: "가변 (80px 또는 400px)",
+        features: [
+          "서버 리스트 (항상 표시, 80px)",
+          "페이지별 콘텐츠 블록 (조건부 표시, 320px)",
+          "동적 너비 조절 (콘텐츠 블록 유무에 따라)"
+        ]
+      },
+      {
+        name: "RightSidebarArea",
+        description: "우측 사이드바 영역 - 페이지별 추가 정보 블록을 표시",
+        width: "고정 (320px)",
+        features: [
+          "홈 페이지: 크리에이터 추천, 브랜드 사이드바",
+          "스튜디오 페이지: 스튜디오 정보, 멤버 목록",
+          "접기/펼치기 기능 (양쪽 사이드바 동시 제어)"
+        ]
+      },
+      {
+        name: "MainContent",
+        description: "중앙 콘텐츠 영역 - 페이지의 주요 콘텐츠를 표시",
+        width: "가변 (사이드바 너비에 따라 자동 조절)",
+        features: [
+          "CSS 변수를 통한 동적 너비 계산",
+          "중앙 정렬 유지",
+          "반응형 디자인 지원"
+        ]
+      }
+    ],
+    cssVariables: [
+      {
+        name: "--left-sidebar-width",
+        description: "좌측 사이드바 너비 (80px 또는 400px)",
+        default: "80px"
+      },
+      {
+        name: "--right-sidebar-width",
+        description: "우측 사이드바 너비 (320px)",
+        default: "320px"
+      }
+    ]
+  },
+  sidebarTypes: [
+    {
+      type: "none",
+      description: "사이드바 없음",
+      width: "0px"
+    },
+    {
+      type: "docs",
+      description: "독스 페이지 사이드바",
+      width: "400px",
+      content: "독스 네비게이션 메뉴"
+    },
+    {
+      type: "discord",
+      description: "스튜디오 디스코드 스타일 사이드바",
+      width: "80px 또는 400px",
+      content: "서버 리스트 + 스튜디오 채널 목록"
+    }
+  ]
+};
+
+// 노드 시스템
+export const nodeSystem = {
+  title: "워크스페이스 노드 시스템",
+  description: "스튜디오 워크스페이스에서 사용하는 노드 기반 화이트보드 시스템입니다.",
+  overview: {
+    title: "개요",
+    description: "노드는 워크스페이스에서 정보를 표현하고 연결하는 기본 단위입니다. 각 노드는 타입에 따라 다른 형태와 기능을 가집니다.",
+    features: [
+      "드래그 앤 드롭으로 자유롭게 배치",
+      "노드 간 연결선으로 관계 표현",
+      "노드 타입별 특화된 UI 및 기능",
+      "실시간 편집 및 저장"
+    ]
+  },
+  nodeTypes: [
+    {
+      type: "PLANNING",
+      label: "기획",
+      icon: "FileText",
+      description: "프로젝트 기획 및 아이디어를 기록하는 노드",
+      features: [
+        "제목과 내용 편집",
+        "이모지 추가 가능",
+        "다른 노드와 연결 가능",
+        "보라색 테두리로 강조 표시"
+      ]
+    },
+    {
+      type: "NOTE",
+      label: "메모",
+      icon: "FileText",
+      description: "일반적인 메모 및 텍스트 노드",
+      features: [
+        "리치 텍스트 에디터 지원",
+        "HTML 콘텐츠 렌더링",
+        "이모지 추가 가능",
+        "무제한 텍스트 입력"
+      ]
+    },
+    {
+      type: "SCHEDULE",
+      label: "캘린더",
+      icon: "Calendar",
+      description: "일정 및 이벤트 정보를 표시하는 노드",
+      features: [
+        "시작일/종료일 설정",
+        "이벤트 타입 표시 (일정/행사/마감기한)",
+        "설명 추가 가능",
+        "캘린더 뷰와 연동"
+      ]
+    },
+    {
+      type: "RESOURCE",
+      label: "드라이브",
+      icon: "Share2",
+      description: "파일 및 자료를 공유하는 노드",
+      features: [
+        "다중 파일 업로드",
+        "파일 목록 표시",
+        "파일 다운로드 기능",
+        "최대 3개 파일 미리보기"
+      ]
+    },
+    {
+      type: "POST",
+      label: "게시물",
+      icon: "FileImage",
+      description: "스튜디오 게시물을 워크스페이스에 임베드하는 노드",
+      features: [
+        "게시물 ID로 연결",
+        "작성자 정보 표시",
+        "게시물 내용 미리보기",
+        "이미지 썸네일 표시",
+        "원본 게시물 링크"
+      ]
+    },
+    {
+      type: "PHOTO",
+      label: "사진",
+      icon: "Image",
+      description: "이미지를 직접 표시하는 노드",
+      features: [
+        "이미지 업로드",
+        "이미지 크기에 맞춰 자동 크기 조절",
+        "비율 유지",
+        "리사이즈 핸들 제공"
+      ]
+    }
+  ],
+  nodeOperations: [
+    {
+      operation: "추가",
+      description: "사이드바의 노드 추가 버튼을 클릭하여 새 노드를 생성합니다.",
+      steps: [
+        "좌측 사이드바에서 노드 타입 선택",
+        "화이트보드에 노드가 생성됨",
+        "노드 클릭하여 내용 편집"
+      ]
+    },
+    {
+      operation: "편집",
+      description: "노드를 클릭하거나 편집 버튼을 눌러 내용을 수정합니다.",
+      steps: [
+        "노드에 마우스 오버 시 편집 버튼 표시",
+        "편집 버튼 클릭",
+        "사이드바에서 내용 수정",
+        "저장 버튼으로 변경사항 저장"
+      ]
+    },
+    {
+      operation: "연결",
+      description: "노드의 연결점을 드래그하여 다른 노드와 연결합니다.",
+      steps: [
+        "노드 우측 연결점에서 드래그 시작",
+        "다른 노드의 좌측 연결점에 드롭",
+        "연결선 생성됨",
+        "연결선에 라벨 추가 가능"
+      ]
+    },
+    {
+      operation: "삭제",
+      description: "노드를 삭제합니다. 연결된 연결선도 함께 제거됩니다.",
+      steps: [
+        "노드에 마우스 오버 시 삭제 버튼 표시",
+        "삭제 버튼 클릭",
+        "확인 대화상자에서 확인",
+        "노드 및 관련 연결선 삭제됨"
+      ]
+    }
+  ]
+};
+
+// SDK 커스텀 노드
+export const sdkCustomNodes = {
+  title: "SDK를 통한 커스텀 노드 개발",
+  description: "Divetobada SDK를 사용하여 자신만의 커스텀 노드를 만들고 워크스페이스에 통합할 수 있습니다.",
+  overview: {
+    title: "SDK 개요",
+    description: "SDK를 통해 커스텀 노드를 개발하면, 워크스페이스에서 자체 제작한 노드를 사용할 수 있습니다.",
+    benefits: [
+      "자신의 비즈니스 로직에 맞는 노드 개발",
+      "외부 서비스와의 통합",
+      "고급 자동화 기능 구현",
+      "커뮤니티와 노드 공유"
+    ]
+  },
+  gettingStarted: {
+    title: "시작하기",
+    steps: [
+      {
+        step: 1,
+        title: "SDK 설치",
+        code: `npm install @divetobada/sdk`
+      },
+      {
+        step: 2,
+        title: "노드 컴포넌트 작성",
+        code: `import { NodeComponent, NodeProps } from '@divetobada/sdk';
+
+export default function MyCustomNode({ data, id }: NodeProps) {
+  return (
+    <div className="custom-node">
+      <h3>{data.title}</h3>
+      <p>{data.content}</p>
+    </div>
+  );
+}`
+      },
+      {
+        step: 3,
+        title: "노드 등록",
+        code: `import { registerNode } from '@divetobada/sdk';
+import MyCustomNode from './MyCustomNode';
+
+registerNode({
+  type: 'MY_CUSTOM_TYPE',
+  label: '내 커스텀 노드',
+  icon: 'CustomIcon',
+  component: MyCustomNode,
+  defaultWidth: 300,
+  defaultHeight: 200
+});`
+      },
+      {
+        step: 4,
+        title: "워크스페이스에 통합",
+        code: `// 스튜디오 설정에서 커스텀 노드 활성화
+// 또는 API를 통해 노드 플러그인 등록`
+      }
+    ]
+  },
+  nodeInterface: {
+    title: "노드 인터페이스",
+    description: "커스텀 노드는 다음 인터페이스를 구현해야 합니다.",
+    props: [
+      {
+        name: "data",
+        type: "CustomNodeData",
+        description: "노드의 데이터 객체",
+        required: true
+      },
+      {
+        name: "id",
+        type: "string",
+        description: "노드의 고유 ID",
+        required: true
+      },
+      {
+        name: "selected",
+        type: "boolean",
+        description: "노드가 선택되었는지 여부",
+        required: false
+      }
+    ],
+    methods: [
+      {
+        name: "onEdit",
+        description: "노드 편집 시 호출되는 콜백",
+        parameters: ["nodeId: string"]
+      },
+      {
+        name: "onDelete",
+        description: "노드 삭제 시 호출되는 콜백",
+        parameters: ["nodeId: string"]
+      }
+    ]
+  },
+  examples: [
+    {
+      title: "간단한 텍스트 노드",
+      description: "기본적인 텍스트 표시 노드 예제",
+      code: `import { NodeComponent } from '@divetobada/sdk';
+
+const SimpleTextNode: NodeComponent = ({ data }) => {
+  return (
+    <div className="p-4 border-2 border-black rounded-lg">
+      <h3 className="font-bold">{data.title}</h3>
+      <p className="text-sm text-gray-600">{data.content}</p>
+    </div>
+  );
+};
+
+export default SimpleTextNode;`
+    },
+    {
+      title: "API 연동 노드",
+      description: "외부 API와 연동하는 노드 예제",
+      code: `import { NodeComponent } from '@divetobada/sdk';
+import { useQuery } from '@tanstack/react-query';
+
+const APINode: NodeComponent = ({ data, id }) => {
+  const { data: apiData } = useQuery({
+    queryKey: ['api-node', id],
+    queryFn: async () => {
+      const res = await fetch(data.apiUrl);
+      return res.json();
+    }
+  });
+
+  return (
+    <div className="p-4 border-2 border-black rounded-lg">
+      <h3 className="font-bold">{data.title}</h3>
+      {apiData ? (
+        <pre>{JSON.stringify(apiData, null, 2)}</pre>
+      ) : (
+        <p>로딩 중...</p>
+      )}
+    </div>
+  );
+};
+
+export default APINode;`
+    }
+  ],
+  bestPractices: [
+    "노드의 크기는 콘텐츠에 맞게 자동 조절되도록 설계하세요",
+    "연결점(Handle)은 노드의 좌우에 배치하세요",
+    "편집 및 삭제 기능은 호버 시에만 표시하세요",
+    "노드 데이터는 JSON 형식으로 저장됩니다",
+    "성능을 위해 불필요한 리렌더링을 방지하세요"
+  ],
+  futureFeatures: [
+    "노드 마켓플레이스 (커뮤니티 노드 공유)",
+    "노드 실행 기능 (자동화 워크플로우)",
+    "노드 간 데이터 전달",
+    "노드 그룹화 및 템플릿 기능"
+  ]
 };
 

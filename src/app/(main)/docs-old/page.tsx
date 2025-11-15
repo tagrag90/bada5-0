@@ -14,7 +14,10 @@ import {
   teamBadaServices,
   experimentalFeatures,
   officialChannel,
-  ssoIntegration
+  ssoIntegration,
+  projectStructure,
+  nodeSystem,
+  sdkCustomNodes
 } from "./docs-data";
 import LatestYoutubeVideo from "@/components/LatestYoutubeVideo";
 import YoutubeStats from "@/components/YoutubeStats";
@@ -63,7 +66,10 @@ export default function DocsPage() {
           <a href="#channel" className="text-primary hover:underline">6. 공식 채널</a>
           <a href="#faq" className="text-primary hover:underline">7. 자주 묻는 질문</a>
           <a href="#guidelines" className="text-primary hover:underline">8. 커뮤니티 가이드라인</a>
-          <a href="#sso" className="text-primary hover:underline">9. Login with Divetobada</a>
+          <a href="#project-structure" className="text-primary hover:underline">9. 프로젝트 구조</a>
+          <a href="#nodes" className="text-primary hover:underline">10. 워크스페이스 노드</a>
+          <a href="#sdk-nodes" className="text-primary hover:underline">11. SDK 커스텀 노드</a>
+          <a href="#sso" className="text-primary hover:underline">12. Login with Divetobada</a>
         </nav>
       </div>
 
@@ -308,9 +314,286 @@ export default function DocsPage() {
         </div>
       </section>
 
-      {/* 9. Login with Divetobada (SSO 통합) */}
+      {/* 9. 프로젝트 구조 */}
+      <section id="project-structure" className="mb-12">
+        <h2 className="text-2xl font-bold mb-6">9. 프로젝트 구조</h2>
+        
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">
+          <h3 className="font-semibold text-xl mb-3">{projectStructure.title}</h3>
+          <p className="text-muted-foreground mb-6">{projectStructure.description}</p>
+          
+          {/* 레이아웃 구조 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">{projectStructure.layout.title}</h4>
+            <p className="text-sm text-muted-foreground mb-4">{projectStructure.layout.description}</p>
+            
+            <div className="space-y-4">
+              {projectStructure.layout.components.map((component, index) => (
+                <div key={index} className="border border-border rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h5 className="font-semibold text-base">{component.name}</h5>
+                      <p className="text-sm text-muted-foreground">{component.description}</p>
+                    </div>
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {component.width}
+                    </span>
+                  </div>
+                  <ul className="space-y-1 mt-2">
+                    {component.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <span className="text-primary mt-1">•</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CSS 변수 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">CSS 변수</h4>
+            <div className="space-y-3">
+              {projectStructure.layout.cssVariables.map((variable, index) => (
+                <div key={index} className="border border-border rounded p-3">
+                  <code className="text-sm font-mono text-primary">{variable.name}</code>
+                  <p className="text-sm text-muted-foreground mt-1">{variable.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">기본값: {variable.default}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 사이드바 타입 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-4">사이드바 타입</h4>
+            <div className="space-y-3">
+              {projectStructure.sidebarTypes.map((sidebar, index) => (
+                <div key={index} className="border border-border rounded p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <code className="text-sm font-mono text-primary">{sidebar.type}</code>
+                    <span className="text-xs bg-accent px-2 py-1 rounded">{sidebar.width}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{sidebar.description}</p>
+                  {sidebar.content && (
+                    <p className="text-xs text-muted-foreground mt-1">콘텐츠: {sidebar.content}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 10. 워크스페이스 노드 시스템 */}
+      <section id="nodes" className="mb-12">
+        <h2 className="text-2xl font-bold mb-6">10. 워크스페이스 노드 시스템</h2>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6 mb-6">
+          <h3 className="font-semibold text-xl mb-3">{nodeSystem.title}</h3>
+          <p className="text-muted-foreground mb-6">{nodeSystem.description}</p>
+          
+          {/* 노드 예제 링크 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 mb-6">
+            <p className="text-sm text-muted-foreground mb-3">
+              실제 노드 컴포넌트의 동작을 확인하고 싶으시다면 노드 예제 페이지를 방문하세요.
+            </p>
+            <Link href="/docs-old/node-examples">
+              <Button variant="outline" className="w-full">
+                노드 예제 보기 →
+              </Button>
+            </Link>
+          </div>
+          
+          {/* 개요 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">{nodeSystem.overview.title}</h4>
+            <p className="text-sm text-muted-foreground mb-4">{nodeSystem.overview.description}</p>
+            <ul className="space-y-2">
+              {nodeSystem.overview.features.map((feature, index) => (
+                <li key={index} className="text-sm flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 노드 타입 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">노드 타입</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              {nodeSystem.nodeTypes.map((nodeType, index) => (
+                <div key={index} className="border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{nodeType.icon}</span>
+                    <h5 className="font-semibold">{nodeType.label}</h5>
+                    <code className="text-xs bg-accent px-2 py-0.5 rounded">{nodeType.type}</code>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{nodeType.description}</p>
+                  <ul className="space-y-1">
+                    {nodeType.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <span className="text-primary mt-1">•</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 노드 작업 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-4">노드 작업</h4>
+            <div className="space-y-4">
+              {nodeSystem.nodeOperations.map((operation, index) => (
+                <div key={index} className="border border-border rounded-lg p-4">
+                  <h5 className="font-semibold mb-2">{operation.operation}</h5>
+                  <p className="text-sm text-muted-foreground mb-3">{operation.description}</p>
+                  <ol className="space-y-2">
+                    {operation.steps.map((step, stepIndex) => (
+                      <li key={stepIndex} className="text-sm flex items-start gap-3">
+                        <span className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-semibold">
+                          {stepIndex + 1}
+                        </span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 11. SDK 커스텀 노드 */}
+      <section id="sdk-nodes" className="mb-12">
+        <h2 className="text-2xl font-bold mb-6">11. SDK 커스텀 노드</h2>
+        
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg p-6 mb-6">
+          <h3 className="font-semibold text-xl mb-3">{sdkCustomNodes.title}</h3>
+          <p className="text-muted-foreground mb-6">{sdkCustomNodes.description}</p>
+          
+          {/* 개요 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">{sdkCustomNodes.overview.title}</h4>
+            <p className="text-sm text-muted-foreground mb-4">{sdkCustomNodes.overview.description}</p>
+            <ul className="space-y-2">
+              {sdkCustomNodes.overview.benefits.map((benefit, index) => (
+                <li key={index} className="text-sm flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 시작하기 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">{sdkCustomNodes.gettingStarted.title}</h4>
+            <div className="space-y-4">
+              {sdkCustomNodes.gettingStarted.steps.map((step, index) => (
+                <div key={index} className="border border-border rounded-lg p-4">
+                  <h5 className="font-semibold mb-2">{step.step}. {step.title}</h5>
+                  <div className="bg-muted p-4 rounded-lg overflow-x-auto mt-3">
+                    <pre className="text-xs">
+                      <code>{step.code}</code>
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 노드 인터페이스 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">{sdkCustomNodes.nodeInterface.title}</h4>
+            <p className="text-sm text-muted-foreground mb-4">{sdkCustomNodes.nodeInterface.description}</p>
+            
+            <div className="space-y-3 mb-4">
+              <h5 className="font-semibold text-sm">Props</h5>
+              {sdkCustomNodes.nodeInterface.props.map((prop, index) => (
+                <div key={index} className="border border-border rounded p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <code className="text-sm font-mono text-primary">{prop.name}</code>
+                    <code className="text-xs bg-accent px-2 py-0.5 rounded">{prop.type}</code>
+                    {prop.required && (
+                      <span className="text-xs text-red-500">필수</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{prop.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <h5 className="font-semibold text-sm">Methods</h5>
+              {sdkCustomNodes.nodeInterface.methods.map((method, index) => (
+                <div key={index} className="border border-border rounded p-3">
+                  <code className="text-sm font-mono text-primary">{method.name}</code>
+                  <p className="text-xs text-muted-foreground mt-1">{method.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    파라미터: {method.parameters.join(", ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 예제 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">예제</h4>
+            <div className="space-y-4">
+              {sdkCustomNodes.examples.map((example, index) => (
+                <div key={index} className="border border-border rounded-lg p-4">
+                  <h5 className="font-semibold mb-2">{example.title}</h5>
+                  <p className="text-sm text-muted-foreground mb-3">{example.description}</p>
+                  <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+                    <pre className="text-xs">
+                      <code>{example.code}</code>
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 모범 사례 */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4">모범 사례</h4>
+            <ul className="space-y-2">
+              {sdkCustomNodes.bestPractices.map((practice, index) => (
+                <li key={index} className="text-sm flex items-start gap-2">
+                  <span className="text-primary mt-1">•</span>
+                  <span>{practice}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 향후 기능 */}
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+            <h4 className="font-semibold text-lg mb-4">향후 기능</h4>
+            <ul className="space-y-2">
+              {sdkCustomNodes.futureFeatures.map((feature, index) => (
+                <li key={index} className="text-sm flex items-start gap-2">
+                  <span className="text-amber-600 dark:text-amber-400 mt-1">🚀</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 12. Login with Divetobada (SSO 통합) */}
       <section id="sso" className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">9. Login with Divetobada (SSO)</h2>
+        <h2 className="text-2xl font-bold mb-6">12. Login with Divetobada (SSO)</h2>
         
         {/* 소개 */}
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6">

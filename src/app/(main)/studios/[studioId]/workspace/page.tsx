@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Plus, FileText, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +18,22 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
+import StudioProfileCard from "@/components/StudioProfileCard";
+import MembersDialog from "../MembersDialog";
+import EditStudioDialog from "../EditStudioDialog";
 
 export default function WorkspaceDashboard() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { setDiscordSidebar } = useSidebar();
+  const { setDiscordSidebar, setSidebar } = useSidebar();
   const currentUser = useOptionalUser();
   const studioId = params.studioId as string;
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newFileName, setNewFileName] = useState("");
+  const [showMembersDialog, setShowMembersDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   // 스튜디오 정보 조회
   const { data: studio } = useQuery({
@@ -74,32 +79,36 @@ export default function WorkspaceDashboard() {
     }
   }, [studioId, router]);
 
-  // 디스코드 사이드바 설정
+  // 디스코드 사이드바 활성화 (다른 페이지와 동일하게)
   React.useEffect(() => {
     if (studio) {
-      const fullStudioData = {
-        id: studio.id,
-        name: studio.name,
-        slug: studio.slug,
-        description: studio.description,
-        avatarUrl: studio.avatarUrl,
-        bannerUrl: studio.bannerUrl,
-        socialLinks: studio.socialLinks,
-        _count: studio._count,
-        subscribersCount: studio.subscribersCount,
-      };
-
       setDiscordSidebar({
         selectedStudioId: studioId,
-        selectedChannel: "workspace",
+        selectedChannel: 'workspace',
         onStudioSelect: handleStudioSelect,
         onChannelSelect: handleChannelSelect,
         studioName: studio.name,
-        studio: fullStudioData,
-        isOwner,
+        studio: studio,
+        isOwner: isOwner,
       });
     }
-  }, [studioId, studio, isOwner, setDiscordSidebar, handleStudioSelect, handleChannelSelect]);
+  }, [studio, studioId, isOwner, setDiscordSidebar, handleStudioSelect, handleChannelSelect]);
+
+  // 이벤트 리스너 설정
+  useEffect(() => {
+    // 다이얼로그 열기 이벤트 리스너
+    const handleOpenMembers = () => setShowMembersDialog(true);
+    const handleOpenSettings = () => setShowEditDialog(true);
+
+    window.addEventListener('openMembersDialog', handleOpenMembers);
+    window.addEventListener('openSettingsDialog', handleOpenSettings);
+
+    // 클린업
+    return () => {
+      window.removeEventListener('openMembersDialog', handleOpenMembers);
+      window.removeEventListener('openSettingsDialog', handleOpenSettings);
+    };
+  }, []);
 
   // 파일 목록 조회
   const { data: files, isLoading } = useQuery({
@@ -175,12 +184,26 @@ export default function WorkspaceDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen p-8">
-      {/* 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">워크스페이스</h1>
-        <p className="text-gray-600">파일을 선택하거나 새로 만드세요</p>
-      </div>
+    <div className="w-full min-w-0">
+      {/* 스튜디오 프로필 카드 */}
+      {studio && (
+        <StudioProfileCard
+          studio={studio}
+          studioName={studio.name}
+          studioId={studioId}
+          isOwner={isOwner}
+          isAdmin={isAdmin}
+          selectedTab="workspace"
+          onTabSelect={handleChannelSelect}
+        />
+      )}
+
+      <div className="w-full min-h-screen p-8">
+        {/* 헤더 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">워크스페이스</h1>
+          <p className="text-gray-600">파일을 선택하거나 새로 만드세요</p>
+        </div>
 
       {/* 파일 생성 버튼 */}
       <div className="mb-6">
@@ -247,6 +270,22 @@ export default function WorkspaceDashboard() {
         </div>
       )}
 
+      {/* 다이얼로그들 */}
+      {studio && (
+        <>
+          <EditStudioDialog
+            open={showEditDialog}
+            onOpenChange={setShowEditDialog}
+            studio={studio}
+          />
+          <MembersDialog
+            open={showMembersDialog}
+            onOpenChange={setShowMembersDialog}
+            studioId={studioId}
+          />
+        </>
+      )}
+
       {/* 파일 생성 다이얼로그 */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
@@ -291,6 +330,7 @@ export default function WorkspaceDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

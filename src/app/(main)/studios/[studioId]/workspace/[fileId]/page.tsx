@@ -4,7 +4,6 @@ import React, { Suspense, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import StudioWorkspace from "../../StudioWorkspace";
-import WorkspaceFileHeader from "./WorkspaceFileHeader";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
 
@@ -58,38 +57,24 @@ function WorkspaceFileContent() {
     }
   }, [studioId, router]);
 
-  // 디스코드 사이드바 설정
+  // 디스코드 사이드바 활성화 (파일 헤더가 사이드바 내부에 표시됨)
   useEffect(() => {
     if (studio) {
-      const fullStudioData = {
-        id: studio.id,
-        name: studio.name,
-        slug: studio.slug,
-        description: studio.description,
-        avatarUrl: studio.avatarUrl,
-        bannerUrl: studio.bannerUrl,
-        socialLinks: studio.socialLinks,
-        _count: studio._count,
-        subscribersCount: studio.subscribersCount,
-      };
-
       setDiscordSidebar({
         selectedStudioId: studioId,
-        selectedChannel: "workspace",
+        selectedChannel: 'workspace',
         onStudioSelect: handleStudioSelect,
         onChannelSelect: handleChannelSelect,
         studioName: studio.name,
-        studio: fullStudioData,
-        isOwner,
+        studio: studio,
+        isOwner: isOwner,
+        fileId: fileId, // 파일 ID 전달
       });
     }
-  }, [studioId, studio, isOwner, setDiscordSidebar, handleStudioSelect, handleChannelSelect]);
+  }, [studio, studioId, isOwner, setDiscordSidebar, handleStudioSelect, handleChannelSelect, fileId]);
 
   return (
-    <div className="w-full h-full relative">
-      {/* 파일 헤더 */}
-      <WorkspaceFileHeader studioId={studioId} fileId={fileId} />
-      
+    <div className="w-full h-screen fixed inset-0">
       {/* 화이트보드 */}
       <div className="w-full h-full">
         <StudioWorkspace studioId={studioId} fileId={fileId} />

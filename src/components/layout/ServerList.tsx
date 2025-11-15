@@ -27,6 +27,15 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import PostEditorModal from "@/components/posts/editor/PostEditorModal";
+import UserAvatar from "@/components/UserAvatar";
+import { useSession } from "@/app/(main)/SessionProvider";
+import { useState } from "react";
+import kyInstance from "@/lib/ky";
+import { NotificationCountInfo } from "@/lib/types";
+import writeIcon from "@/assets/write.png";
+import bellIcon from "@/assets/like.png";
 
 interface Studio {
   id: string;
@@ -124,6 +133,20 @@ export default function ServerList({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useSession();
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+  // 읽지 않은 알림 개수 조회
+  const { data: notificationData } = useQuery<NotificationCountInfo>({
+    queryKey: ["unread-notification-count"],
+    queryFn: () =>
+      kyInstance
+        .get("/api/notifications/unread-count")
+        .json<NotificationCountInfo>(),
+    enabled: !!user,
+    initialData: { unreadCount: 0 },
+    refetchInterval: 60 * 1000,
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -204,9 +227,9 @@ export default function ServerList({
   };
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* 상단: 홈 버튼 (바다 로고) */}
-      <div className="flex flex-col items-center p-3">
+      <div className="flex flex-col items-center p-3 flex-shrink-0">
         <Link href="/">
           <button
             onClick={() => onStudioSelect(null)}
@@ -243,7 +266,7 @@ export default function ServerList({
       </div>
 
       {/* 서버 목록 */}
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="flex-1 overflow-y-auto px-2 min-h-0">
         <div className="space-y-2">
           {/* 스튜디오 목록 */}
           {isLoading ? (
@@ -291,6 +314,60 @@ export default function ServerList({
           </button>
         </div>
       </div>
-    </>
+
+      {/* 하단: 글쓰기, 알림, 유저 버튼 (수직 정렬) */}
+      {user && (
+        <div className="flex flex-col items-center gap-2 p-3 border-t border-gray-200 flex-shrink-0">
+          {/* 글쓰기 버튼 */}
+          <button
+            onClick={() => setIsEditorOpen(true)}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 transition-all hover:bg-gray-200"
+            title="글쓰기"
+          >
+            <Image src={writeIcon} alt="Write" width={24} height={24} />
+          </button>
+
+          {/* 알림 버튼 */}
+          <Link href="/notifications">
+            <button
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 transition-all hover:bg-gray-200"
+              title="알림"
+            >
+              <div className="relative">
+                <Image src={bellIcon} alt="Notifications" width={24} height={24} />
+                {!!notificationData?.unreadCount && (
+                  <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-xs font-medium tabular-nums text-primary-foreground">
+                    {notificationData.unreadCount}
+                  </span>
+                )}
+              </div>
+            </button>
+          </Link>
+
+          {/* 유저 프로필 버튼 */}
+          <Link href={`/users/${user.username}`}>
+            <button
+              className="flex h-14 w-14 items-center justify-center rounded-full transition-all hover:bg-gray-100"
+              title="프로필"
+            >
+              <UserAvatar
+                avatarUrl={user.avatarUrl}
+                userId={user.id}
+                size={56}
+                className="border-2 border-stone-700"
+              />
+            </button>
+          </Link>
+        </div>
+      )}
+
+      {/* 글쓰기 모달 */}
+      {user && (
+        <PostEditorModal
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+        />
+      )}
+    </div>
   );
 }

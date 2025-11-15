@@ -115,10 +115,16 @@
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+  }
+  
   body {
     /* @apply bg-background text-foreground; */ /* 기존 Tailwind 적용 방식 주석 처리 */
     background-color: var(--background); /* 표준 CSS로 배경색 설정 */
     @apply text-foreground; /* 전경색은 Tailwind 유지 */
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* 페이지별 배경색 클래스 */

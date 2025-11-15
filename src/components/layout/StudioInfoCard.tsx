@@ -244,17 +244,6 @@ export default function StudioInfoCard({ studio, studioName, isOwner = false, is
               >
                 스튜디오 설정
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                size="sm"
-                onClick={() => {
-                  const event = new CustomEvent('openMembersDialog');
-                  window.dispatchEvent(event);
-                }}
-              >
-                멤버 관리
-              </Button>
             </div>
           </>
         )}

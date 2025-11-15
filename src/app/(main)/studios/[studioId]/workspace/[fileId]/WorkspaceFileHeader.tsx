@@ -124,7 +124,7 @@ export default function WorkspaceFileHeader({ studioId, fileId }: WorkspaceFileH
   }
 
   return (
-    <div className="w-full bg-white border-b border-gray-200 px-4 py-3 z-10 relative">
+    <div className="w-full bg-white border-b border-gray-200 px-4 py-3">
       <div className="flex items-center gap-4">
         {/* 뒤로가기 버튼 */}
         <Button
@@ -139,54 +139,74 @@ export default function WorkspaceFileHeader({ studioId, fileId }: WorkspaceFileH
         {/* 파일 정보 */}
         <div className="flex-1 min-w-0">
           {isEditing ? (
-            <div className="flex items-center gap-2">
-              <Input
-                ref={nameInputRef}
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                className="flex-1 max-w-md"
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={nameInputRef}
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="flex-1"
+                  placeholder="파일 이름"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSave();
+                    } else if (e.key === "Escape") {
+                      handleCancel();
+                    }
+                  }}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleSave}
+                  disabled={updateFileMutation.isPending}
+                  className="h-8 w-8"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleCancel}
+                  disabled={updateFileMutation.isPending}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                className="flex-1 min-h-[60px] resize-none"
+                placeholder="캡션 (선택사항)"
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && e.ctrlKey) {
+                    e.preventDefault();
                     handleSave();
                   } else if (e.key === "Escape") {
                     handleCancel();
                   }
                 }}
               />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleSave}
-                disabled={updateFileMutation.isPending}
-                className="h-8 w-8"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleCancel}
-                disabled={updateFileMutation.isPending}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold truncate">{file.name}</h1>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleStartEdit}
-                className="h-8 w-8"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold truncate">{file.name}</h1>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleStartEdit}
+                  className="h-8 w-8"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+              {file.description && (
+                <p className="text-sm text-gray-500 mt-1 break-words">{file.description}</p>
+              )}
             </div>
-          )}
-          {file.description && !isEditing && (
-            <p className="text-sm text-gray-500 mt-1 truncate">{file.description}</p>
           )}
         </div>
       </div>

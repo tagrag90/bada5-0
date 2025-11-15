@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Calendar, StickyNote, Network, Users, Settings } from "lucide-react";
+import { FileText, Calendar, StickyNote, Network, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
@@ -137,14 +137,6 @@ export default function MobileStudioContentList({
           <>
             <Separator />
             <div className="space-y-1">
-              <NavItem
-                icon={Users}
-                label="멤버 관리"
-                onClick={() => {
-                  const event = new CustomEvent('openMembersDialog');
-                  window.dispatchEvent(event);
-                }}
-              />
               <NavItem
                 icon={Settings}
                 label="설정"

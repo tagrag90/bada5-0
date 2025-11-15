@@ -13,8 +13,6 @@ interface FeedRightSidebarProps {
   className?: string;
 }
 
-// 우측 사이드바 주석처리 - 내용물이 DiscordStyleSidebar로 이동됨
-/*
 export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
   return (
     <div
@@ -23,11 +21,11 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
         className,
       )}
     >
-      {/* 프로필 버튼 - 상단 *//*}
+      {/* 프로필 버튼 - 상단 */}
       <UserProfileButton />
 
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-        {/* 공지사항 *//*}
+        {/* 공지사항 */}
         <div className="relative group">
           <div
             className="relative space-y-3 rounded-2xl bg-black p-6 shadow-md transition-all duration-500 group-hover:scale-[1.03]"
@@ -53,7 +51,7 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
         <WhoToFollow />
         <StudiosToExplore />
 
-        {/* 브랜드 사이드바 - 하단 *//*}
+        {/* 브랜드 사이드바 - 하단 */}
         <div className="space-y-5 rounded-2xl bg-card p-5 shadow-sm">
           <BrandSidebar />
 
@@ -109,10 +107,4 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
       </Suspense>
     </div>
   );
-}
-*/
-
-// 임시 빈 컴포넌트 반환 (주석처리된 상태)
-export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
-  return null;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Calendar, StickyNote, Edit3, Users, Settings, ChevronDown } from "lucide-react";
+import { FileText, Calendar, StickyNote, Edit3, Settings, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import Link from "next/link";
@@ -87,14 +87,6 @@ export default function StudioContentList({
           <>
             <Separator />
             <div className="space-y-1">
-              <NavItem
-                icon={Users}
-                label="멤버 관리"
-                onClick={() => {
-                  const event = new CustomEvent('openMembersDialog');
-                  window.dispatchEvent(event);
-                }}
-              />
               <NavItem
                 icon={Settings}
                 label="설정"

@@ -1,11 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Menu } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import EditStudioDialog from "./EditStudioDialog";
 import MembersDialog from "./MembersDialog";
@@ -13,12 +9,11 @@ import StudioCalendar from "./StudioCalendar";
 import StudioNotes from "./StudioNotes";
 import StudioPosts from "./StudioPosts";
 import StudioWorkspace from "./StudioWorkspace";
-import Image from "next/image";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import MobileStudioBottomSheet from "@/components/layout/MobileStudioBottomSheet";
-import TabletChannelSidebar from "@/components/layout/TabletChannelSidebar";
+import StudioProfileCard from "@/components/StudioProfileCard";
 
 function WorkspaceRedirect({ studioId }: { studioId: string }) {
   const router = useRouter();
@@ -41,26 +36,15 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const tabFromUrl = searchParams.get("tab") || "workspace";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
-  const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
-  const [tabletButtonLeft, setTabletButtonLeft] = useState('1rem'); // 기본값: left-4
-  const { setSidebar, discordData, setDiscordSidebar } = useSidebar();
-  
-  // 테블릿 사이즈에서 서버 사이드바 너비(80px) 고려하여 버튼 위치 조정
+  const { setDiscordSidebar } = useSidebar();
+
+  // URL 파라미터와 동기화
   useEffect(() => {
-    const updateButtonPosition = () => {
-      const isTablet = window.innerWidth >= 768 && window.innerWidth < 1280;
-      if (isTablet) {
-        // 서버 사이드바(80px) + 여유 공간(16px) = 96px
-        setTabletButtonLeft('96px');
-      } else {
-        setTabletButtonLeft('1rem'); // 기본값
-      }
-    };
-    
-    updateButtonPosition();
-    window.addEventListener('resize', updateButtonPosition);
-    return () => window.removeEventListener('resize', updateButtonPosition);
-  }, []);
+    const tab = searchParams.get("tab") || "workspace";
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, activeTab]);
 
   const { data: studio, isLoading } = useQuery({
     queryKey: ["studio", studioId],
@@ -81,15 +65,8 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
     },
   });
 
-  // 디스코드 사이드바에 스튜디오 정보 전달
-  useEffect(() => {
-    if (discordData && studio) {
-      discordData.studioName = studio.name;
-    }
-  }, [discordData, studio]);
-
-  // 디스코드 사이드바에서 선택된 채널 사용 (우선순위)
-  const currentTab = discordData?.selectedChannel || activeTab;
+  // 현재 탭
+  const currentTab = activeTab;
 
   // 멤버십 상태 확인
   const { data: membershipStatus } = useQuery({
@@ -109,53 +86,36 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   // 관리자 권한 확인 (소유자이거나 ADMIN 멤버)
   const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
 
-  // 스튜디오 상세 페이지에서도 디스코드 사이드바 활성화
-  const [selectedStudioId, setSelectedStudioId] = useState<string | null>(studioId);
-  const [selectedChannel, setSelectedChannel] = useState<string>(activeTab);
-
-  const handleStudioSelect = (studioId: string | null) => {
-    setSelectedStudioId(studioId);
-    setSelectedChannel('workspace');
-  };
-
-  const handleChannelSelect = (channel: string) => {
-    setSelectedChannel(channel);
-    setActiveTab(channel); // 기존 activeTab도 동기화
+  const handleChannelSelect = React.useCallback((channel: string) => {
+    setActiveTab(channel);
     // workspace 탭 클릭 시 대시보드로 리다이렉트
     if (channel === "workspace") {
       router.push(`/studios/${studioId}/workspace`);
     } else {
       router.push(`/studios/${studioId}?tab=${channel}`);
     }
-  };
+  }, [studioId, router]);
 
-  // 디스코드 사이드바 활성화
+  // 디스코드 사이드바 활성화 (다른 페이지와 동일하게)
   useEffect(() => {
     if (studio) {
-      // 스튜디오 데이터를 완전하게 전달
-      const fullStudioData = {
-        id: studio.id,
-        name: studio.name,
-        slug: studio.slug,
-        description: studio.description,
-        avatarUrl: studio.avatarUrl,
-        bannerUrl: studio.bannerUrl,
-        socialLinks: studio.socialLinks,
-        _count: studio._count,
-        subscribersCount: studio.subscribersCount,
-      };
-
       setDiscordSidebar({
         selectedStudioId: studioId,
-        selectedChannel: selectedChannel,
-        onStudioSelect: handleStudioSelect,
+        selectedChannel: activeTab === 'workspace' ? 'posts' : activeTab,
+        onStudioSelect: (id: string | null) => {
+          if (id) {
+            router.push(`/studios/${id}`);
+          } else {
+            router.push('/');
+          }
+        },
         onChannelSelect: handleChannelSelect,
         studioName: studio.name,
-        studio: fullStudioData,
-        isOwner,
+        studio: studio,
+        isOwner: isOwner,
       });
     }
-  }, [studioId, selectedChannel, studio, isOwner, setDiscordSidebar]);
+  }, [studio, studioId, activeTab, isOwner, setDiscordSidebar, router, handleChannelSelect]);
 
   // 이벤트 리스너 설정
   useEffect(() => {
@@ -191,22 +151,20 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   return (
     <div className="w-full min-w-0">
-      {/* 테블릿: 좌측 상단 사이드바 버튼 (768px~1279px) */}
-      <div 
-        className="fixed top-4 z-40 hidden sm:flex xl:hidden"
-        style={{ left: tabletButtonLeft }}
-      >
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsTabletSidebarOpen(true)}
-          className="h-10 w-10 rounded-full bg-white shadow-lg"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* 스튜디오 프로필 카드 */}
+      {studio && (
+        <StudioProfileCard
+          studio={studio}
+          studioName={studio.name}
+          studioId={studioId}
+          isOwner={isOwner}
+          isAdmin={isAdmin}
+          selectedTab={currentTab}
+          onTabSelect={handleChannelSelect}
+        />
+      )}
 
-      {/* 스튜디오 콘텐츠 - 디스코드 사이드바 우측 칼럼과 연동 */}
+      {/* 스튜디오 콘텐츠 */}
       <div className={currentTab === "workspace" ? "w-full h-full" : ""}>
         {currentTab === "posts" && <StudioPosts studioId={studioId} isOwner={isOwner} />}
         {currentTab === "calendar" && <StudioCalendar studioId={studioId} />}
@@ -226,18 +184,6 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
             open={showMembersDialog}
             onOpenChange={setShowMembersDialog}
             studioId={studioId}
-          />
-
-          {/* 테블릿 채널 사이드바 (좌측 슬라이드, 768px~1279px) */}
-          <TabletChannelSidebar
-            open={isTabletSidebarOpen}
-            onOpenChange={setIsTabletSidebarOpen}
-            studioId={studioId}
-            studioName={studio.name}
-            studio={studio}
-            selectedTab={currentTab}
-            onTabSelect={handleChannelSelect}
-            isOwner={isOwner}
           />
 
           {/* 모바일 하단 바텀시트 (모바일만, 768px 미만) - 항상 표시 */}

@@ -1,34 +1,27 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  TabsVertical,
-  TabsVerticalContent,
-  TabsVerticalList,
-  TabsVerticalTrigger,
-} from "@/components/ui/tabsvertical";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import ForYouFeed from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
-import UsersFeed from "./UsersFeed";
-import { Button } from "@/components/ui/button";
-import UserButton from "@/components/UserButton";
-import Image from "next/image";
-import Link from "next/link";
-import MainLogoWhite from "@/assets/logowhite.png";
-import MainLogoBlack from "@/assets/logobalck.png";
 import { useOptionalUser } from "./SessionProvider";
-import InlinePostEditor from "@/components/posts/editor/InlinePostEditor";
-import { cn } from "@/lib/utils";
 import NonLoggedInContent from "@/components/NonLoggedInContent";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function MainContent() {
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const user = useOptionalUser();
   const isLoggedIn = !!user;
-  const [activeMobileTab, setActiveMobileTab] = useState<'for-you' | 'following' | 'users'>('for-you');
   const { setDiscordSidebar } = useSidebar();
+  const pathname = usePathname();
+  
+  // 스튜디오 페이지인지 확인
+  const isStudioPage = pathname?.startsWith('/studios/') && !pathname?.includes('/settings');
 
   // 디스코드 스타일 사이드바 활성화
   const [selectedStudioId, setSelectedStudioId] = useState<string | null>(null);
@@ -44,9 +37,9 @@ export default function MainContent() {
     setSelectedChannel(channel);
   };
 
-  // 디스코드 사이드바 활성화 (로그인 시 즉시 실행)
+  // 디스코드 사이드바 활성화 (로그인 시 즉시 실행, 단 스튜디오 페이지에서는 제외)
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && !isStudioPage) {
       setDiscordSidebar({
         selectedStudioId: selectedStudioId || null,
         selectedChannel: selectedChannel || 'posts',
@@ -55,167 +48,42 @@ export default function MainContent() {
         studioName: "",
       });
     }
-  }, [isLoggedIn, selectedStudioId, selectedChannel, setDiscordSidebar]);
+  }, [isLoggedIn, selectedStudioId, selectedChannel, setDiscordSidebar, isStudioPage]);
 
   return (
     <main className="flex-1">
-      {/* 데스크톱 버전 */}
-      <TabsVertical defaultValue="for-you" className="hidden w-full md:block">
-        <div
-          className="flex w-full justify-between px-4 py-4"
-          style={{ borderRadius: '1.5rem', backgroundColor: '#000000' }}
-        >
-          <div className="flex w-1/3 items-center justify-start">
-            {isLoggedIn ? (
-              <UserButton className="border-2 border-stone-700" />
-            ) : (
-              <Link href="/login">
-                <Button variant="outline" className="font-semibold text-white">
-                  로그인
-                </Button>
-              </Link>
+      {/* 피드 선택 버튼 (헤더 외부) */}
+      <Tabs defaultValue="for-you" className="w-full">
+        {/* 피드 선택 버튼 - 수평 배열 */}
+        <div className="flex justify-center px-4 py-3 border-b bg-background">
+          <TabsList className="h-auto p-0 bg-transparent">
+            <TabsTrigger value="for-you" className="px-6">
+              전체
+            </TabsTrigger>
+            {isLoggedIn && (
+              <TabsTrigger value="following" className="px-6">
+                팔로잉
+              </TabsTrigger>
             )}
-          </div>
-          <div className="flex w-1/3 items-center justify-center">
-            <Link href="/docs">
-              <Image
-                src={MainLogoWhite}
-                alt="logo"
-                width={26}
-                height={26}
-                className="md:block"
-              />
-            </Link>
-          </div>
-          <div className="flex w-1/3 items-center justify-end">
-            <TabsVerticalList>
-              <TabsVerticalTrigger value="for-you" className="text-right">
-                전체
-              </TabsVerticalTrigger>
-              {isLoggedIn && (
-                <TabsVerticalTrigger value="following" className="text-right">
-                  팔로잉
-                </TabsVerticalTrigger>
-              )}
-              {/* <TabsVerticalTrigger value="users" className="text-right">
-                사용자
-              </TabsVerticalTrigger> */}
-            </TabsVerticalList>
-          </div>
+          </TabsList>
         </div>
 
-        {/* 인라인 에디터 - 데스크톱 */}
-        {/* {isLoggedIn && (
-          <div className="mt-4">
-            <div className="rounded-[24px] bg-white p-4 drop-shadow overflow-hidden">
-              <InlinePostEditor />
-            </div>
-          </div>
-        )} */}
-
+        {/* 피드 컨텐츠 */}
         <div className="mt-4">
           {!isLoggedIn ? (
             <NonLoggedInContent />
           ) : (
             <>
-              <TabsVerticalContent value="for-you">
+              <TabsContent value="for-you">
                 <ForYouFeed />
-              </TabsVerticalContent>
-              <TabsVerticalContent value="following">
+              </TabsContent>
+              <TabsContent value="following">
                 <FollowingFeed />
-              </TabsVerticalContent>
-              {/* <TabsVerticalContent value="users">
-                <UsersFeed />
-              </TabsVerticalContent> */}
+              </TabsContent>
             </>
           )}
         </div>
-      </TabsVertical>
-
-      {/* 모바일 버전 */}
-      <div
-        className="w-full px-4 pt-5 pb-5 md:hidden"
-        style={{ backgroundColor: '#000000' }}
-      >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex w-12 flex-shrink-0 justify-start">
-            <Link href="/login">
-              {!isLoggedIn && (
-                <Button variant="outline" size="sm" className="font-semibold text-white">
-                  로그인
-                </Button>
-              )}
-            </Link>
-          </div>
-          <Link href="/docs">
-            <Image
-              src={MainLogoWhite}
-              alt="logo"
-              width={18}
-              height={18}
-            />
-          </Link>
-          <div className="w-12 flex-shrink-0"></div>
-        </div>
-
-        <div className="mt-4 flex justify-center gap-4">
-          <button
-            onClick={() => setActiveMobileTab('for-you')}
-            className={cn(
-              "text-sm font-medium transition-colors",
-              activeMobileTab === 'for-you'
-                ? 'text-white font-semibold'
-                : 'text-gray-400 hover:text-gray-300'
-            )}
-          >
-            전체
-          </button>
-          {isLoggedIn && (
-            <button
-              onClick={() => setActiveMobileTab('following')}
-              className={cn(
-                "text-sm font-medium transition-colors",
-                activeMobileTab === 'following'
-                  ? 'text-white font-semibold'
-                  : 'text-gray-400 hover:text-gray-300'
-              )}
-            >
-              팔로잉
-            </button>
-          )}
-          {/* <button
-            onClick={() => setActiveMobileTab('users')}
-            className={cn(
-              "text-sm font-medium transition-colors",
-              activeMobileTab === 'users'
-                ? 'text-white font-semibold'
-                : 'text-gray-400 hover:text-gray-300'
-            )}
-          >
-            사용자
-          </button> */}
-        </div>
-      </div>
-
-      {/* {isLoggedIn && (
-        <div className="mb-4 md:hidden">
-          <div className="rounded-[24px] bg-white p-4 drop-shadow overflow-hidden">
-            <InlinePostEditor />
-          </div>
-        </div>
-      )} */}
-
-      <div className="w-full md:hidden">
-        {!isLoggedIn ? (
-          <NonLoggedInContent />
-        ) : (
-          <>
-            {activeMobileTab === 'for-you' && <ForYouFeed />}
-            {activeMobileTab === 'following' && <FollowingFeed />}
-            {/* {activeMobileTab === 'users' && <UsersFeed />} */}
-          </>
-        )}
-      </div>
+      </Tabs>
     </main>
   );
 }
