@@ -39,6 +39,7 @@ model User {
   tickets             Ticket[]
   studioItems         StudioItem[]
   projectNodes        ProjectNode[]
+  workspaceFiles      WorkspaceFile[]
 
   @@map("users")
 }
@@ -170,7 +171,7 @@ model Studio {
   isPublic    Boolean  @default(true)
   isVerified  Boolean  @default(false)
 
-  subscribersCount Int @default(0)
+  subscribersCount Int  @default(0)
   order            Int? // 드래그 정렬 순서
 
   createdAt DateTime @default(now())
@@ -183,6 +184,7 @@ model Studio {
   posts         Post[]               @relation("StudioPosts")
   nodes         ProjectNode[]
   edges         NodeEdge[]
+  files         WorkspaceFile[]
 
   @@map("studios")
 }
@@ -387,6 +389,10 @@ model ProjectNode {
   fromEdges NodeEdge[] @relation("FromNode")
   toEdges   NodeEdge[] @relation("ToNode")
 
+  // 워크스페이스 파일 관계 (nullable로 시작하여 기존 데이터 보존)
+  fileId String?
+  file   WorkspaceFile? @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
   // 메타데이터
   emoji       String? // 노션 스타일 이모지 (타이틀 앞에 표시)
   color       String?
@@ -410,6 +416,10 @@ model NodeEdge {
   fromNode ProjectNode @relation("FromNode", fields: [fromId], references: [id], onDelete: Cascade)
   toId     String
   toNode   ProjectNode @relation("ToNode", fields: [toId], references: [id], onDelete: Cascade)
+
+  // 워크스페이스 파일 관계 (nullable로 시작하여 기존 데이터 보존)
+  fileId String?
+  file   WorkspaceFile? @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   // 데이터 흐름 정의 (Phase 2+)
   fromPort String? // 연결 시작 포트 ID
@@ -462,4 +472,28 @@ enum EdgeType {
   ARROW // 화살표 (기본)
   DASHED // 점선
   DOTTED // 점점선
+}
+
+// ============= Workspace File System Models =============
+
+model WorkspaceFile {
+  id       String @id @default(cuid())
+  studioId String
+  studio   Studio @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  name         String
+  description  String?
+  thumbnailUrl String? // 썸네일 이미지 (선택)
+  order        Int     @default(0) // 정렬 순서
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nodes ProjectNode[] // 각 파일은 고유한 노드 세트를 가짐
+  edges NodeEdge[] // 각 파일은 고유한 연결선 세트를 가짐
+
+  @@map("workspace_files")
 }
