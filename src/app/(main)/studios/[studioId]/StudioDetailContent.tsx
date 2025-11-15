@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Menu } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import EditStudioDialog from "./EditStudioDialog";
 import MembersDialog from "./MembersDialog";
 import StudioCalendar from "./StudioCalendar";
@@ -16,13 +16,31 @@ import StudioWorkspace from "./StudioWorkspace";
 import Image from "next/image";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import MobileStudioBottomSheet from "@/components/layout/MobileStudioBottomSheet";
 import TabletChannelSidebar from "@/components/layout/TabletChannelSidebar";
 
+function WorkspaceRedirect({ studioId }: { studioId: string }) {
+  const router = useRouter();
+  const [hasRedirected, setHasRedirected] = useState(false);
+  
+  React.useEffect(() => {
+    if (!hasRedirected) {
+      setHasRedirected(true);
+      router.push(`/studios/${studioId}/workspace`);
+    }
+  }, [router, studioId, hasRedirected]);
+  
+  return null;
+}
+
 export default function StudioDetailContent({ studioId }: { studioId: string }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMembersDialog, setShowMembersDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("workspace");
+  const tabFromUrl = searchParams.get("tab") || "workspace";
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [isTabletSidebarOpen, setIsTabletSidebarOpen] = useState(false);
   const [tabletButtonLeft, setTabletButtonLeft] = useState('1rem'); // 기본값: left-4
   const { setSidebar, discordData, setDiscordSidebar } = useSidebar();
@@ -103,6 +121,12 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
   const handleChannelSelect = (channel: string) => {
     setSelectedChannel(channel);
     setActiveTab(channel); // 기존 activeTab도 동기화
+    // workspace 탭 클릭 시 대시보드로 리다이렉트
+    if (channel === "workspace") {
+      router.push(`/studios/${studioId}/workspace`);
+    } else {
+      router.push(`/studios/${studioId}?tab=${channel}`);
+    }
   };
 
   // 디스코드 사이드바 활성화
@@ -187,7 +211,7 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
         {currentTab === "posts" && <StudioPosts studioId={studioId} isOwner={isOwner} />}
         {currentTab === "calendar" && <StudioCalendar studioId={studioId} />}
         {currentTab === "notes" && <StudioNotes studioId={studioId} />}
-        {currentTab === "workspace" && <StudioWorkspace studioId={studioId} />}
+        {currentTab === "workspace" && <WorkspaceRedirect studioId={studioId} />}
       </div>
 
       {/* 다이얼로그들 */}

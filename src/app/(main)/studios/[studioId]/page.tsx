@@ -1,6 +1,15 @@
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import StudioDetailContent from "./StudioDetailContent";
+import { Suspense } from "react";
+
+function StudioDetailContentWrapper({ studioId }: { studioId: string }) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]">로딩 중...</div>}>
+      <StudioDetailContent studioId={studioId} />
+    </Suspense>
+  );
+}
 
 export default async function StudioDetailPage({
   params,
@@ -17,7 +26,7 @@ export default async function StudioDetailPage({
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
-        <StudioDetailContent studioId={studioId} />
+        <StudioDetailContentWrapper studioId={studioId} />
       </div>
     </main>
   );
