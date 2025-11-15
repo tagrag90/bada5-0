@@ -119,6 +119,15 @@ export async function POST(
       );
     }
 
+    // NodeType enum 검증
+    const validTypes = ['PLANNING', 'NOTE', 'SCHEDULE', 'RESOURCE', 'POST', 'PHOTO', 'TRIGGER', 'ACTION', 'CONDITION', 'LOOP', 'TRANSFORM', 'CUSTOM'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { error: `Invalid node type: ${type}. Valid types: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     const node = await prisma.projectNode.create({
       data: {
         studioId: studioId,

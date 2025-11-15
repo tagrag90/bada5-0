@@ -78,8 +78,8 @@ export default function DiscordStyleSidebar({
         />
       </div>
 
-      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (테블릿에서는 숨김) */}
-      <div className={isTablet ? "hidden" : "flex flex-col flex-1"} style={{ minWidth: 0 }}>
+      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (테블릿에서는 숨김, 워크스페이스에서는 숨김) */}
+      <div className={isTablet || selectedChannel === 'workspace' ? "hidden" : "flex flex-col flex-1"} style={{ minWidth: 0 }}>
         {isSettingsPage ? (
           /* 설정 페이지일 때 설정 사이드바 표시 */
           <SettingsSidebar />

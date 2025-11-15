@@ -427,13 +427,12 @@ model NodeEdge {
 
 enum NodeType {
   // 기본 노드 타입 (Phase 1)
-  IDEA // 아이디어
   PLANNING // 기획
   NOTE // 메모
-  SCHEDULE // 일정관리
-  RESULT // 결과물
+  SCHEDULE // 일정관리/캘린더
   RESOURCE // 자료공유
   POST // 게시물
+  PHOTO // 사진
 
   // 자동화 노드 타입 (Phase 3+)
   TRIGGER // 트리거 노드 (시작점)

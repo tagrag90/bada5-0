@@ -42,10 +42,31 @@ interface DatabaseUserAttributes {
   googleId: string | null;
 }
 
+// 디버깅: 환경변수 확인
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const redirectUri = `${baseUrl}/api/auth/callback/google`;
+
+console.log("[Google OAuth Config] 설정 확인:", {
+  hasClientId: !!googleClientId,
+  hasClientSecret: !!googleClientSecret,
+  baseUrl,
+  redirectUri,
+  nodeEnv: process.env.NODE_ENV,
+});
+
+if (!googleClientId || !googleClientSecret) {
+  console.error("[Google OAuth Config] 환경변수 누락:", {
+    GOOGLE_CLIENT_ID: !!googleClientId,
+    GOOGLE_CLIENT_SECRET: !!googleClientSecret,
+  });
+}
+
 export const google = new Google(
-  process.env.GOOGLE_CLIENT_ID!,
-  process.env.GOOGLE_CLIENT_SECRET!,
-  `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback/google`,
+  googleClientId!,
+  googleClientSecret!,
+  redirectUri,
 );
 
 export const validateRequest = cache(

@@ -11,17 +11,16 @@ declare global {
 }
 
 // 개발 모드에서도 최신 Prisma Client 사용하도록 강제
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
-
-// Prisma Client에 projectNode 모델과 emoji 필드가 있는지 확인
+// Prisma Client 재생성 시 강제로 새 인스턴스 생성
+let prisma: ReturnType<typeof prismaClientSingleton>;
 if (process.env.NODE_ENV === "development") {
-  const testNode = (prisma as any).projectNode;
-  if (!testNode) {
-    // 기존 인스턴스를 무효화하고 새로 생성
-    globalThis.prismaGlobal = undefined;
-    const newPrisma = prismaClientSingleton();
-    globalThis.prismaGlobal = newPrisma;
-    console.log("Prisma Client regenerated - projectNode model missing");
+  // 개발 모드에서는 항상 새 인스턴스 생성 (핫 리로드 대응)
+  prisma = prismaClientSingleton();
+  globalThis.prismaGlobal = prisma;
+} else {
+  prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.prismaGlobal = prisma;
   }
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
-import { Pencil, Download, FileText, ExternalLink } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Handle, Position, NodeProps, NodeResizer } from "reactflow";
+import { Pencil, Download, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { nodeTypeIcons, nodeTypeLabels } from "./nodeConfig";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -19,13 +19,78 @@ interface CustomNodeData {
   emoji?: string;
   postId?: string;
   onEdit?: (nodeId: string) => void;
+  onDelete?: (nodeId: string) => void;
   isPlanning?: boolean;
   isConnectedToPlanning?: boolean;
 }
 
-export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
+export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeData>) {
   const Icon = nodeTypeIcons[data.type] || nodeTypeIcons["NOTE"];
   const typeLabel = nodeTypeLabels[data.type] || "";
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [hasUpdatedSize, setHasUpdatedSize] = useState(false);
+
+  // PHOTO 노드: 이미지 크기에 맞게 노드 크기 조정
+  const handleImageLoad = () => {
+    if (data.type === "PHOTO" && imageRef.current && !hasUpdatedSize) {
+      const img = imageRef.current;
+      
+      // 이미지 크기가 유효한지 확인
+      if (!img.naturalWidth || !img.naturalHeight) {
+        return;
+      }
+      
+      const aspectRatio = img.naturalWidth / img.naturalHeight;
+      
+      // 최소/최대 크기 제한
+      const minWidth = 200;
+      const maxWidth = 800;
+      const minHeight = 200;
+      const maxHeight = 800;
+      
+      // 이미지 원본 크기를 기준으로 비율 유지하며 크기 계산
+      let width = img.naturalWidth;
+      let height = img.naturalHeight;
+      
+      // 너비 제한
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      } else if (width < minWidth) {
+        width = minWidth;
+        height = width / aspectRatio;
+      }
+      
+      // 높이 제한
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      } else if (height < minHeight) {
+        height = minHeight;
+        width = height * aspectRatio;
+      }
+      
+      // 노드 크기 업데이트 API 호출 (에러 처리 포함)
+      const studioId = window.location.pathname.match(/\/studios\/([^\/]+)/)?.[1];
+      if (studioId) {
+        fetch(`/api/studios/${studioId}/nodes/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ width, height }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              setHasUpdatedSize(true);
+              // 노드 크기 업데이트 후 React Flow에 반영
+              window.dispatchEvent(new Event('resize'));
+            }
+          })
+          .catch((error) => {
+            console.error("Failed to update node size:", error);
+          });
+      }
+    }
+  };
 
   // 게시물 노드용 데이터 조회
   const { data: postData, isLoading: isLoadingPost, error: postError } = useQuery<PostData>({
@@ -53,9 +118,10 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
   const isPlanning = data.isPlanning || data.type === "PLANNING";
   const isConnectedToPlanning = data.isConnectedToPlanning || false;
   const handleColor = isPlanning || isConnectedToPlanning ? '#9333ea' : '#000';
+  const isPhotoNode = data.type === "PHOTO";
 
   return (
-    <div className="custom-node relative group">
+    <div className={`custom-node relative group`} style={{ borderRadius: '8px', overflow: 'visible', position: 'relative' }}>
       {/* 입력 연결점 - 좌측 (보더 위에 위치) */}
       <Handle 
         type="target" 
@@ -68,33 +134,275 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
           height: '12px',
           border: `2px solid ${handleColor}`,
           backgroundColor: '#fff',
-          zIndex: 10,
+          zIndex: 1000,
         }}
       />
-      <div className="flex flex-col items-start text-left gap-1 w-full">
-        <div className="flex items-start justify-between w-full gap-2">
-          <div className="flex flex-col items-start gap-1 flex-1 min-w-0">
-            {/* 이모티콘 */}
-            {data.emoji && (
-              <div className="text-base">{data.emoji}</div>
-            )}
-            {/* 제목 */}
-            <div className="font-semibold text-sm text-black break-words w-full">
-              {data.label}
+      
+      {/* PHOTO 노드: 사진만 표시 */}
+      {isPhotoNode && (
+        <>
+          {/* 리사이즈 핸들 - 선택 시에만 표시 */}
+          <NodeResizer
+            minWidth={200}
+            minHeight={200}
+            isVisible={selected}
+            handleStyle={{
+              width: '10px',
+              height: '10px',
+              backgroundColor: '#000',
+              border: '2px solid #fff',
+              borderRadius: '2px',
+            }}
+          />
+          
+          {(() => {
+            if (!data.content) {
+              return (
+                <div className="relative w-full h-full min-h-[200px]">
+                  <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg" style={{ border: '2px solid #000' }}>
+                    사진이 없습니다
+                  </div>
+                  {/* 편집/삭제 버튼 - 항상 표시 */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1 z-[100]" style={{ pointerEvents: 'auto' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        data.onEdit?.(id);
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 편집"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-gray-800" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (confirm("이 노드를 삭제하시겠습니까?")) {
+                          data.onDelete?.(id);
+                        }
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 삭제"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            
+            try {
+              const parsed = JSON.parse(data.content);
+              const files = parsed.files || [];
+              
+              if (files.length === 0) {
+                return (
+                  <div className="relative w-full h-full min-h-[200px]">
+                    <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg" style={{ border: '2px solid #000' }}>
+                      사진이 없습니다
+                    </div>
+                    {/* 편집/삭제 버튼 - 항상 표시 */}
+                    <div className="absolute top-2 right-2 flex items-center gap-1 z-[100]" style={{ pointerEvents: 'auto' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          data.onEdit?.(id);
+                        }}
+                        className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                        title="노드 편집"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-gray-800" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (confirm("이 노드를 삭제하시겠습니까?")) {
+                            data.onDelete?.(id);
+                          }
+                        }}
+                        className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                        title="노드 삭제"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+              
+              const firstImage = files[0];
+              if (!firstImage || !firstImage.url) {
+                return (
+                  <div className="relative w-full h-full min-h-[200px]">
+                    <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg" style={{ border: '2px solid #000' }}>
+                      이미지 URL이 없습니다
+                    </div>
+                    {/* 편집/삭제 버튼 - 항상 표시 */}
+                    <div className="absolute top-2 right-2 flex items-center gap-1 z-[100]" style={{ pointerEvents: 'auto' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          data.onEdit?.(id);
+                        }}
+                        className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                        title="노드 편집"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-gray-800" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (confirm("이 노드를 삭제하시겠습니까?")) {
+                            data.onDelete?.(id);
+                          }
+                        }}
+                        className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                        title="노드 삭제"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="relative w-full h-full">
+                  {/* 사진이 노드 자체가 됨 - 이미지에 직접 테두리 적용 */}
+                  <img
+                    ref={imageRef}
+                    src={firstImage.url}
+                    alt={firstImage.name || "Photo"}
+                    onLoad={handleImageLoad}
+                    onError={(e) => {
+                      console.error("이미지 로드 실패:", firstImage.url, firstImage);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    style={{ 
+                      display: 'block',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      border: '2px solid #000'
+                    }}
+                  />
+                  {/* 편집/삭제 버튼 - 항상 표시 */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1 z-[100]" style={{ pointerEvents: 'auto' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        data.onEdit?.(id);
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 편집"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-gray-800" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (confirm("이 노드를 삭제하시겠습니까?")) {
+                          data.onDelete?.(id);
+                        }
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 삭제"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              );
+            } catch (error) {
+              console.error("PHOTO 노드 content 파싱 실패:", error, data.content);
+              return (
+                <div className="relative w-full h-full min-h-[200px]">
+                  <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg" style={{ border: '2px solid #000' }}>
+                    이미지 로드 실패
+                  </div>
+                  {/* 편집/삭제 버튼 - 항상 표시 */}
+                  <div className="absolute top-2 right-2 flex items-center gap-1 z-[100]" style={{ pointerEvents: 'auto' }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        data.onEdit?.(id);
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 편집"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-gray-800" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (confirm("이 노드를 삭제하시겠습니까?")) {
+                          data.onDelete?.(id);
+                        }
+                      }}
+                      className="p-1.5 rounded-md bg-white hover:bg-gray-50 shadow-lg border border-gray-300 transition-all"
+                      title="노드 삭제"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+          })()}
+        </>
+      )}
+
+      {/* 일반 노드: 이모티콘, 제목, 내용 표시 */}
+      {!isPhotoNode && (
+        <div className="flex flex-col items-start text-left gap-1 w-full">
+          <div className="flex items-start justify-between w-full gap-2">
+            <div className="flex flex-col items-start gap-1 flex-1 min-w-0">
+              {/* 이모티콘 */}
+              {data.emoji && (
+                <div className="text-base">{data.emoji}</div>
+              )}
+              {/* 제목 */}
+              <div className="font-semibold text-sm text-black break-words w-full overflow-hidden">
+                {data.label}
+              </div>
+            </div>
+            {/* 편집/삭제 버튼 - 우측 상단 (이모티콘/제목과 같은 높이) */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex-shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  data.onEdit?.(id);
+                }}
+                className="p-1.5 rounded hover:bg-gray-100"
+                title="노드 편집"
+              >
+                <Pencil className="h-3.5 w-3.5 text-gray-600" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm("이 노드를 삭제하시겠습니까?")) {
+                    data.onDelete?.(id);
+                  }
+                }}
+                className="p-1.5 rounded hover:bg-red-50"
+                title="노드 삭제"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-red-600" />
+              </button>
             </div>
           </div>
-          {/* 편집 버튼 - 우측 상단 (이모티콘/제목과 같은 높이) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onEdit?.(id);
-            }}
-            className="p-1.5 rounded hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity z-10 flex-shrink-0"
-            title="노드 편집"
-          >
-            <Pencil className="h-3.5 w-3.5 text-gray-600" />
-          </button>
-        </div>
         
         {/* 드라이브 노드: 파일 목록 */}
         {data.type === "RESOURCE" && data.content && (() => {
@@ -234,12 +542,31 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
         )}
         
         {/* 일반 노드: 내용 표시 */}
-        {data.type !== "RESOURCE" && data.type !== "POST" && data.content && (
-          <div className={`text-xs text-gray-600 mt-1 whitespace-pre-line break-words ${data.type === "NOTE" ? "" : "line-clamp-3"}`}>
-            {data.content}
-          </div>
+        {data.type !== "RESOURCE" && data.type !== "POST" && data.type !== "PHOTO" && data.content && (
+          (() => {
+            // HTML 태그가 포함되어 있으면 HTML로 렌더링, 아니면 일반 텍스트로 렌더링
+            const isHTML = /<[a-z][\s\S]*>/i.test(data.content);
+            if (isHTML) {
+              return (
+                <div 
+                  className={`text-xs text-gray-600 mt-1 break-words overflow-hidden ${data.type === "NOTE" ? "" : "line-clamp-3"}`}
+                  dangerouslySetInnerHTML={{ __html: data.content }}
+                />
+              );
+            } else {
+              return (
+                <div 
+                  className={`text-xs text-gray-600 mt-1 whitespace-pre-line break-words overflow-hidden ${data.type === "NOTE" ? "" : "line-clamp-3"}`}
+                >
+                  {data.content}
+                </div>
+              );
+            }
+          })()
         )}
-      </div>
+        </div>
+      )}
+      
       {/* 출력 연결점 - 우측 (보더 위에 위치) */}
       <Handle 
         type="source" 
@@ -252,10 +579,9 @@ export default function CustomNode({ data, id }: NodeProps<CustomNodeData>) {
           height: '12px',
           border: `2px solid ${handleColor}`,
           backgroundColor: '#fff',
-          zIndex: 10,
+          zIndex: 1000,
         }}
       />
     </div>
   );
 }
-

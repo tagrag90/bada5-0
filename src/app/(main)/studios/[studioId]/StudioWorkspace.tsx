@@ -31,6 +31,9 @@ import { nodeTypeLabels, nodeTypeIcons } from "@/components/workspace/nodeConfig
 import NodeSidebar from "@/components/workspace/NodeSidebar";
 import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
 import NodeCreationToast from "@/components/workspace/NodeCreationToast";
+import StudioInfoHoverCard from "@/components/layout/StudioInfoHoverCard";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import { useOptionalUser } from "@/app/(main)/SessionProvider";
 
 interface StudioWorkspaceProps {
   studioId: string;
@@ -38,6 +41,8 @@ interface StudioWorkspaceProps {
 
 function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   const { toast } = useToast();
+  const { discordData } = useSidebar();
+  const currentUser = useOptionalUser();
   const [isAddPostDialogOpen, setIsAddPostDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -52,6 +57,32 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   });
   
   const [nodeButtonBottom, setNodeButtonBottom] = useState('80px'); // 기본값: 네비바 위
+
+  // 스튜디오 정보 조회
+  const { data: studio } = useQuery({
+    queryKey: ["studio", studioId],
+    queryFn: async () => {
+      const res = await fetch(`/api/studios/${studioId}`);
+      if (!res.ok) throw new Error("Failed to fetch studio");
+      return res.json();
+    },
+  });
+
+  // 멤버십 상태 확인
+  const { data: membershipStatus } = useQuery({
+    queryKey: ["studio-membership", studioId],
+    queryFn: async () => {
+      if (!studioId || !currentUser) return null;
+      const res = await fetch(`/api/studios/${studioId}/subscription-status`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!studioId && !!currentUser,
+  });
+
+  // 소유자 및 관리자 확인
+  const isOwner = membershipStatus?.isOwner === true || (currentUser && studio && studio.ownerId === currentUser.id);
+  const isAdmin = isOwner || membershipStatus?.memberRole === "ADMIN";
   
   // 모바일 네비바가 화이트보드에 덮이지 않도록 확인 및 노드 버튼 위치 조정
   useEffect(() => {
@@ -230,8 +261,6 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   // 노드 삭제 핸들러
   const handleNodeDelete = useCallback(
     async (nodeId: string) => {
-      if (!confirm("이 노드를 삭제하시겠습니까?")) return;
-
       try {
         const res = await fetch(`/api/studios/${studioId}/nodes/${nodeId}`, {
           method: "DELETE",
@@ -241,6 +270,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
         queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId] });
         queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId] });
+        setSelectedNodeId(null);
+        setSidebarOpen(false);
         toast({
           title: "노드 삭제 완료",
           description: "노드가 삭제되었습니다.",
@@ -271,6 +302,8 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       }
     }
     
+    const isPlanning = node.type === "PLANNING";
+    
     return {
       id: node.id,
       type: "custom",
@@ -282,13 +315,17 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
         emoji: node.emoji,
         postId,
         onEdit: handleNodeEdit,
+        onDelete: handleNodeDelete,
+        isPlanning,
+        isConnectedToPlanning: false,
       },
       style: {
-        width: node.width,
-        backgroundColor: "#fff",
-        border: "2px solid #000",
+        width: node.type === "PHOTO" ? (node.width || 300) : node.width,
+        height: node.type === "PHOTO" ? (node.height || 200) : "auto",
+        backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
+        border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
         borderRadius: "8px",
-        padding: "12px",
+        padding: node.type === "PHOTO" ? "0" : "12px",
       },
     };
   }) || [];
@@ -307,6 +344,37 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // 노드 크기 변경 핸들러 (PHOTO 노드 리사이즈용)
+  const handleNodesChange = useCallback(
+    (changes: any[]) => {
+      // 기본 변경사항 적용
+      onNodesChange(changes);
+
+      // 노드 크기 변경 감지 및 저장
+      changes.forEach((change) => {
+        if (change.type === "dimensions" && change.id) {
+          const node = nodes.find((n) => n.id === change.id);
+          if (node && node.data.type === "PHOTO") {
+            const newWidth = change.dimensions?.width;
+            const newHeight = change.dimensions?.height;
+            
+            if (newWidth && newHeight) {
+              // API 호출하여 노드 크기 업데이트
+              fetch(`/api/studios/${studioId}/nodes/${change.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ width: newWidth, height: newHeight }),
+              }).catch((error) => {
+                console.error("Failed to update node size:", error);
+              });
+            }
+          }
+        }
+      });
+    },
+    [nodes, studioId, onNodesChange]
+  );
 
   // 연결선 삭제 핸들러 (setEdges 사용 전에 정의되어야 함)
   const handleEdgeDelete = useCallback(
@@ -393,21 +461,23 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
             emoji: node.emoji,
             postId,
             onEdit: handleNodeEdit,
+            onDelete: handleNodeDelete,
             isPlanning,
             isConnectedToPlanning,
           },
           style: {
-            width: node.width,
-            backgroundColor: "#fff",
-            border: isPlanning ? "2px solid #9333ea" : "2px solid #000",
+            width: node.type === "PHOTO" ? (node.width || 300) : node.width,
+            height: node.type === "PHOTO" ? (node.height || 200) : "auto",
+            backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
+            border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
             borderRadius: "8px",
-            padding: "12px",
+            padding: node.type === "PHOTO" ? "0" : "12px",
           },
         };
       });
       setNodes(newNodes);
     }
-  }, [nodesData, edgesData, setNodes, handleNodeEdit]);
+  }, [nodesData, edgesData, setNodes, handleNodeEdit, handleNodeDelete]);
 
   useEffect(() => {
     if (edgesData) {
@@ -569,9 +639,14 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
   // 연결선 추가
   const onConnect = useCallback(
     async (params: Connection) => {
-      if (!params.source || !params.target) return;
+      if (!params.source || !params.target) {
+        console.error("onConnect: source or target is missing", params);
+        return;
+      }
 
       try {
+        console.log("onConnect: Creating edge", { source: params.source, target: params.target });
+        
         const res = await fetch(`/api/studios/${studioId}/edges`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -583,7 +658,14 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           }),
         });
 
-        if (!res.ok) throw new Error("Failed to create edge");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+          console.error("onConnect: API error", { status: res.status, errorData });
+          throw new Error(errorData.error || `Failed to create edge (${res.status})`);
+        }
+
+        const edgeData = await res.json();
+        console.log("onConnect: Edge created successfully", edgeData);
 
         // 연결선 상태 업데이트
         setEdges((eds) => addEdge(params, eds));
@@ -595,9 +677,10 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           description: "노드가 연결되었습니다.",
         });
       } catch (error: any) {
+        console.error("onConnect: Error creating edge", error);
         toast({
           title: "연결선 생성 실패",
-          description: error.message,
+          description: error.message || "알 수 없는 오류가 발생했습니다.",
           variant: "destructive",
         });
       }
@@ -809,6 +892,20 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       className="h-screen fixed top-0 right-0 bottom-0" 
       style={workspaceStyle}
     >
+      {/* 스튜디오 정보 호버 컴포넌트 - 좌측 상단 */}
+      {studio && (
+        <div className="fixed top-4 left-24 z-50">
+          <StudioInfoHoverCard
+            studio={studio}
+            studioName={discordData?.studioName || studio.name}
+            isOwner={isOwner}
+            isAdmin={isAdmin}
+            selectedChannel={discordData?.selectedChannel || "workspace"}
+            onChannelSelect={discordData?.onChannelSelect}
+          />
+        </div>
+      )}
+
       {/* 노드 생성 중 토스트 팝업 */}
       <NodeCreationToast
         isVisible={createNodeMutation.isPending}
@@ -818,7 +915,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={(changes) => {
           // 연결선 삭제 처리
           changes.forEach((change) => {
@@ -840,6 +937,12 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           event.preventDefault();
           if (confirm("이 노드를 삭제하시겠습니까?")) {
             handleNodeDelete(node.id);
+          }
+        }}
+        onEdgeClick={(event, edge) => {
+          event.stopPropagation();
+          if (confirm("이 연결선을 삭제하시겠습니까?")) {
+            handleEdgeDelete(edge.id);
           }
         }}
         nodeTypes={nodeTypes}
@@ -915,6 +1018,7 @@ function WorkspaceContent({ studioId }: StudioWorkspaceProps) {
           isOpen={sidebarOpen}
           onClose={handleSidebarClose}
           onSave={handleNodeSave}
+          onDelete={handleNodeDelete}
         />
       )}
 

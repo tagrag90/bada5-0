@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Upload, Trash2 } from "lucide-react";
+import { X, Upload, Trash2, Bold, Highlighter } from "lucide-react";
+import Image from "next/image";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Highlight from "@tiptap/extension-highlight";
 
 interface NodeSidebarProps {
   nodeId: string;
@@ -19,6 +23,7 @@ interface NodeSidebarProps {
   isOpen?: boolean;
   onClose: () => void;
   onSave: (nodeId: string, title: string, content?: string, emoji?: string) => Promise<void>;
+  onDelete?: (nodeId: string) => Promise<void>;
 }
 
 export default function NodeSidebar({
@@ -30,21 +35,53 @@ export default function NodeSidebar({
   isOpen = true,
   onClose,
   onSave,
+  onDelete,
 }: NodeSidebarProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [emoji, setEmoji] = useState(initialEmoji);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Tiptap 에디터 (RESOURCE, POST 타입이 아닐 때만 사용)
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bold: {},
+        italic: false,
+        strike: false,
+        code: false,
+        heading: false,
+        blockquote: false,
+        codeBlock: false,
+        horizontalRule: false,
+        hardBreak: false,
+        dropcursor: false,
+        gapcursor: false,
+        history: {},
+      }),
+      Highlight.configure({ multicolor: false }),
+    ],
+    content: nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" ? initialContent : "",
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: "text-sm leading-normal focus:outline-none min-h-[200px] p-3",
+      },
+    },
+  });
   
   // 자료 공유 노드용 파일 관리
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   
-  // content를 파싱하여 파일 목록 가져오기 (RESOURCE 타입일 때)
+  // content를 파싱하여 파일 목록 가져오기 (RESOURCE, PHOTO 타입일 때)
   const [fileList, setFileList] = useState<any[]>(() => {
-    if (nodeType === "RESOURCE" && initialContent) {
+    if ((nodeType === "RESOURCE" || nodeType === "PHOTO") && initialContent) {
       try {
         const parsed = JSON.parse(initialContent);
         return parsed.files || [];
@@ -62,8 +99,13 @@ export default function NodeSidebar({
     setEmoji(initialEmoji || "");
     setShowEmojiPicker(false);
     
-    // 파일 목록 업데이트 (RESOURCE 타입)
-    if (nodeType === "RESOURCE" && initialContent) {
+    // Tiptap 에디터 내용 업데이트 (RESOURCE, POST, PHOTO 타입이 아닐 때만)
+    if (editor && nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO") {
+      editor.commands.setContent(initialContent || "");
+    }
+    
+    // 파일 목록 업데이트 (RESOURCE, PHOTO 타입)
+    if ((nodeType === "RESOURCE" || nodeType === "PHOTO") && initialContent) {
       try {
         const parsed = JSON.parse(initialContent);
         setFileList(parsed.files || []);
@@ -73,7 +115,7 @@ export default function NodeSidebar({
     } else {
       setFileList([]);
     }
-  }, [initialTitle, initialContent, initialEmoji, nodeType]);
+  }, [initialTitle, initialContent, initialEmoji, nodeType, editor]);
   
 
   const handleSave = async () => {
@@ -82,10 +124,13 @@ export default function NodeSidebar({
       // emoji가 빈 문자열이면 undefined로 전달하여 null로 저장되도록 함
       const emojiValue = emoji && emoji.trim() ? emoji.trim() : undefined;
       
-      // RESOURCE 타입일 때는 파일 목록을 JSON으로 저장
+      // RESOURCE, PHOTO 타입일 때는 파일 목록을 JSON으로 저장
       let contentToSave = content;
-      if (nodeType === "RESOURCE") {
+      if (nodeType === "RESOURCE" || nodeType === "PHOTO") {
         contentToSave = JSON.stringify({ files: fileList });
+      } else if (nodeType !== "POST" && editor) {
+        // Tiptap 에디터에서 HTML 가져오기
+        contentToSave = editor.getHTML();
       }
       
       await onSave(nodeId, title, contentToSave, emojiValue);
@@ -97,7 +142,22 @@ export default function NodeSidebar({
     }
   };
   
-  // 자료 공유 노드용 파일 업로드 (모든 파일 타입 허용)
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    if (!confirm("이 노드를 삭제하시겠습니까?")) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDelete(nodeId);
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete node:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  // 자료 공유/사진 노드용 파일 업로드
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -106,11 +166,20 @@ export default function NodeSidebar({
 
     for (const file of files) {
       try {
+        // PHOTO 타입은 이미지만 허용
+        if (nodeType === "PHOTO" && !file.type.startsWith('image/')) {
+          toast({
+            variant: "destructive",
+            description: `${file.name}은(는) 이미지 파일만 업로드 가능합니다.`,
+          });
+          continue;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', 'resource'); // 자료 공유용 타입
+        formData.append('type', nodeType === "PHOTO" ? 'media' : 'resource');
 
-        const response = await fetch('/api/upload-resource', {
+        const response = await fetch(nodeType === "PHOTO" ? '/api/upload' : '/api/upload-resource', {
           method: 'POST',
           body: formData,
         });
@@ -124,7 +193,7 @@ export default function NodeSidebar({
 
         // 파일 목록에 추가
         setFileList(prev => [...prev, {
-          id: result.fileId || crypto.randomUUID(),
+          id: result.fileId || result.mediaId || crypto.randomUUID(),
           url: result.url,
           name: file.name,
           size: file.size,
@@ -216,17 +285,38 @@ export default function NodeSidebar({
           )}
         </div>
 
-        {nodeType !== "RESOURCE" && nodeType !== "POST" && (
+        {nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" && editor && (
           <div className="space-y-2">
-            <Label htmlFor="content">내용</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="노드 내용 (선택사항)"
-              rows={8}
-              className="resize-none"
-            />
+            <div className="flex items-center justify-between">
+              <Label htmlFor="content">내용</Label>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  disabled={!editor.can().chain().focus().toggleBold().run()}
+                  title="볼드체"
+                >
+                  <Bold className={`h-4 w-4 ${editor.isActive('bold') ? 'text-blue-600' : ''}`} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  disabled={!editor.can().chain().focus().toggleHighlight().run()}
+                  title="형광펜"
+                >
+                  <Highlighter className={`h-4 w-4 ${editor.isActive('highlight') ? 'text-yellow-600' : ''}`} />
+                </Button>
+              </div>
+            </div>
+            <div className="border border-gray-200 rounded-md min-h-[200px] [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-normal [&_.ProseMirror_p]:my-1 [&_.ProseMirror_p:first-child]:mt-0 [&_.ProseMirror_p:last-child]:mb-0">
+              <EditorContent editor={editor} />
+            </div>
           </div>
         )}
         
@@ -281,6 +371,57 @@ export default function NodeSidebar({
             )}
           </div>
         )}
+
+        {/* 사진 노드: 이미지 업로드 UI */}
+        {nodeType === "PHOTO" && (
+          <div className="space-y-2">
+            <Label>사진</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {isUploading ? "업로드 중..." : "사진 선택"}
+            </Button>
+            
+            {/* 이미지 목록 */}
+            {fileList.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {fileList.map((file) => (
+                  <div
+                    key={file.id}
+                    className="relative aspect-square rounded overflow-hidden border border-gray-200 group"
+                  >
+                    <Image
+                      src={file.url}
+                      alt={file.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleFileRemove(file.id)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         {/* 게시물 노드: 게시물 정보 표시 */}
         {nodeType === "POST" && (() => {
@@ -328,20 +469,31 @@ export default function NodeSidebar({
       </div>
 
       {/* 푸터 */}
-      <div className="p-4 border-t border-gray-200 rounded-b-xl flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={onClose}
-          disabled={isSaving}
-        >
-          취소
-        </Button>
-        <Button 
-          onClick={handleSave} 
-          disabled={isSaving || !title.trim()}
-        >
-          {isSaving ? "저장 중..." : "저장"}
-        </Button>
+      <div className="p-4 border-t border-gray-200 rounded-b-xl flex justify-between items-center">
+        {onDelete && (
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting || isSaving}
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </Button>
+        )}
+        <div className="flex gap-2 ml-auto">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isSaving || isDeleting}
+          >
+            취소
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving || isDeleting || !title.trim()}
+          >
+            {isSaving ? "저장 중..." : "저장"}
+          </Button>
+        </div>
       </div>
     </div>
   );

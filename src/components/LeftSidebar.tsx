@@ -12,15 +12,17 @@ interface LeftSidebarProps {
 }
 
 export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarProps) {
-  // 고정 폭 설정 (우측 칼럼을 1.5배 키우기 위해 전체 사이드바 폭 증가)
-  // 좌측 칼럼 80px + 우측 칼럼 기본 약 176px -> 우측 칼럼을 1.5배하면 약 264px
-  // 전체 사이드바: 80px + 264px = 344px
-  const width = 500; // 최대 폭으로 고정 (우측 칼럼이 넓게 보이도록)
+  // 고정 폭 설정
+  // 좌측 칼럼 80px + 우측 칼럼 400px = 전체 사이드바 480px
+  const width = 480; // 우측 칼럼 400px 포함
   const sidebarRef = useRef<HTMLElement>(null);
   const [sidebarWidth, setSidebarWidth] = useState(width);
   const { sidebarType, discordData } = useSidebar();
   const pathname = usePathname();
   const isSettingsPage = pathname?.startsWith('/settings');
+  
+  // 워크스페이스 페이지 감지
+  const isWorkspacePage = discordData?.selectedChannel === 'workspace';
   
   // 테블릿 사이즈 감지하여 사이드바 너비 조정
   useEffect(() => {
@@ -34,15 +36,17 @@ export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarPr
         setSidebarWidth(width);
       } else if (isTablet && (sidebarType === 'studio' || sidebarType === 'discord' || isSettingsPage)) {
         setSidebarWidth(80); // 테블릿: 서버 리스트 너비만
+      } else if (isWorkspacePage && (sidebarType === 'studio' || sidebarType === 'discord' || isSettingsPage)) {
+        setSidebarWidth(80); // 워크스페이스: 서버 리스트 너비만
       } else {
-        setSidebarWidth(width); // 데스크톱: 전체 너비
+        setSidebarWidth(width); // 데스크톱 (워크스페이스 제외): 전체 너비
       }
     };
     
     updateWidth();
     window.addEventListener('resize', updateWidth);
     return () => window.removeEventListener('resize', updateWidth);
-  }, [sidebarType, isSettingsPage, width]);
+  }, [sidebarType, isSettingsPage, width, isWorkspacePage]);
 
   // 부모 컴포넌트에 너비 전달 (고정값)
   useEffect(() => {
@@ -68,9 +72,13 @@ export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarPr
           document.documentElement.style.setProperty("--has-sidebar", `0px`);
         }
       } else {
-        // 데스크톱에서는 전체 사이드바 폭 적용
+        // 데스크톱에서는 워크스페이스일 때만 80px, 그 외에는 전체 사이드바 폭 적용
         if (sidebarType !== 'none' || isSettingsPage) {
-          document.documentElement.style.setProperty("--has-sidebar", `${width}px`);
+          if (isWorkspacePage) {
+            document.documentElement.style.setProperty("--has-sidebar", `80px`); // 워크스페이스: 서버 리스트 너비만
+          } else {
+            document.documentElement.style.setProperty("--has-sidebar", `${width}px`); // 그 외: 전체 사이드바 폭
+          }
         } else {
           document.documentElement.style.setProperty("--has-sidebar", `0px`);
         }
@@ -86,7 +94,7 @@ export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarPr
     return () => {
       window.removeEventListener('resize', updateSidebarWidth);
     };
-  }, [sidebarType, width, isSettingsPage]);
+  }, [sidebarType, width, isSettingsPage, isWorkspacePage]);
 
   // 설정 페이지인 경우 강제로 사이드바 활성화 (데스크톱만)
   useEffect(() => {

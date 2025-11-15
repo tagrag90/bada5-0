@@ -10,9 +10,19 @@ export async function GET(req: NextRequest) {
   // TestFlight 파라미터 확인
   const isTestFlight = req.nextUrl.searchParams.get('testflight') === 'true';
 
+  console.log("[Google OAuth Login] 로그인 시작:", {
+    hasState: !!state,
+    hasCodeVerifier: !!codeVerifier,
+    isTestFlight,
+    url: req.url,
+    origin: req.headers.get("origin"),
+  });
+
   const url = await google.createAuthorizationURL(state, codeVerifier, {
     scopes: ["profile", "email"],
   });
+
+  console.log("[Google OAuth Login] 인증 URL 생성 완료:", url.toString());
 
   const cookieStore = await cookies();
 
@@ -30,6 +40,12 @@ export async function GET(req: NextRequest) {
     httpOnly: true,
     maxAge: 60 * 10,
     sameSite: "lax",
+  });
+
+  console.log("[Google OAuth Login] 쿠키 설정 완료:", {
+    stateSet: true,
+    codeVerifierSet: true,
+    isProduction: process.env.NODE_ENV === "production",
   });
 
   // TestFlight 정보를 쿠키에 저장
