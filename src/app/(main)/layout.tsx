@@ -45,15 +45,15 @@ export default async function Layout({
           )}
         
         <div 
-          className="flex grow justify-center px-0 py-0 md:p-5"
+          className={`flex grow justify-center ${isLoggedIn ? 'px-0 py-0 md:p-5' : 'p-0'}`}
           style={{
-            marginLeft: 'var(--left-sidebar-width, 0px)',
-            marginRight: 'var(--right-sidebar-width, 0px)',
-            maxWidth: 'calc(100vw - var(--left-sidebar-width, 0px) - var(--right-sidebar-width, 0px))',
+            marginLeft: isLoggedIn ? 'var(--left-sidebar-width, 0px)' : '0px',
+            marginRight: isLoggedIn ? 'var(--right-sidebar-width, 0px)' : '0px',
+            maxWidth: isLoggedIn ? 'calc(100vw - var(--left-sidebar-width, 0px) - var(--right-sidebar-width, 0px))' : '100vw',
           }}
         >
           {/* 중앙 피드 영역 - 항상 중앙 정렬 */}
-          <div className="w-full min-w-0 max-w-3xl mobile-page-container md:pt-0 flex flex-col items-center">
+          <div className={`w-full min-w-0 ${isLoggedIn ? 'max-w-3xl' : 'max-w-full'} mobile-page-container md:pt-0 flex flex-col ${isLoggedIn ? 'items-center' : 'items-stretch'}`}>
             {children}
           </div>
         </div>
