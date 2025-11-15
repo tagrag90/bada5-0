@@ -4,7 +4,7 @@ globs:
 alwaysApply: false
 ---
 
-# 🧭 Bada Project Rules (v1.3)
+# 🧭 Bada Project Rules (v1.4)
 **Author:** Junseo Park
 **Copyright:** © 2025 Studio_bada.
 **Target:** All projects under Studio_bada, including divetobada.com, Chartroom, Workflow, etc.
@@ -19,7 +19,59 @@ alwaysApply: false
 
 ---
 
-## 2. Technical Stack Consistency
+## 2. CRITICAL: Git & Data Protection Rules
+
+### 2.1 절대 금지 사항
+- **절대 `git checkout -- .` 또는 `git restore .`를 실행하지 말 것**
+- **절대 `git clean -fdx`를 실행하지 말 것** (이미 규칙에 있음)
+- 사용자가 "되돌려라"고 명시적으로 지시하지 않는 한, 변경사항을 되돌리지 말 것
+
+### 2.2 변경사항 되돌리기 전 필수 절차
+**사용자가 변경사항을 되돌리라고 요청했을 때만, 다음 절차를 반드시 따라야 함:**
+
+1. **백업 생성 (필수)**
+   ```bash
+   # 현재 변경사항을 백업 브랜치에 저장
+   git stash push -m "백업: [작업 내용 요약] - $(date +%Y%m%d_%H%M%S)"
+   # 또는 백업 브랜치 생성
+   git branch backup-$(date +%Y%m%d_%H%M%S)
+   git add .
+   git commit -m "백업: [작업 내용 요약]"
+   ```
+
+2. **사용자에게 확인**
+   - 백업 완료 후 사용자에게 알림
+   - 되돌리기 전에 최종 확인 요청
+
+3. **되돌리기 실행**
+   - 확인 후에만 `git checkout -- .` 실행
+   - 실행 후 `git status`로 확인
+
+### 2.3 작업 시작 전 필수 확인 사항
+**모든 작업 시작 전에 반드시 다음을 확인:**
+
+1. **Git 상태 확인**
+   ```bash
+   git status
+   git diff --stat  # 변경된 파일 목록 확인
+   ```
+
+2. **작업 전 백업 생성 (선택적이지만 권장)**
+   - 큰 작업 시작 전에는 백업 브랜치 생성 권장
+   - 특히 새로운 기능 추가나 대규모 리팩토링 시
+
+3. **작업 중간 저장**
+   - 작업이 완료되면 즉시 커밋
+   - 사용자가 요청하지 않아도, 작업 완료 시점에 커밋 제안
+
+### 2.4 데이터 손실 방지 원칙
+- **"프로젝트가 손상되었다"는 표현은 되돌리기 요청이 아님**
+- 사용자가 명시적으로 "되돌려라", "복구해라", "원래대로 돌려놔라"고 말하지 않는 한, 되돌리지 말 것
+- 문제 해결을 우선 시도하고, 사용자에게 해결 방안을 제시할 것
+
+---
+
+## 3. Technical Stack Consistency
 | Component | Technology |
 |------------|-------------|
 | **Language** | TypeScript (JS) |
@@ -39,7 +91,7 @@ alwaysApply: false
 
 ---
 
-## 3. Design Policy
+## 4. Design Policy
 - Every Studio_bada product must follow the **divetobada.com visual framework**.
 - Maintain the same typography, spacing, hierarchy, and component patterns.
 - **Icons should be avoided** whenever possible.
@@ -48,7 +100,7 @@ alwaysApply: false
 
 ---
 
-## 4. Version Control & Data Management
+## 5. Version Control & Data Management
 - Never execute `git clean -fdx`.
 - Always run `git clean -n` first if absolutely required.
 - Keep backup folders (`backups/`) outside the project directory or in cloud storage.
@@ -57,7 +109,25 @@ alwaysApply: false
 
 ---
 
-## 5. Learning from Past Failures
+## 6. Learning from Past Failures
+
+### 6.1 2025-01-16 작업물 손실 사건
+**원인:**
+- 사용자가 "프로젝트를 완전 손상시킴"이라고 표현했을 때, 이는 되돌리기 요청이 아니라 문제 보고였음
+- 제가 즉시 `git checkout -- .`를 실행하여 모든 작업물을 삭제함
+- 백업 없이 되돌리기를 실행함
+
+**교훈:**
+- "손상되었다"는 표현은 문제 보고일 뿐, 되돌리기 요청이 아님
+- 되돌리기 전에 반드시 백업 생성
+- 사용자가 명시적으로 "되돌려라"고 말하지 않는 한, 되돌리지 말 것
+- 문제 해결을 우선 시도할 것
+
+**재발 방지책:**
+- Section 2.2, 2.3, 2.4에 명시된 절차를 반드시 준수
+- 되돌리기 명령어 실행 전에 항상 백업 생성
+- 사용자 확인 없이 되돌리기 실행 금지
+
 - Past mistakes recorded in reflection logs (`worklog_YYYY-MM-DD.md`) are considered **binding lessons**.
 - The model should use those reflections to prevent recurrence,
   but must **not replicate failed structures or temporary fixes**.
@@ -66,7 +136,7 @@ alwaysApply: false
 
 ---
 
-## 6. Deployment & Domain Management
+## 7. Deployment & Domain Management
 
 ### Vercel 배포 도메인 연결 문제
 - **문제**: GitHub 푸시 후 자동 배포가 성공해도 `www.divetobada.com`에 변경사항이 자동 반영되지 않을 수 있음
@@ -84,8 +154,26 @@ alwaysApply: false
 
 ---
 
-## 7. Enforcement and Compliance
+## 8. Enforcement and Compliance
 - This rule set is **mandatory**, not advisory.
 - Violations may result in loss of trust or project damage and are treated as critical incidents.
 - Every task must end with:
   > "This work complies with the project rules and Studio_bada's copyright and design integrity standards."
+
+---
+
+## 9. 작업 완료 시 체크리스트
+
+작업을 완료할 때마다 다음을 확인:
+
+1. ✅ Git 상태 확인 (`git status`)
+2. ✅ 변경사항이 있다면 커밋 제안
+3. ✅ 빌드 성공 확인 (`npm run build`)
+4. ✅ 타입 체크 통과 확인 (`npx tsc --noEmit`)
+5. ✅ 린터 에러 없음 확인
+6. ✅ 규칙 준수 확인 메시지 포함
+
+---
+
+**Last Updated**: 2025-01-16
+**Version**: 1.4 (Git Protection Rules 강화)
