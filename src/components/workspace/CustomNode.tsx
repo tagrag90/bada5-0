@@ -541,8 +541,55 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
           </div>
         )}
         
+        {/* 캘린더 노드: 일정 정보 표시 */}
+        {data.type === "SCHEDULE" && data.content && (() => {
+          try {
+            const scheduleData = JSON.parse(data.content);
+            const startDate = scheduleData.startDate ? new Date(scheduleData.startDate) : null;
+            const endDate = scheduleData.endDate ? new Date(scheduleData.endDate) : null;
+            const eventType = scheduleData.eventType || "SCHEDULE";
+            const eventTypeLabels: Record<string, string> = {
+              SCHEDULE: "일정",
+              EVENT: "행사",
+              DEADLINE: "마감기한",
+            };
+
+            return (
+              <div className="text-xs text-gray-600 mt-1 space-y-1">
+                {eventType && (
+                  <div className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                    {eventTypeLabels[eventType] || eventType}
+                  </div>
+                )}
+                {startDate && (
+                  <div className="text-gray-700">
+                    <span className="font-medium">시작:</span> {startDate.toLocaleDateString("ko-KR")}
+                  </div>
+                )}
+                {endDate && (
+                  <div className="text-gray-700">
+                    <span className="font-medium">종료:</span> {endDate.toLocaleDateString("ko-KR")}
+                  </div>
+                )}
+                {scheduleData.description && (
+                  <div className="text-gray-600 mt-1 line-clamp-2">
+                    {scheduleData.description}
+                  </div>
+                )}
+              </div>
+            );
+          } catch {
+            // JSON 파싱 실패 시 일반 텍스트로 표시
+            return (
+              <div className="text-xs text-gray-600 mt-1 whitespace-pre-line break-words overflow-hidden line-clamp-3">
+                {data.content}
+              </div>
+            );
+          }
+        })()}
+
         {/* 일반 노드: 내용 표시 */}
-        {data.type !== "RESOURCE" && data.type !== "POST" && data.type !== "PHOTO" && data.content && (
+        {data.type !== "RESOURCE" && data.type !== "POST" && data.type !== "PHOTO" && data.type !== "SCHEDULE" && data.content && (
           (() => {
             // HTML 태그가 포함되어 있으면 HTML로 렌더링, 아니면 일반 텍스트로 렌더링
             const isHTML = /<[a-z][\s\S]*>/i.test(data.content);

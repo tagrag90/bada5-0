@@ -1048,10 +1048,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   );
 }
 
-export default function StudioWorkspace({ studioId }: StudioWorkspaceProps) {
+export default function StudioWorkspace({ studioId, fileId }: StudioWorkspaceProps) {
   return (
     <ReactFlowProvider>
-      <WorkspaceContent studioId={studioId} />
+      <WorkspaceContent studioId={studioId} fileId={fileId} />
     </ReactFlowProvider>
   );
 }

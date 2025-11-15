@@ -51,6 +51,8 @@ export default function DiscordStyleSidebar({
   const pathname = usePathname();
   const isSettingsPage = pathname?.startsWith('/settings');
   const isStudioSettingsPage = pathname?.includes('/studios/') && pathname?.includes('/settings');
+  // 워크스페이스 파일 페이지 감지 (화이트보드 진입 시)
+  const isWorkspaceFilePage = pathname?.includes('/workspace/') && pathname?.match(/\/workspace\/[^\/]+$/);
 
   // 테블릿 사이즈 감지 (md 이상 xl 미만)
   useEffect(() => {
@@ -78,8 +80,8 @@ export default function DiscordStyleSidebar({
         />
       </div>
 
-      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (테블릿에서는 숨김, 워크스페이스에서는 숨김) */}
-      <div className={isTablet || selectedChannel === 'workspace' ? "hidden" : "flex flex-col flex-1"} style={{ minWidth: 0 }}>
+      {/* 우측 칼럼: 채널 목록 또는 설정 사이드바 (테블릿에서는 숨김, 워크스페이스 파일 페이지에서는 숨김) */}
+      <div className={isTablet || selectedChannel === 'workspace' || isWorkspaceFilePage ? "hidden" : "flex flex-col flex-1"} style={{ minWidth: 0 }}>
         {isSettingsPage ? (
           /* 설정 페이지일 때 설정 사이드바 표시 */
           <SettingsSidebar />

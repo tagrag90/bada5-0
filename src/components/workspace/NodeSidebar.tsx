@@ -63,7 +63,7 @@ export default function NodeSidebar({
       }),
       Highlight.configure({ multicolor: false }),
     ],
-    content: nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" ? initialContent : "",
+    content: nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" && nodeType !== "SCHEDULE" ? initialContent : "",
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
@@ -92,6 +92,40 @@ export default function NodeSidebar({
     return [];
   });
 
+  // 캘린더 노드용 일정 정보 (SCHEDULE 타입일 때)
+  const [scheduleData, setScheduleData] = useState<{
+    startDate?: string;
+    endDate?: string;
+    eventType?: "SCHEDULE" | "EVENT" | "DEADLINE";
+    description?: string;
+  }>(() => {
+    if (nodeType === "SCHEDULE" && initialContent) {
+      try {
+        const parsed = JSON.parse(initialContent);
+        return {
+          startDate: parsed.startDate || "",
+          endDate: parsed.endDate || "",
+          eventType: parsed.eventType || "SCHEDULE",
+          description: parsed.description || "",
+        };
+      } catch {
+        // JSON이 아니면 일반 텍스트로 처리
+        return {
+          startDate: "",
+          endDate: "",
+          eventType: "SCHEDULE" as const,
+          description: initialContent,
+        };
+      }
+    }
+    return {
+      startDate: "",
+      endDate: "",
+      eventType: "SCHEDULE" as const,
+      description: "",
+    };
+  });
+
   // 초기값이 변경되면 상태 업데이트
   useEffect(() => {
     setTitle(initialTitle);
@@ -115,6 +149,27 @@ export default function NodeSidebar({
     } else {
       setFileList([]);
     }
+
+    // 캘린더 노드 데이터 업데이트 (SCHEDULE 타입)
+    if (nodeType === "SCHEDULE" && initialContent) {
+      try {
+        const parsed = JSON.parse(initialContent);
+        setScheduleData({
+          startDate: parsed.startDate || "",
+          endDate: parsed.endDate || "",
+          eventType: parsed.eventType || "SCHEDULE",
+          description: parsed.description || "",
+        });
+      } catch {
+        // JSON이 아니면 일반 텍스트를 description으로 처리
+        setScheduleData({
+          startDate: "",
+          endDate: "",
+          eventType: "SCHEDULE" as const,
+          description: initialContent,
+        });
+      }
+    }
   }, [initialTitle, initialContent, initialEmoji, nodeType, editor]);
   
 
@@ -125,9 +180,18 @@ export default function NodeSidebar({
       const emojiValue = emoji && emoji.trim() ? emoji.trim() : undefined;
       
       // RESOURCE, PHOTO 타입일 때는 파일 목록을 JSON으로 저장
+      // SCHEDULE 타입일 때는 일정 정보를 JSON으로 저장
       let contentToSave = content;
       if (nodeType === "RESOURCE" || nodeType === "PHOTO") {
         contentToSave = JSON.stringify({ files: fileList });
+      } else if (nodeType === "SCHEDULE") {
+        // 캘린더 노드: 일정 정보를 JSON으로 저장
+        contentToSave = JSON.stringify({
+          startDate: scheduleData.startDate || "",
+          endDate: scheduleData.endDate || "",
+          eventType: scheduleData.eventType || "SCHEDULE",
+          description: scheduleData.description || "",
+        });
       } else if (nodeType !== "POST" && editor) {
         // Tiptap 에디터에서 HTML 가져오기
         contentToSave = editor.getHTML();
@@ -285,7 +349,74 @@ export default function NodeSidebar({
           )}
         </div>
 
-        {nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" && editor && (
+        {/* 캘린더 노드: 날짜 선택 및 일정 관리 UI */}
+        {nodeType === "SCHEDULE" && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>이벤트 종류</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={scheduleData.eventType === "SCHEDULE" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setScheduleData({ ...scheduleData, eventType: "SCHEDULE" })}
+                >
+                  일정
+                </Button>
+                <Button
+                  type="button"
+                  variant={scheduleData.eventType === "EVENT" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setScheduleData({ ...scheduleData, eventType: "EVENT" })}
+                >
+                  행사
+                </Button>
+                <Button
+                  type="button"
+                  variant={scheduleData.eventType === "DEADLINE" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setScheduleData({ ...scheduleData, eventType: "DEADLINE" })}
+                >
+                  마감기한
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">시작 날짜</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={scheduleData.startDate || ""}
+                  onChange={(e) => setScheduleData({ ...scheduleData, startDate: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">종료 날짜</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={scheduleData.endDate || ""}
+                  onChange={(e) => setScheduleData({ ...scheduleData, endDate: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">설명</Label>
+              <Textarea
+                id="description"
+                value={scheduleData.description || ""}
+                onChange={(e) => setScheduleData({ ...scheduleData, description: e.target.value })}
+                placeholder="일정에 대한 설명을 입력하세요"
+                rows={4}
+              />
+            </div>
+          </div>
+        )}
+
+        {nodeType !== "RESOURCE" && nodeType !== "POST" && nodeType !== "PHOTO" && nodeType !== "SCHEDULE" && editor && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="content">내용</Label>
