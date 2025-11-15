@@ -26,11 +26,15 @@ export async function GET(
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // 필터링용 노드 타입
+    const fileId = searchParams.get("fileId"); // 파일 ID 필터링
 
     const where: any = { studioId: studioId };
 
     if (type) {
       where.type = type;
+    }
+    if (fileId) {
+      where.fileId = fileId;
     }
 
     const nodes = await prisma.projectNode.findMany({
@@ -108,6 +112,7 @@ export async function POST(
       height,
       color,
       config,
+      fileId, // 워크스페이스 파일 ID (선택적)
     } = body;
     
     console.log("Creating node with data:", { type, title, x, y, studioId });
@@ -128,6 +133,19 @@ export async function POST(
       );
     }
 
+    // fileId가 제공된 경우, 해당 파일이 같은 스튜디오에 속하는지 확인
+    if (fileId) {
+      const file = await prisma.workspaceFile.findFirst({
+        where: { id: fileId, studioId },
+      });
+      if (!file) {
+        return Response.json(
+          { error: "파일을 찾을 수 없거나 접근 권한이 없습니다" },
+          { status: 404 }
+        );
+      }
+    }
+
     const node = await prisma.projectNode.create({
       data: {
         studioId: studioId,
@@ -141,6 +159,7 @@ export async function POST(
         height: height ? parseFloat(height) : 200,
         color: color || null,
         config: config || null,
+        fileId: fileId || null, // 파일 ID (없으면 null)
       },
       include: {
         author: {

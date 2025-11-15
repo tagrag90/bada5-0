@@ -17,8 +17,16 @@ export async function GET(
 
     await requireStudioMember(user.id, studioId);
 
+    const { searchParams } = new URL(req.url);
+    const fileId = searchParams.get("fileId"); // 파일 ID 필터링
+
+    const where: any = { studioId: studioId };
+    if (fileId) {
+      where.fileId = fileId;
+    }
+
     const edges = await prisma.nodeEdge.findMany({
-      where: { studioId: studioId },
+      where,
       include: {
         fromNode: {
           select: {
@@ -59,7 +67,7 @@ export async function POST(
     await requireStudioMember(user.id, studioId);
 
     const body = await req.json();
-    const { fromId, toId, fromPort, toPort, type, label, color } = body;
+    const { fromId, toId, fromPort, toPort, type, label, color, fileId } = body;
 
     if (!fromId || !toId) {
       return Response.json(
@@ -84,6 +92,26 @@ export async function POST(
       );
     }
 
+    // fileId가 제공된 경우, 두 노드가 같은 파일에 속하는지 확인
+    if (fileId) {
+      const file = await prisma.workspaceFile.findFirst({
+        where: { id: fileId, studioId },
+      });
+      if (!file) {
+        return Response.json(
+          { error: "파일을 찾을 수 없거나 접근 권한이 없습니다" },
+          { status: 404 }
+        );
+      }
+      // 두 노드가 같은 파일에 속하는지 확인
+      if (fromNode.fileId !== fileId || toNode.fileId !== fileId) {
+        return Response.json(
+          { error: "두 노드는 같은 파일에 속해야 합니다" },
+          { status: 400 }
+        );
+      }
+    }
+
     // 자기 자신에게 연결 불가
     if (fromId === toId) {
       return Response.json(
@@ -102,6 +130,7 @@ export async function POST(
         type: type || "ARROW",
         label: label || null,
         color: color || null,
+        fileId: fileId || null, // 파일 ID (없으면 null)
       },
       include: {
         fromNode: {
