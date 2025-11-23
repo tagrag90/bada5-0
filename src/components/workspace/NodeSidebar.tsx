@@ -250,8 +250,14 @@ export default function NodeSidebar({
         });
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Upload failed');
+          let errorMessage = '업로드 실패';
+          try {
+            const error = await response.json();
+            errorMessage = error.message || error.error || `서버 오류 (${response.status})`;
+          } catch {
+            errorMessage = `서버 오류 (${response.status})`;
+          }
+          throw new Error(errorMessage);
         }
 
         const result = await response.json();
