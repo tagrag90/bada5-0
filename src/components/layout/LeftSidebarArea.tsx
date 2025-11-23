@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useMemo } from "react";
 import { useSidebar } from "./SidebarContext";
 import { usePathname } from "next/navigation";
 import UserProfileButton from "@/components/UserProfileButton";
+import { shouldShowSidebarContent } from "@/lib/sidebar-utils";
 
 interface LeftSidebarAreaProps {
   children?: ReactNode;
@@ -18,28 +19,10 @@ export default function LeftSidebarArea({ children }: LeftSidebarAreaProps) {
   const pathname = usePathname();
   const isSettingsPage = pathname?.startsWith('/settings');
 
-  // 표시할 블록이 있는지 확인
+  // 표시할 블록이 있는지 확인 (통합 로직 사용)
   const hasContentBlock = useMemo(() => {
-    // 설정 페이지는 항상 표시
-    if (isSettingsPage) return true;
-    
-    // 독스 페이지는 항상 표시
-    if (sidebarType === 'docs') return true;
-    
-    // 스튜디오/디스코드 사이드바인 경우
-    if (sidebarType === 'studio' || sidebarType === 'discord') {
-      // 화이트보드 파일 페이지인 경우에만 우측 칼럼 표시
-      const isWorkspaceFilePage = pathname?.match(/\/studios\/[^/]+\/workspace\/[^/]+$/);
-      if (isWorkspaceFilePage && discordData?.selectedStudioId && discordData?.fileId) {
-        return true;
-      }
-      // 스튜디오 메인 페이지에서는 우측 칼럼 표시하지 않음
-      return false;
-    }
-    
-    // 그 외의 경우는 표시할 블록이 없음
-    return false;
-  }, [sidebarType, discordData?.selectedStudioId, discordData?.fileId, isSettingsPage, pathname]);
+    return shouldShowSidebarContent(sidebarType, pathname, discordData);
+  }, [sidebarType, pathname, discordData]);
 
   // 사이드바 너비 결정
   // 접혔을 때는 유저 박스를 포함할 수 있도록 충분한 폭 필요 (약 280px)

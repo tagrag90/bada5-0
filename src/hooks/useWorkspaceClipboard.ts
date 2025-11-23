@@ -73,7 +73,7 @@ export const useWorkspaceClipboard = (studioId: string) => {
         fromTempId: nodeIdToTempId.get(edge.source)!,
         toTempId: nodeIdToTempId.get(edge.target)!,
         type: edge.type || 'default',
-        label: edge.label,
+        label: typeof edge.label === 'string' ? edge.label : undefined,
         color: edge.style?.stroke,
         fromPort: edge.sourceHandle || undefined,
         toPort: edge.targetHandle || undefined,

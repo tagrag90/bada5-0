@@ -13,7 +13,6 @@ import { useSidebar } from "@/components/layout/SidebarContext";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import MobileStudioBottomSheet from "@/components/layout/MobileStudioBottomSheet";
-import StudioProfileCard from "@/components/StudioProfileCard";
 
 function WorkspaceRedirect({ studioId }: { studioId: string }) {
   const router = useRouter();
@@ -151,19 +150,6 @@ export default function StudioDetailContent({ studioId }: { studioId: string }) 
 
   return (
     <div className="w-full min-w-0">
-      {/* 스튜디오 프로필 카드 */}
-      {studio && (
-        <StudioProfileCard
-          studio={studio}
-          studioName={studio.name}
-          studioId={studioId}
-          isOwner={isOwner}
-          isAdmin={isAdmin}
-          selectedTab={currentTab}
-          onTabSelect={handleChannelSelect}
-        />
-      )}
-
       {/* 스튜디오 콘텐츠 */}
       <div className={currentTab === "workspace" ? "w-full h-full" : ""}>
         {currentTab === "posts" && <StudioPosts studioId={studioId} isOwner={isOwner} />}

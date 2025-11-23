@@ -40,24 +40,24 @@ interface StudioProfileCardProps {
 
 interface NavItemProps {
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   active?: boolean;
   onClick?: () => void;
-  title?: string;
 }
 
-function NavItem({ icon: Icon, active, onClick, title }: NavItemProps) {
+function NavItem({ icon: Icon, label, active, onClick }: NavItemProps) {
   return (
     <button
       onClick={onClick}
-      title={title}
       className={cn(
-        "flex items-center justify-center p-2 rounded-lg transition-colors",
+        "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
         active
           ? "bg-accent text-accent-foreground"
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
       )}
     >
-      <Icon className="h-5 w-5" />
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
     </button>
   );
 }
@@ -161,12 +161,11 @@ export default function StudioProfileCard({
 
   return (
     <div
-      className="w-full max-w-md md:max-w-xl bg-card shadow-sm mb-4 mx-auto overflow-hidden"
-      style={{ borderRadius: '1.5rem' }}
+      className="w-full bg-card overflow-hidden"
     >
       {/* 배너 영역 */}
       {studio?.bannerUrl && (
-        <div className="relative w-full h-32 overflow-hidden">
+        <div className="relative w-full h-24 overflow-hidden">
           <Image
             src={studio.bannerUrl}
             alt={`${studio.name} banner`}
@@ -176,32 +175,32 @@ export default function StudioProfileCard({
         </div>
       )}
 
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-3">
         {/* 프로필 헤더 */}
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold">{studioName}</h2>
-            <div className="text-muted-foreground">
+            <h2 className="text-lg font-bold truncate">{studioName}</h2>
+            <div className="text-xs text-muted-foreground truncate">
               @{studio?.slug || studioName.toLowerCase().replace(/\s+/g, '')}
             </div>
             {studio?.description && (
-              <div className="mt-2 overflow-hidden whitespace-pre-line break-words text-sm">
+              <div className="mt-1 overflow-hidden whitespace-pre-line break-words text-xs line-clamp-2">
                 {studio.description}
               </div>
             )}
           </div>
-          <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white">
+          <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 border-2 border-white">
             {studio?.avatarUrl ? (
               <Image
                 key={studio.avatarUrl}
                 src={studio.avatarUrl}
                 alt={studioName}
-                width={80}
-                height={80}
+                width={64}
+                height={64}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gray-300 flex items-center justify-center text-2xl font-bold text-gray-600">
+              <div className="w-full h-full bg-gray-300 flex items-center justify-center text-xl font-bold text-gray-600">
                 {studioName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -210,24 +209,24 @@ export default function StudioProfileCard({
 
         {/* 통계 */}
         {studio && (
-          <div className="flex items-center gap-8 text-sm">
+          <div className="flex items-center gap-4 text-xs">
             <div className="flex flex-col items-center">
-              <span className="text-lg font-bold">
+              <span className="text-base font-bold">
                 {formatNumber(studio._count.members)}
               </span>
-              <span className="text-muted-foreground">멤버</span>
+              <span className="text-muted-foreground text-xs">멤버</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-lg font-bold">
+              <span className="text-base font-bold">
                 {formatNumber(studio.subscribersCount)}
               </span>
-              <span className="text-muted-foreground">팔로워</span>
+              <span className="text-muted-foreground text-xs">팔로워</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-lg font-bold">
+              <span className="text-base font-bold">
                 {formatNumber(studio._count.events)}
               </span>
-              <span className="text-muted-foreground">이벤트</span>
+              <span className="text-muted-foreground text-xs">이벤트</span>
             </div>
           </div>
         )}
@@ -239,31 +238,31 @@ export default function StudioProfileCard({
           </div>
         )}
 
-        {/* 네비게이션 메뉴 - 수평 배열, 아이콘만 */}
-        <nav className="flex items-center gap-2 pt-2">
+        {/* 네비게이션 메뉴 - 수직 배열, 텍스트 포함 */}
+        <nav className="flex flex-col gap-1 pt-2">
           <NavItem
             icon={Network}
+            label="워크스페이스"
             active={selectedTab === "workspace"}
             onClick={() => handleTabSelect("workspace")}
-            title="워크스페이스"
           />
           <NavItem
             icon={FileText}
+            label="포스트"
             active={selectedTab === "posts"}
             onClick={() => handleTabSelect("posts")}
-            title="포스트"
           />
           <NavItem
             icon={Calendar}
+            label="캘린더"
             active={selectedTab === "calendar"}
             onClick={() => handleTabSelect("calendar")}
-            title="캘린더"
           />
           <NavItem
             icon={StickyNote}
+            label="메모"
             active={selectedTab === "notes"}
             onClick={() => handleTabSelect("notes")}
-            title="메모"
           />
         </nav>
 

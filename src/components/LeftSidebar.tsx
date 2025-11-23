@@ -7,6 +7,7 @@ import DiscordStyleSidebar from "@/components/layout/DiscordStyleSidebar";
 import ServerList from "@/components/layout/ServerList";
 import CreateStudioDialog from "@/app/(main)/studios/CreateStudioDialog";
 import { usePathname } from "next/navigation";
+import { shouldShowRightColumn } from "@/lib/sidebar-utils";
 
 interface LeftSidebarProps {
   children?: React.ReactNode;
@@ -128,28 +129,21 @@ export default function LeftSidebar({ children, whoToFollowSlot }: LeftSidebarPr
                   />
                 </div>
 
-                {/* 우측: 채널 목록 또는 설정 사이드바 (표시할 내용이 있을 때만) */}
-                {(() => {
-                  const isWorkspaceFilePage = pathname?.match(/\/studios\/[^/]+\/workspace\/[^/]+$/);
-                  
-                  // 설정 페이지이거나 화이트보드 파일 페이지일 때만 우측 칼럼 표시
-                  const shouldShowRightColumn = isSettingsPage || (isWorkspaceFilePage && discordData?.selectedStudioId && discordData?.fileId);
-                  
-                  return shouldShowRightColumn ? (
-                    <div className="flex-1 overflow-y-auto" style={{ width: `${rightColumnWidth}px` }}>
-                      <DiscordStyleSidebar
-                        selectedStudioId={discordData?.selectedStudioId || undefined}
-                        selectedChannel={discordData?.selectedChannel || 'posts'}
-                        onStudioSelect={discordData?.onStudioSelect || (() => {})}
-                        onChannelSelect={discordData?.onChannelSelect || (() => {})}
-                        isOwner={discordData?.isOwner || false}
-                        studioName={discordData?.studioName || ""}
-                        studio={discordData?.studio}
-                        fileId={discordData?.fileId}
-                      />
-                    </div>
-                  ) : null;
-                })()}
+                {/* 우측: 채널 목록 또는 설정 사이드바 (통합 로직 사용) */}
+                {shouldShowRightColumn(pathname, discordData) ? (
+                  <div className="flex-1 overflow-y-auto" style={{ width: `${rightColumnWidth}px` }}>
+                    <DiscordStyleSidebar
+                      selectedStudioId={discordData?.selectedStudioId || undefined}
+                      selectedChannel={discordData?.selectedChannel || 'posts'}
+                      onStudioSelect={discordData?.onStudioSelect || (() => {})}
+                      onChannelSelect={discordData?.onChannelSelect || (() => {})}
+                      isOwner={discordData?.isOwner || false}
+                      studioName={discordData?.studioName || ""}
+                      studio={discordData?.studio}
+                      fileId={discordData?.fileId}
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
           </>

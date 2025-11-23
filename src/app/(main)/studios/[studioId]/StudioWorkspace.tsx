@@ -26,6 +26,7 @@ import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
 import { useWorkspaceClipboard } from "@/hooks/useWorkspaceClipboard";
 import ModeToggleButton from "@/components/workspace/ModeToggleButton";
+import html2canvas from "html2canvas";
 
 interface StudioWorkspaceProps {
   studioId: string;
@@ -44,6 +45,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [interactionMode, setInteractionMode] = useState<"drag" | "select">("drag"); // 드래그/선택 모드
+  const thumbnailGenerationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reactFlowWrapperRef = useRef<HTMLDivElement>(null);
   
   // 클립보드 훅
   const { copy, paste, cut, clipboardData, loadFromStorage } = useWorkspaceClipboard(studioId);
@@ -140,6 +143,258 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     },
   });
 
+  // 파일 정보 조회 (썸네일 확인용)
+  const { data: fileInfo } = useQuery({
+    queryKey: ["workspace-file", studioId, fileId],
+    queryFn: async () => {
+      if (!fileId) return null;
+      const res = await fetch(`/api/studios/${studioId}/files/${fileId}`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!fileId,
+  });
+
+  // 썸네일 자동 생성 함수
+  const generateThumbnail = useCallback(async () => {
+    console.log('[썸네일 생성] 시작', { fileId, hasReactFlowInstance: !!reactFlowInstance, hasWrapper: !!reactFlowWrapperRef.current });
+    
+    if (!fileId || !reactFlowInstance || !reactFlowWrapperRef.current) {
+      console.log('[썸네일 생성] 조건 불만족으로 중단');
+      return;
+    }
+
+    try {
+      // React Flow의 모든 노드 가져오기
+      const currentNodes = reactFlowInstance.getNodes();
+      console.log('[썸네일 생성] 현재 노드 개수:', currentNodes.length);
+      
+      if (!currentNodes || currentNodes.length === 0) {
+        console.log('[썸네일 생성] 노드가 없어서 중단');
+        return; // 노드가 없으면 썸네일 생성 안 함
+      }
+
+      // 노드들의 경계 상자 계산 (수동으로 계산)
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      currentNodes.forEach((node: Node) => {
+        const nodeWidth = node.width || 200;
+        const nodeHeight = node.height || 100;
+        const x = node.position.x;
+        const y = node.position.y;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + nodeWidth);
+        maxY = Math.max(maxY, y + nodeHeight);
+      });
+
+      const nodesBounds = {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+      };
+
+      console.log('[썸네일 생성] 노드 영역:', nodesBounds);
+      
+      if (nodesBounds.width === 0 || nodesBounds.height === 0) {
+        console.log('[썸네일 생성] 노드 영역이 유효하지 않아서 중단');
+        return;
+      }
+
+      // 현재 뷰포트 저장
+      const currentViewport = reactFlowInstance.getViewport();
+
+      // React Flow 뷰포트 요소 찾기 (여러 가능한 선택자 시도)
+      let reactFlowElement = reactFlowWrapperRef.current.querySelector('.react-flow__viewport') as HTMLElement;
+      
+      // .react-flow__viewport를 찾지 못하면 .react-flow를 사용
+      if (!reactFlowElement) {
+        reactFlowElement = reactFlowWrapperRef.current.querySelector('.react-flow') as HTMLElement;
+      }
+      
+      // 여전히 찾지 못하면 wrapper 자체를 사용
+      if (!reactFlowElement) {
+        reactFlowElement = reactFlowWrapperRef.current;
+      }
+      
+      console.log('[썸네일 생성] React Flow 요소:', reactFlowElement ? `찾음 (${reactFlowElement.className})` : '찾지 못함');
+      console.log('[썸네일 생성] Wrapper 내부 요소들:', reactFlowWrapperRef.current.querySelectorAll('*').length, '개');
+      
+      if (!reactFlowElement) {
+        console.log('[썸네일 생성] React Flow 요소를 찾지 못해서 중단');
+        return;
+      }
+
+      // 노드 영역에 맞춰 뷰포트 설정
+      const padding = 50;
+      const targetZoom = Math.min(
+        1,
+        (800 - padding * 2) / nodesBounds.width,
+        (600 - padding * 2) / nodesBounds.height
+      );
+
+      const viewport = {
+        x: -(nodesBounds.x - padding) * targetZoom,
+        y: -(nodesBounds.y - padding) * targetZoom,
+        zoom: targetZoom,
+      };
+
+      // 임시로 뷰포트 변경
+      reactFlowInstance.setViewport(viewport);
+
+      // 뷰포트 변경 후 렌더링 대기
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 캔버스 캡처 (노드 영역만)
+      console.log('[썸네일 생성] html2canvas 시작');
+      const canvas = await html2canvas(reactFlowElement, {
+        backgroundColor: '#E5E5E5',
+        useCORS: true,
+        scale: 0.5, // 썸네일 크기 최적화
+        logging: false,
+        width: nodesBounds.width + padding * 2,
+        height: nodesBounds.height + padding * 2,
+      });
+      console.log('[썸네일 생성] html2canvas 완료', { width: canvas.width, height: canvas.height });
+
+      // 원래 뷰포트로 복원
+      reactFlowInstance.setViewport(currentViewport);
+
+      // Canvas를 Blob으로 변환하고 업로드
+      await new Promise<void>((resolve, reject) => {
+        console.log('[썸네일 생성] Blob 변환 시작');
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            console.error('[썸네일 생성] Blob 생성 실패');
+            reject(new Error('Blob 생성 실패'));
+            return;
+          }
+
+          console.log('[썸네일 생성] Blob 생성 완료', { size: blob.size });
+
+          try {
+            // 이미지 업로드
+            console.log('[썸네일 생성] 업로드 시작');
+            const formData = new FormData();
+            formData.append('file', blob, 'thumbnail.png');
+            formData.append('type', 'media');
+
+            const uploadRes = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!uploadRes.ok) {
+              const error = await uploadRes.json();
+              console.error('[썸네일 생성] 업로드 실패', error);
+              throw new Error(error.message || error.error || '업로드 실패');
+            }
+
+            const uploadResult = await uploadRes.json();
+            console.log('[썸네일 생성] 업로드 완료', { url: uploadResult.url });
+
+            // 파일 썸네일 업데이트
+            console.log('[썸네일 생성] 파일 업데이트 시작');
+            const updateRes = await fetch(`/api/studios/${studioId}/files/${fileId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ thumbnailUrl: uploadResult.url }),
+            });
+
+            if (!updateRes.ok) {
+              const error = await updateRes.json();
+              console.error('[썸네일 생성] 파일 업데이트 실패', error);
+              throw new Error(error.error || '파일 업데이트 실패');
+            }
+
+            const updatedFile = await updateRes.json();
+            console.log('[썸네일 생성] 파일 업데이트 완료', { thumbnailUrl: updatedFile.thumbnailUrl });
+
+            // 파일 목록 쿼리 무효화
+            queryClient.invalidateQueries({ queryKey: ['workspace-files', studioId] });
+            console.log('[썸네일 생성] 쿼리 무효화 완료');
+
+            // 썸네일 생성 완료 후 iframe 닫기 (부모 창이 있으면)
+            if (window.parent !== window) {
+              // iframe 내부에서 실행 중이면 부모에게 완료 신호 전송
+              window.parent.postMessage({ type: 'thumbnailGenerated', fileId }, '*');
+              console.log('[썸네일 생성] postMessage 전송 완료');
+            }
+
+            console.log('[썸네일 생성] 전체 프로세스 완료');
+            resolve();
+          } catch (error) {
+            console.error('[썸네일 생성] 에러 발생:', error);
+            reject(error);
+          }
+        }, 'image/png', 0.8);
+      });
+    } catch (error) {
+      console.error('[썸네일 생성] 전체 프로세스 실패:', error);
+    }
+  }, [fileId, reactFlowInstance, studioId, queryClient]);
+
+  // URL 파라미터에서 썸네일 생성 요청 확인
+  const [shouldGenerateThumbnail, setShouldGenerateThumbnail] = useState(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const shouldGenerate = params.get('generateThumbnail') === 'true';
+      console.log('[썸네일 스케줄] URL 파라미터 확인:', { generateThumbnail: params.get('generateThumbnail'), shouldGenerate });
+      setShouldGenerateThumbnail(shouldGenerate);
+    }
+  }, []);
+
+  // 파일 로드 시 썸네일이 없고 노드가 있으면 자동 생성
+  useEffect(() => {
+    console.log('[썸네일 스케줄] useEffect 조건 확인:', {
+      fileId: !!fileId,
+      fileInfo: !!fileInfo,
+      hasThumbnail: fileInfo?.thumbnailUrl,
+      nodesDataLength: nodesData?.length,
+      reactFlowInstance: !!reactFlowInstance,
+      reactFlowWrapperRef: !!reactFlowWrapperRef.current,
+      isLoadingNodes,
+      isLoadingEdges,
+      shouldGenerateThumbnail,
+    });
+
+    if (
+      fileId &&
+      fileInfo &&
+      !fileInfo.thumbnailUrl &&
+      nodesData &&
+      nodesData.length > 0 &&
+      reactFlowInstance &&
+      reactFlowWrapperRef.current &&
+      !isLoadingNodes &&
+      !isLoadingEdges &&
+      shouldGenerateThumbnail // URL 파라미터가 있을 때만 생성
+    ) {
+      console.log('[썸네일 스케줄] 모든 조건 만족, 3초 후 썸네일 생성 시작');
+      // 약간의 지연 후 썸네일 생성 (렌더링 완료 대기)
+      const timer = setTimeout(() => {
+        console.log('[썸네일 스케줄] 타이머 완료, generateThumbnail 호출');
+        generateThumbnail().catch((error) => {
+          console.error('[썸네일 스케줄] 썸네일 생성 실패:', error);
+        });
+      }, 3000); // 렌더링 완료를 위해 3초 대기
+
+      return () => {
+        console.log('[썸네일 스케줄] 타이머 취소');
+        clearTimeout(timer);
+      };
+    } else {
+      console.log('[썸네일 스케줄] 조건 불만족으로 썸네일 생성 안 함');
+    }
+  }, [fileId, fileInfo, nodesData, reactFlowInstance, isLoadingNodes, isLoadingEdges, shouldGenerateThumbnail, generateThumbnail]);
+
   // 가짜 진행률 시뮬레이션
   useEffect(() => {
     if (isLoadingNodes || isLoadingEdges) {
@@ -212,6 +467,27 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     setNodeEditData(null);
   }, [setNodeEditData]);
 
+  // 썸네일 생성 스케줄링 (debounce)
+  const scheduleThumbnailGeneration = useCallback(() => {
+    if (!fileId) {
+      console.log('[썸네일 스케줄] fileId 없어서 중단');
+      return;
+    }
+
+    console.log('[썸네일 스케줄] 스케줄링 시작');
+
+    // 기존 타이머 취소
+    if (thumbnailGenerationTimeoutRef.current) {
+      clearTimeout(thumbnailGenerationTimeoutRef.current);
+    }
+
+    // 3초 후 썸네일 생성 (여러 변경사항을 한 번에 처리)
+    thumbnailGenerationTimeoutRef.current = setTimeout(() => {
+      console.log('[썸네일 스케줄] 타이머 완료, generateThumbnail 호출');
+      generateThumbnail();
+    }, 3000);
+  }, [fileId, generateThumbnail]);
+
   // 노드 저장 핸들러
   const handleNodeSave = useCallback(
     async (nodeId: string, title: string, content?: string, emoji?: string) => {
@@ -240,6 +516,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         console.log("Node updated successfully:", updatedNode);
 
         queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+        
+        // 썸네일 자동 생성 스케줄링
+        scheduleThumbnailGeneration();
+        
         toast({
           title: "노드 업데이트 완료",
           description: "노드가 성공적으로 업데이트되었습니다.",
@@ -254,7 +534,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         throw error;
       }
     },
-    [studioId, fileId, queryClient, toast]
+    [studioId, fileId, queryClient, toast, scheduleThumbnailGeneration]
   );
 
   // 노드 삭제 핸들러 (Optimistic Update 적용)
@@ -287,6 +567,9 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         // 성공 시 쿼리 무효화 (서버 동기화)
         queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
         queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+        
+        // 썸네일 자동 생성 스케줄링
+        scheduleThumbnailGeneration();
         
         toast({
           title: "노드 삭제 완료",
@@ -702,6 +985,9 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           node.id?.startsWith("temp-") ? newNode : node
         );
       });
+      
+      // 썸네일 자동 생성 스케줄링
+      scheduleThumbnailGeneration();
       
       toast({
         title: "노드 생성 완료",
@@ -1173,6 +1459,9 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
             // 서버에서 업데이트된 노드 데이터 다시 가져오기
             queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+            
+            // 썸네일 자동 생성 스케줄링
+            scheduleThumbnailGeneration();
           } else {
             // 업데이트할 노드가 없으면 즉시 제거
             nodeIdsToUpdate.forEach((nId) => {
@@ -1456,6 +1745,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
   return (
     <div 
+      ref={reactFlowWrapperRef}
       className="h-screen fixed top-0 right-0 bottom-0" 
       style={workspaceStyle}
     >
