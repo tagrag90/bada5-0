@@ -7,8 +7,6 @@ import StudiosToExplore from "./StudiosToExplore";
 import Image from "next/image";
 import Logo from "@/assets/logo.png";
 import BrandSidebar from "./BrandSidebar";
-import UserProfileButton from "./UserProfileButton";
-
 interface FeedRightSidebarProps {
   className?: string;
 }
@@ -21,9 +19,6 @@ export default function FeedRightSidebar({ className }: FeedRightSidebarProps) {
         className,
       )}
     >
-      {/* 프로필 버튼 - 상단 */}
-      <UserProfileButton />
-
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         {/* 공지사항 */}
         <div className="relative group">

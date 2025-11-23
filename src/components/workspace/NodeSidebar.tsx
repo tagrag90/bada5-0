@@ -300,9 +300,9 @@ export default function NodeSidebar({
   }
 
   return (
-    <div className="w-full bg-card border border-border rounded-xl shadow-sm flex flex-col h-full">
+    <div className="w-full bg-card flex flex-col h-full">
       {/* 헤더 */}
-      <div className="flex items-center justify-between p-4 border-b border-border rounded-t-xl">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-semibold">노드 편집</h2>
         <Button
           variant="ghost"
@@ -446,7 +446,7 @@ export default function NodeSidebar({
                 </Button>
               </div>
             </div>
-            <div className="border border-gray-200 rounded-md min-h-[200px] [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-relaxed [&_.ProseMirror_p]:my-2 [&_.ProseMirror_p:first-child]:mt-0 [&_.ProseMirror_p:last-child]:mb-0 [&_.ProseMirror_p:empty]:min-h-[1.5rem] [&_.ProseMirror_p:empty]:before:content-[''] [&_.ProseMirror_br]:block [&_.ProseMirror_br]:content-[''] [&_.ProseMirror_br]:mb-1">
+            <div className="min-h-[200px] [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-relaxed [&_.ProseMirror_p]:my-2 [&_.ProseMirror_p:first-child]:mt-0 [&_.ProseMirror_p:last-child]:mb-0 [&_.ProseMirror_p:empty]:min-h-[1.5rem] [&_.ProseMirror_p:empty]:before:content-[''] [&_.ProseMirror_br]:block [&_.ProseMirror_br]:content-[''] [&_.ProseMirror_br]:mb-1">
               <EditorContent editor={editor} />
             </div>
           </div>
@@ -601,7 +601,7 @@ export default function NodeSidebar({
       </div>
 
       {/* 푸터 */}
-      <div className="p-4 border-t border-border rounded-b-xl flex justify-between items-center flex-shrink-0">
+      <div className="p-4 border-t border-border flex justify-between items-center flex-shrink-0">
         {onDelete && (
           <Button
             variant="destructive"

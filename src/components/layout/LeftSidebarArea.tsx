@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useMemo } from "react";
 import { useSidebar } from "./SidebarContext";
 import { usePathname } from "next/navigation";
+import UserProfileButton from "@/components/UserProfileButton";
 
 interface LeftSidebarAreaProps {
   children?: ReactNode;
@@ -40,13 +41,15 @@ export default function LeftSidebarArea({ children }: LeftSidebarAreaProps) {
     return false;
   }, [sidebarType, discordData?.selectedStudioId, discordData?.fileId, isSettingsPage, pathname]);
 
-  // 사이드바 너비 결정: 표시할 블록이 없으면 서버 사이드바만(80px), 있으면 전체(400px)
-  const sidebarWidth = hasContentBlock ? 400 : 80;
+  // 사이드바 너비 결정
+  // 접혔을 때는 유저 박스를 포함할 수 있도록 충분한 폭 필요 (약 280px)
+  // 펼쳐졌을 때: 표시할 블록이 없으면 서버 사이드바만(80px), 있으면 전체(400px)
+  const sidebarWidth = sidebarsCollapsed ? 280 : (hasContentBlock ? 400 : 80);
 
   // CSS 변수 설정
   useEffect(() => {
     document.documentElement.style.setProperty("--left-sidebar-width", `${sidebarWidth}px`);
-  }, [sidebarWidth]);
+  }, [sidebarWidth, sidebarsCollapsed]);
 
   return (
     <aside 
@@ -59,7 +62,12 @@ export default function LeftSidebarArea({ children }: LeftSidebarAreaProps) {
         borderRadius: '22px'
       }}
     >
-      {!sidebarsCollapsed && (
+      {sidebarsCollapsed ? (
+        /* 사이드바 접혔을 때 유저 프로필 버튼 표시 */
+        <div className="flex-1 overflow-hidden flex items-center justify-center p-2">
+          <UserProfileButton />
+        </div>
+      ) : (
         <div className="flex-1 overflow-hidden">
           {children}
         </div>

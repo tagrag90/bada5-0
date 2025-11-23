@@ -23,16 +23,17 @@ export default function RightSidebarArea({ children }: RightSidebarAreaProps) {
   // 화이트보드 파일 페이지인지 확인
   const isWorkspaceFilePage = pathname?.match(/\/studios\/[^/]+\/workspace\/[^/]+$/);
 
-  // CSS 변수 설정 (너비는 항상 320px 유지)
+  // CSS 변수 설정 (화이트보드 파일 페이지일 때는 400px, 일반 페이지는 320px)
   useEffect(() => {
-    document.documentElement.style.setProperty("--right-sidebar-width", "320px");
-  }, []);
+    const sidebarWidth = isWorkspaceFilePage ? "400px" : "320px";
+    document.documentElement.style.setProperty("--right-sidebar-width", sidebarWidth);
+  }, [isWorkspaceFilePage]);
 
   return (
     <aside 
       className="fixed right-4 bg-card border-2 border-black overflow-hidden hidden xl:flex xl:flex-col z-30 shadow-sm transition-all duration-300" 
       style={{ 
-        width: '320px',
+        width: isWorkspaceFilePage ? '400px' : '320px',
         top: '16px', // 항상 상단에 위치
         bottom: sidebarsCollapsed ? undefined : '16px',
         height: sidebarsCollapsed ? '60px' : undefined,
@@ -55,7 +56,7 @@ export default function RightSidebarArea({ children }: RightSidebarAreaProps) {
         <div className="flex-1 overflow-hidden flex flex-col">
           {/* 화이트보드 파일 페이지일 때는 노드 편집 사이드바 표시 */}
           {isWorkspaceFilePage && discordData?.nodeEditData ? (
-            <div className="flex-1 overflow-hidden p-4">
+            <div className="flex-1 overflow-hidden">
               <NodeSidebar
                 nodeId={discordData.nodeEditData.nodeId}
                 initialTitle={discordData.nodeEditData.initialTitle}
