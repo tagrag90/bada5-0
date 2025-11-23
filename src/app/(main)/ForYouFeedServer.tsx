@@ -2,7 +2,7 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getPostDataSelect, PostsPage } from "@/lib/types";
-import ForYouFeedClient from "./ForYouFeedClient";
+import ForYouFeedClient from "./ForYouFeed";
 
 export default async function ForYouFeedServer() {
   const { user } = await validateRequest();

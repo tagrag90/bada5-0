@@ -48,7 +48,13 @@ export async function GET(req: Request) {
           avatarUrl: true,
         },
       },
-      attachments: true,
+      attachments: {
+        select: {
+          id: true,
+          url: true,
+          type: true,
+        },
+      },
       likes: {
         where: {
           userId: ANONYMOUS_USER_ID,

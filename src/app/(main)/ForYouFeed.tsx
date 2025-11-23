@@ -30,6 +30,7 @@ export default function ForYouFeedClient({ initialData }: ForYouFeedClientProps)
     status,
     error,
     refetch,
+    isPending,
   } = useInfiniteQuery({
     queryKey: ["post-feed", "for-you"],
     initialData: initialData ? {
@@ -68,7 +69,7 @@ export default function ForYouFeedClient({ initialData }: ForYouFeedClientProps)
     await refetch();
   };
 
-  if (status === "pending") {
+  if (isPending) {
     return (
       <div className="rounded-t-[24px] bg-white p-4 drop-shadow">
         <PostsLoadingSkeleton />
