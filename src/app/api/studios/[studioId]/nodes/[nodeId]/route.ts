@@ -1,4 +1,6 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { checkStudioAccess } from "@/lib/permissions";
 import { NextRequest } from "next/server";
@@ -56,7 +58,7 @@ export async function PATCH(
     if (body.isCollapsed !== undefined) updateData.isCollapsed = body.isCollapsed;
     if (body.config !== undefined) updateData.config = body.config;
 
-    console.log("Updating node:", { nodeId, updateData });
+    logger.debug("Updating node:", { nodeId, updateData });
 
     const node = await prisma.projectNode.update({
       where: { id: nodeId },
@@ -74,20 +76,7 @@ export async function PATCH(
 
     return Response.json(node);
   } catch (error: any) {
-    console.error("Error updating node:", error);
-    console.error("Error details:", {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
-    return Response.json(
-      { 
-        error: error.message || "Failed to update node",
-        details: process.env.NODE_ENV === "development" ? error.stack : undefined
-      }, 
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -131,8 +120,7 @@ export async function DELETE(
 
     return Response.json({ message: "Node deleted successfully" });
   } catch (error: any) {
-    console.error("Error deleting node:", error);
-    return Response.json({ error: error.message || "Failed to delete node" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

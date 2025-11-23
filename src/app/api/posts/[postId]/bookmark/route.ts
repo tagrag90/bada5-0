@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { BookmarkInfo } from "@/lib/types";
 
@@ -29,8 +30,7 @@ export async function GET(
 
     return Response.json(data);
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -62,8 +62,7 @@ export async function POST(
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -88,7 +87,6 @@ export async function DELETE(
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

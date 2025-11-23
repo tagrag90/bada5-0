@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError, AppError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { requireStudioOwner, checkStudioAccess, getStudioPermission } from "@/lib/permissions";
 import { getStudioDataSelect } from "@/lib/types";
@@ -40,11 +41,7 @@ export async function GET(
 
     return Response.json(studio);
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -86,14 +83,10 @@ export async function PATCH(
 
     return Response.json(studio);
   } catch (error: any) {
-    console.error(error);
     if (error.message) {
-      return Response.json({ error: error.message }, { status: 403 });
+      return handleApiError(new AppError(error.message, 403));
     }
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -119,14 +112,10 @@ export async function DELETE(
 
     return Response.json({ message: "스튜디오가 삭제되었습니다" });
   } catch (error: any) {
-    console.error(error);
     if (error.message) {
-      return Response.json({ error: error.message }, { status: 403 });
+      return handleApiError(new AppError(error.message, 403));
     }
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

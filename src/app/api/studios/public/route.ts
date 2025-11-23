@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
@@ -63,10 +64,6 @@ export async function GET(req: NextRequest) {
       hasMore: offset + limit < total,
     });
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

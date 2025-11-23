@@ -13,7 +13,10 @@ export function formatRelativeDate(from: Date | string) {
   
   // 유효한 Date인지 확인
   if (isNaN(date.getTime())) {
-    console.warn("formatRelativeDate: Invalid date", from);
+    // logger는 순환 참조 방지를 위해 직접 체크
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("formatRelativeDate: Invalid date", from);
+    }
     return "날짜 없음";
   }
   

@@ -1,4 +1,6 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { FollowerInfo } from "@/lib/types";
 
@@ -44,8 +46,7 @@ export async function GET(
 
     return Response.json(data);
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -86,7 +87,7 @@ export async function POST(
 
     // 푸시 알림 발송
     try {
-      console.log('Sending follow push notification:', {
+      logger.debug('Sending follow push notification:', {
         followedUserId: userId,
         followerUserId: loggedInUser.id,
         displayName: loggedInUser.displayName
@@ -109,16 +110,15 @@ export async function POST(
       });
 
       const result = await response.json();
-      console.log('Follow push notification response:', result);
+      logger.debug('Follow push notification response:', result);
     } catch (error) {
-      console.error('Failed to send push notification for follow:', error);
+      logger.error('Failed to send push notification for follow:', error);
       // 푸시 알림 실패해도 팔로우 기능은 정상 작동
     }
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -152,7 +152,6 @@ export async function DELETE(
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

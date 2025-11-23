@@ -1,6 +1,7 @@
 import { useSession, useOptionalUser } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { getUserFriendlyMessage } from "@/lib/error-messages";
+import { logger } from "@/lib/logger";
 import { PostsPage } from "@/lib/types";
 import {
   InfiniteData,
@@ -18,7 +19,7 @@ export function useSubmitPostMutation() {
   const mutation = useMutation({
     mutationFn: submitPost,
     onMutate: (variables) => {
-      console.log("🔍 mutation 호출됨 - 입력값:", variables);
+      logger.debug("mutation 호출됨 - 입력값:", variables);
     },
     onSuccess: async (newPost) => {
       // 간단한 객체 반환으로 인한 캐시 업데이트 방식 변경
@@ -40,8 +41,7 @@ export function useSubmitPostMutation() {
       });
     },
     onError(error) {
-      console.log("❌ useSubmitPostMutation 에러 발생:", error);
-      console.error("❌ 상세 에러:", {
+      logger.error("useSubmitPostMutation 에러 발생:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         name: error instanceof Error ? error.name : undefined
@@ -79,8 +79,7 @@ export function useUpdatePostMutation() {
       });
     },
     onError(error) {
-      console.log("❌ useSubmitPostMutation 에러 발생:", error);
-      console.error("❌ 상세 에러:", {
+      logger.error("useUpdatePostMutation 에러 발생:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         name: error instanceof Error ? error.name : undefined

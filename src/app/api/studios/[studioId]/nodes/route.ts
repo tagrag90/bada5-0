@@ -1,4 +1,6 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { checkStudioAccess } from "@/lib/permissions";
 import { NextRequest } from "next/server";
@@ -75,8 +77,7 @@ export async function GET(
 
     return Response.json(nodes);
   } catch (error: any) {
-    console.error("Error fetching nodes:", error);
-    return Response.json({ error: error.message || "Failed to fetch nodes" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -115,7 +116,7 @@ export async function POST(
       fileId, // 워크스페이스 파일 ID (선택적)
     } = body;
     
-    console.log("Creating node with data:", { type, title, x, y, studioId });
+    logger.debug("Creating node with data:", { type, title, x, y, studioId });
 
     if (!type || !title || x === undefined || y === undefined) {
       return Response.json(
@@ -172,11 +173,10 @@ export async function POST(
       },
     });
 
-    console.log("Node created successfully:", node.id);
+    logger.debug("Node created successfully:", node.id);
     return Response.json(node, { status: 201 });
   } catch (error: any) {
-    console.error("Error creating node:", error);
-    console.error("Error details:", {
+    logger.error("Error creating node:", {
       message: error.message,
       code: error.code,
       meta: error.meta,

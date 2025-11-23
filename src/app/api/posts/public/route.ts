@@ -1,3 +1,4 @@
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { PostsPage } from "@/lib/types";
 import { Prisma } from "@prisma/client";
@@ -111,10 +112,6 @@ export async function GET(req: Request) {
 
     return Response.json(result);
   } catch (error) {
-    console.error("Error fetching public posts:", error);
-    return Response.json(
-      { error: "Failed to fetch posts" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 } 

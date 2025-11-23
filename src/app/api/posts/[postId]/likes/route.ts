@@ -1,4 +1,6 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { LikeInfo } from "@/lib/types";
 
@@ -44,8 +46,7 @@ export async function GET(
 
     return Response.json(data);
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -103,7 +104,7 @@ export async function POST(
     // 푸시 알림 발송 (자신의 게시물이 아닐 때만)
     if (loggedInUser.id !== post.userId) {
       try {
-        console.log('Sending like push notification:', {
+        logger.debug('Sending like push notification:', {
           postUserId: post.userId,
           currentUserId: loggedInUser.id,
           displayName: loggedInUser.displayName,
@@ -128,17 +129,16 @@ export async function POST(
         });
 
         const result = await response.json();
-        console.log('Like push notification response:', result);
+        logger.debug('Like push notification response:', result);
       } catch (error) {
-        console.error('Failed to send push notification for like:', error);
+        logger.error('Failed to send push notification for like:', error);
         // 푸시 알림 실패해도 좋아요 기능은 정상 작동
       }
     }
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -184,7 +184,6 @@ export async function DELETE(
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

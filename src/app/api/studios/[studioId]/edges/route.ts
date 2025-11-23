@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError, AppError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { requireStudioMember } from "@/lib/permissions";
 import { NextRequest } from "next/server";
@@ -47,8 +48,7 @@ export async function GET(
 
     return Response.json(edges);
   } catch (error: any) {
-    console.error("Error fetching edges:", error);
-    return Response.json({ error: error.message || "Failed to fetch edges" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -154,13 +154,9 @@ export async function POST(
   } catch (error: any) {
     // unique constraint 에러 처리
     if (error.code === "P2002") {
-      return Response.json(
-        { error: "Edge already exists" },
-        { status: 409 }
-      );
+      return handleApiError(new AppError("Edge already exists", 409));
     }
-    console.error("Error creating edge:", error);
-    return Response.json({ error: error.message || "Failed to create edge" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

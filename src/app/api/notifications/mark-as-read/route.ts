@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 
 export async function PATCH() {
@@ -21,7 +22,6 @@ export async function PATCH() {
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

@@ -13,7 +13,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { HTTPError } from "ky";
 
-export default function ForYouFeed() {
+interface ForYouFeedClientProps {
+  initialData?: PostsPage | null;
+}
+
+export default function ForYouFeedClient({ initialData }: ForYouFeedClientProps) {
   const user = useOptionalUser();
   const isLoggedIn = !!user;
 
@@ -28,6 +32,10 @@ export default function ForYouFeed() {
     refetch,
   } = useInfiniteQuery({
     queryKey: ["post-feed", "for-you"],
+    initialData: initialData ? {
+      pages: [initialData],
+      pageParams: [null],
+    } : undefined,
     queryFn: async ({ pageParam }) => {
       try {
         return await kyInstance

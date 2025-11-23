@@ -6,7 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import ForYouFeed from "./ForYouFeed";
+import ForYouFeedClient from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
 import { useOptionalUser } from "./SessionProvider";
 import NonLoggedInContent from "@/components/NonLoggedInContent";
@@ -79,7 +79,7 @@ export default function MainContent() {
             {/* 피드 컨텐츠 */}
             <div className="mt-4">
               <TabsContent value="for-you">
-                <ForYouFeed />
+                <ForYouFeedClient />
               </TabsContent>
               <TabsContent value="following">
                 <FollowingFeed />

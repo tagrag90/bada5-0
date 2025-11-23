@@ -1,5 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
+import { handleApiError } from '@/lib/api-error-handler';
+import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    console.log(`📁 파일 업로드 시도 [${uploadType}]:`, {
+    logger.info(`파일 업로드 시도 [${uploadType}]:`, {
       name: file.name,
       size: file.size,
       type: file.type,
@@ -43,13 +45,13 @@ export async function POST(request: NextRequest) {
 
     const allowed = allowedTypes[uploadType]?.some(type => fileType.startsWith(type));
     if (!allowed) {
-      console.error(`❌ 파일 타입 거부 [${uploadType}]:`, file.type, `(추론: ${fileType})`);
+      logger.warn(`파일 타입 거부 [${uploadType}]:`, file.type, `(추론: ${fileType})`);
       return NextResponse.json({
         error: `Invalid file type: ${file.type} (inferred: ${fileType}). Allowed: ${allowedTypes[uploadType]?.join(', ')}`
       }, { status: 400 });
     }
 
-    console.log(`✅ 파일 타입 승인 [${uploadType}]:`, fileType);
+    logger.debug(`파일 타입 승인 [${uploadType}]:`, fileType);
 
     // 파일 크기 검증
     const maxSizes = {
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
       addRandomSuffix: true, // 같은 이름 파일 충돌 방지
     });
 
-    console.log(`✅ Vercel Blob 업로드 성공 [${uploadType}]:`, blob.url);
+    logger.info(`Vercel Blob 업로드 성공 [${uploadType}]:`, blob.url);
 
     // 데이터베이스에 미디어 정보 저장 (게시물 미디어인 경우만)
     let mediaId = null;
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
         },
       });
       mediaId = media.id;
-      console.log('💾 미디어 DB 저장 완료, ID:', media.id);
+      logger.debug('미디어 DB 저장 완료, ID:', media.id);
     }
 
     return NextResponse.json({
@@ -102,10 +104,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Vercel Blob 업로드 실패:', error);
-    return NextResponse.json(
-      { error: 'Upload failed', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

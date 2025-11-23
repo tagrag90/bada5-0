@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { getPostDataInclude } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -26,11 +27,7 @@ export async function GET(
 
     return NextResponse.json(post);
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
