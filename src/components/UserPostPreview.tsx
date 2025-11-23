@@ -93,7 +93,7 @@ export default function UserPostPreview({ post }: UserPostPreviewProps) {
                   postId={post.id}
                   initialState={{
                     likes: post._count.likes,
-                    isLikedByUser: post.likes.some(
+                    isLikedByUser: (post.likes || []).some(
                       (like) => like.userId === user?.id,
                     ),
                   }}
@@ -102,7 +102,7 @@ export default function UserPostPreview({ post }: UserPostPreviewProps) {
                 <BookmarkButton
                   postId={post.id}
                   initialState={{
-                    isBookmarkedByUser: post.bookmarks.some(
+                    isBookmarkedByUser: (post.bookmarks || []).some(
                       (bookmark) => bookmark.userId === user?.id,
                     ),
                   }}

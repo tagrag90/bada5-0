@@ -248,7 +248,7 @@ export default function Post({ post }: PostProps) {
           <div className="post-content break-words text-base">
             <ContentRenderer content={post.content} />
           </div>
-          {!!post.attachments.length && (
+          {post.attachments && post.attachments.length > 0 && (
             <div className="mt-3">
               <MediaSlider attachments={post.attachments} />
             </div>
@@ -290,7 +290,7 @@ export default function Post({ post }: PostProps) {
                     postId={post.id}
                     initialState={{
                       likes: post._count.likes,
-                      isLikedByUser: post.likes.some(
+                      isLikedByUser: (post.likes || []).some(
                         (like) => like.userId === user?.id,
                       ),
                     }}
@@ -299,7 +299,7 @@ export default function Post({ post }: PostProps) {
                   <BookmarkButton
                     postId={post.id}
                     initialState={{
-                      isBookmarkedByUser: post.bookmarks.some(
+                      isBookmarkedByUser: (post.bookmarks || []).some(
                         (bookmark) => bookmark.userId === user?.id,
                       ),
                     }}
