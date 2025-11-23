@@ -25,10 +25,12 @@ export class AppError extends Error {
 /**
  * API 에러를 처리하고 표준 응답을 반환
  */
-export function handleApiError(error: unknown): NextResponse {
+export function handleApiError(error: unknown, context?: string): NextResponse {
+  const errorContext = context ? `API Error in ${context}` : "API Error";
+  
   // AppError 인스턴스인 경우
   if (error instanceof AppError) {
-    logger.error("API Error:", {
+    logger.error(errorContext + ":", {
       message: error.message,
       statusCode: error.statusCode,
       code: error.code,
@@ -46,7 +48,7 @@ export function handleApiError(error: unknown): NextResponse {
 
   // 일반 Error 인스턴스인 경우
   if (error instanceof Error) {
-    logger.error("API Error:", {
+    logger.error(errorContext + ":", {
       message: error.message,
       stack: error.stack,
       name: error.name,
@@ -61,7 +63,7 @@ export function handleApiError(error: unknown): NextResponse {
   }
 
   // 알 수 없는 에러
-  logger.error("Unknown API Error:", error);
+  logger.error(errorContext + " (Unknown):", error);
   return NextResponse.json(
     {
       error: "Internal server error",

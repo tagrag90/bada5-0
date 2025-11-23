@@ -6,15 +6,20 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import ForYouFeedServer from "./ForYouFeedServer";
+import ForYouFeedClient from "./ForYouFeed";
 import FollowingFeed from "./FollowingFeed";
 import { useOptionalUser } from "./SessionProvider";
 import NonLoggedInContent from "@/components/NonLoggedInContent";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { PostsPage } from "@/lib/types";
 
-export default function MainContent() {
+interface MainContentProps {
+  initialForYouData?: PostsPage | null;
+}
+
+export default function MainContent({ initialForYouData }: MainContentProps) {
   const user = useOptionalUser();
   const isLoggedIn = !!user;
   const { setDiscordSidebar } = useSidebar();
@@ -79,7 +84,7 @@ export default function MainContent() {
             {/* 피드 컨텐츠 */}
             <div className="mt-4">
               <TabsContent value="for-you">
-                <ForYouFeedServer />
+                <ForYouFeedClient initialData={initialForYouData} />
               </TabsContent>
               <TabsContent value="following">
                 <FollowingFeed />
