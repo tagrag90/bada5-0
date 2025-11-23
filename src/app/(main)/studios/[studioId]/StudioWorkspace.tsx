@@ -535,76 +535,98 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         findConnected(planningId);
       });
       
-      const newNodes: Node[] = nodesData.map((node: any) => {
-        // POST 타입일 때 content에서 postId 추출
-        let postId: string | undefined;
-        if (node.type === "POST" && node.content) {
-          try {
-            const parsed = JSON.parse(node.content);
-            postId = parsed.postId;
-            console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
-          } catch (error) {
-            console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
+      setNodes((currentNodes) => {
+        // 현재 UI 노드 위치를 맵으로 저장
+        const currentPositions = new Map<string, { x: number; y: number }>();
+        currentNodes.forEach((n) => {
+          currentPositions.set(n.id, { x: n.position.x, y: n.position.y });
+        });
+        
+        const newNodes: Node[] = nodesData.map((node: any) => {
+          // POST 타입일 때 content에서 postId 추출
+          let postId: string | undefined;
+          if (node.type === "POST" && node.content) {
+            try {
+              const parsed = JSON.parse(node.content);
+              postId = parsed.postId;
+              console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
+            } catch (error) {
+              console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
+            }
           }
-        }
+          
+          const isPlanning = node.type === "PLANNING";
+          const isConnectedToPlanning = connectedToPlanning.has(node.id);
+          
+          // 드래그 중이거나 위치 업데이트 중인 노드는 현재 위치를 유지
+          const isDragging = isDraggingRef.current === node.id;
+          const isUpdating = updatingNodeIds.current.has(node.id);
+          let position = { x: node.x, y: node.y };
+          
+          if (isDragging && draggingNodePosition.current) {
+            // 드래그 중인 노드는 저장된 위치 사용
+            position = draggingNodePosition.current;
+          } else if (isUpdating && currentNodePositions.current[node.id]) {
+            // 위치 업데이트 중인 노드는 저장된 현재 위치 사용
+            position = currentNodePositions.current[node.id];
+          } else {
+            // 현재 UI 위치와 서버 위치를 비교하여 UI 위치가 더 최신이면 유지
+            const currentPos = currentPositions.get(node.id);
+            if (currentPos) {
+              const serverPos = { x: node.x, y: node.y };
+              const distance = Math.sqrt(
+                Math.pow(currentPos.x - serverPos.x, 2) + Math.pow(currentPos.y - serverPos.y, 2)
+              );
+              // 거리가 1픽셀 이상 차이나면 UI 위치가 더 최신일 가능성이 높음
+              if (distance > 1) {
+                position = currentPos;
+              }
+            }
+          }
+          
+          // 리사이즈 중인 노드는 저장된 크기 사용
+          const isResizing = resizingNodeIds.current.has(node.id);
+          let nodeWidth = node.type === "PHOTO" ? (node.width || 300) : node.width;
+          let nodeHeight = node.type === "PHOTO" ? (node.height || 200) : "auto";
+          
+          if (isResizing && resizingNodeDimensions.current[node.id]) {
+            const savedDimensions = resizingNodeDimensions.current[node.id];
+            nodeWidth = savedDimensions.width;
+            nodeHeight = savedDimensions.height;
+          }
+          
+          return {
+            id: node.id,
+            type: "custom",
+            position,
+            data: {
+              label: node.title,
+              content: node.content,
+              type: node.type,
+              emoji: node.emoji,
+              postId,
+              onEdit: handleNodeEdit,
+              onDelete: handleNodeDelete,
+              isPlanning,
+              isConnectedToPlanning,
+            },
+            selected: selectedNodeIds.includes(node.id) || selectedNodeId === node.id,
+            draggable: isDragging ? true : (isPlanning || selectedNodeIds.includes(node.id) || selectedNodeId === node.id), // 기획 노드는 항상 드래그 가능, 일반 노드는 선택된 경우만
+            style: {
+              width: nodeWidth,
+              height: nodeHeight,
+              backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
+              border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
+              borderRadius: "8px",
+              padding: node.type === "PHOTO" ? "0" : "12px",
+            },
+          };
+        });
         
-        const isPlanning = node.type === "PLANNING";
-        const isConnectedToPlanning = connectedToPlanning.has(node.id);
-        
-        // 드래그 중이거나 위치 업데이트 중인 노드는 현재 위치를 유지
-        const isDragging = isDraggingRef.current === node.id;
-        const isUpdating = updatingNodeIds.current.has(node.id);
-        let position = { x: node.x, y: node.y };
-        
-        if (isDragging && draggingNodePosition.current) {
-          // 드래그 중인 노드는 저장된 위치 사용
-          position = draggingNodePosition.current;
-        } else if (isUpdating && currentNodePositions.current[node.id]) {
-          // 위치 업데이트 중인 노드는 현재 위치 사용
-          position = currentNodePositions.current[node.id];
-        }
-        
-        // 리사이즈 중인 노드는 저장된 크기 사용
-        const isResizing = resizingNodeIds.current.has(node.id);
-        let nodeWidth = node.type === "PHOTO" ? (node.width || 300) : node.width;
-        let nodeHeight = node.type === "PHOTO" ? (node.height || 200) : "auto";
-        
-        if (isResizing && resizingNodeDimensions.current[node.id]) {
-          const savedDimensions = resizingNodeDimensions.current[node.id];
-          nodeWidth = savedDimensions.width;
-          nodeHeight = savedDimensions.height;
-        }
-        
-        return {
-          id: node.id,
-          type: "custom",
-          position,
-          data: {
-            label: node.title,
-            content: node.content,
-            type: node.type,
-            emoji: node.emoji,
-            postId,
-            onEdit: handleNodeEdit,
-            onDelete: handleNodeDelete,
-            isPlanning,
-            isConnectedToPlanning,
-          },
-          selected: selectedNodeIds.includes(node.id) || selectedNodeId === node.id,
-          draggable: isDragging ? true : (selectedNodeIds.includes(node.id) || selectedNodeId === node.id), // 드래그 중이거나 선택된 노드만 드래그 가능
-          style: {
-            width: nodeWidth,
-            height: nodeHeight,
-            backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
-            border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
-            borderRadius: "8px",
-            padding: node.type === "PHOTO" ? "0" : "12px",
-          },
-        };
+        return newNodes;
       });
-      setNodes(newNodes);
     }
-  }, [nodesData, edgesData, setNodes, handleNodeEdit, handleNodeDelete, selectedNodeId]);
+  }, [nodesData, edgesData, setNodes, handleNodeEdit, handleNodeDelete, selectedNodeId, selectedNodeIds]);
 
   useEffect(() => {
     if (edgesData) {
@@ -964,9 +986,13 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         return;
       }
       
-      // 선택되지 않은 노드는 드래그 불가
-      if (!selectedNodeIds.includes(node.id) && selectedNodeId !== node.id) {
-        return;
+      // 기획 노드는 선택되지 않아도 드래그 가능 (연결된 노드들과 함께 이동)
+      const isPlanningNode = node.data.type === "PLANNING";
+      if (!isPlanningNode) {
+        // 일반 노드는 선택되지 않으면 드래그 불가
+        if (!selectedNodeIds.includes(node.id) && selectedNodeId !== node.id) {
+          return;
+        }
       }
 
       // 드래그 시작 표시 및 현재 위치 저장
@@ -977,10 +1003,16 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       };
 
       // 기획노드인 경우 연결된 노드들도 함께 이동
-      if (node.data.type === "PLANNING") {
+      if (isPlanningNode) {
         // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
         const connectedNodeIds = getConnectedNodes(node.id);
         connectedNodesGroup.current = connectedNodeIds;
+        
+        // 기획 노드 자신의 초기 위치도 저장
+        dragStartPositions.current[node.id] = {
+          x: node.position.x,
+          y: node.position.y,
+        };
         
         connectedNodeIds.forEach((connectedId) => {
           const connectedNode = nodes.find((n) => n.id === connectedId);
@@ -999,7 +1031,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         };
       }
     },
-    [nodes, edges, getConnectedNodes, selectedNodeId, selectedNodeIds]
+    [nodes, edges, getConnectedNodes, selectedNodeId, selectedNodeIds, interactionMode]
   );
 
   const onNodeDrag = useCallback(
@@ -1055,10 +1087,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   // 노드 위치 업데이트 (디바운싱)
   const onNodeDragStop = useCallback(
     (_: any, node: Node) => {
-      // 드래그 종료 표시 및 위치 초기화
-      isDraggingRef.current = null;
-      draggingNodePosition.current = null;
-
       // 기획노드인 경우 연결된 노드들도 함께 업데이트
       const nodeIdsToUpdate: string[] = [];
       
@@ -1079,10 +1107,25 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         delete dragStartPositions.current[node.id];
       }
 
+      // 현재 UI 위치를 저장 (nodesData 업데이트 시 보존용)
+      nodeIdsToUpdate.forEach((nId) => {
+        const currentNode = nodes.find((n) => n.id === nId);
+        if (currentNode) {
+          currentNodePositions.current[nId] = {
+            x: currentNode.position.x,
+            y: currentNode.position.y,
+          };
+        }
+      });
+
       // 위치 업데이트 시작 표시
       nodeIdsToUpdate.forEach((nId) => {
         updatingNodeIds.current.add(nId);
       });
+
+      // 드래그 종료 표시 (위치 저장 후)
+      isDraggingRef.current = null;
+      draggingNodePosition.current = null;
 
       // 기존 타이머가 있으면 취소
       nodeIdsToUpdate.forEach((nId) => {
@@ -1118,10 +1161,15 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
               throw new Error("Failed to update node positions");
             }
 
-            // 위치 업데이트 완료 표시 (서버 동기화 전에 제거)
-            nodeIdsToUpdate.forEach((nId) => {
-              updatingNodeIds.current.delete(nId);
-            });
+            // 서버 동기화 완료 후 위치 업데이트 표시 제거
+            // invalidateQueries 호출 전에 제거하면 위치가 덮어씌워질 수 있음
+            // 서버 응답 후 약간의 지연을 두고 제거
+            setTimeout(() => {
+              nodeIdsToUpdate.forEach((nId) => {
+                updatingNodeIds.current.delete(nId);
+                delete currentNodePositions.current[nId];
+              });
+            }, 100);
 
             // 서버에서 업데이트된 노드 데이터 다시 가져오기
             queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
@@ -1129,6 +1177,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             // 업데이트할 노드가 없으면 즉시 제거
             nodeIdsToUpdate.forEach((nId) => {
               updatingNodeIds.current.delete(nId);
+              delete currentNodePositions.current[nId];
             });
           }
 
@@ -1141,6 +1190,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           // 에러 발생 시 위치 업데이트 표시 제거
           nodeIdsToUpdate.forEach((nId) => {
             updatingNodeIds.current.delete(nId);
+            delete currentNodePositions.current[nId];
           });
           // 에러 발생 시 노드를 원래 위치로 되돌리지 않음 (사용자가 이동한 위치 유지)
         }
