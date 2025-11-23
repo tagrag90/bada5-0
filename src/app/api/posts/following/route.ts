@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: pageSize + 1,
       cursor: cursor ? { id: cursor } : undefined,
-      include: getPostDataInclude(user.id),
+      select: getPostDataSelect(user.id),
     });
 
     const nextCursor = posts.length > pageSize ? posts[pageSize].id : null;

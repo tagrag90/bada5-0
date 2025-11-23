@@ -1,3 +1,5 @@
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -20,7 +22,7 @@ export async function GET(req: NextRequest) {
     );
 
     if (!response.ok) {
-      console.error(`Failed to fetch YouTube feed for channel ${channelId}. Status: ${response.status}`);
+      logger.error(`Failed to fetch YouTube feed for channel ${channelId}. Status: ${response.status}`);
       return NextResponse.json(
         { error: "Failed to fetch YouTube feed" },
         { status: response.status },
@@ -41,10 +43,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ videoId });
   } catch (error) {
-    console.error("Error fetching youtube feed", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 } 

@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
@@ -64,11 +65,7 @@ export async function POST(
 
     return Response.json({ message: "구독했습니다" });
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -124,11 +121,7 @@ export async function DELETE(
 
     return Response.json({ message: "구독을 취소했습니다" });
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

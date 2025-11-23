@@ -1,3 +1,5 @@
+import { handleApiError } from '@/lib/api-error-handler';
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
@@ -21,7 +23,7 @@ async function fetchYouTubeMetadata(url: string) {
       image: data.thumbnail_url || null
     };
   } catch (error) {
-    console.error('YouTube oEmbed API 오류:', error);
+    logger.error('YouTube oEmbed API 오류:', error);
     
     // oEmbed 실패 시 일반 메타데이터 추출로 폴백
     return await fetchMetadata(url);
@@ -65,7 +67,7 @@ async function fetchMetadata(url: string) {
       image: metaImage || null
     };
   } catch (error) {
-    console.error('Error fetching metadata:', error);
+    logger.error('Error fetching metadata:', error);
     return {
       url,
       title: new URL(url).hostname,

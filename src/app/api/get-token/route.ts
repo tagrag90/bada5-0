@@ -1,11 +1,13 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import streamServerClient from "@/lib/stream";
 
 export async function GET() {
   try {
     const { user } = await validateRequest();
 
-    console.log("Calling get-token for user: ", user?.id);
+    logger.debug("Calling get-token for user: ", user?.id);
 
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +25,6 @@ export async function GET() {
 
     return Response.json({ token });
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

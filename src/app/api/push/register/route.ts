@@ -1,3 +1,5 @@
+import { handleApiError } from '@/lib/api-error-handler';
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 
 // 마이그레이션 없이 메모리에 푸시 토큰 저장 (임시 방법)
@@ -13,7 +15,7 @@ export async function POST(request: NextRequest) {
     try {
         const { deviceToken, platform, userId } = await request.json();
         
-        console.log('Push token registration request:', {
+        logger.debug('Push token registration request:', {
             deviceToken: deviceToken ? deviceToken.substring(0, 20) + '...' : 'null',
             platform,
             userId,
@@ -21,19 +23,19 @@ export async function POST(request: NextRequest) {
         });
         
         if (!deviceToken || !platform) {
-            console.error('Missing required fields:', { deviceToken: !!deviceToken, platform: !!platform });
+            logger.warn('Missing required fields:', { deviceToken: !!deviceToken, platform: !!platform });
             return NextResponse.json(
                 { error: 'deviceToken and platform are required' }, 
                 { status: 400 }
             );
         }
         
-        console.log(`Registering push token: ${deviceToken.substring(0, 20)}... for platform: ${platform}, userId: ${userId}`);
+        logger.debug(`Registering push token: ${deviceToken.substring(0, 20)}... for platform: ${platform}, userId: ${userId}`);
         
         // 기존 토큰 확인
         const existingToken = global.globalPushTokens.get(deviceToken);
         if (existingToken) {
-            console.log('Token already exists, updating:', existingToken);
+            logger.debug('Token already exists, updating:', existingToken);
         }
         
         // 메모리에 토큰 저장 (서버 재시작 시 초기화됨)
@@ -43,17 +45,8 @@ export async function POST(request: NextRequest) {
             createdAt: new Date()
         });
         
-        console.log('Push token registered successfully in memory');
-        console.log(`Total tokens after registration: ${global.globalPushTokens.size}`);
-        
-        // 현재 저장된 모든 토큰 정보 로그
-        const allTokens = Array.from(global.globalPushTokens.entries()).map(([token, data]) => ({
-            token: token.substring(0, 20) + '...',
-            platform: data.platform,
-            userId: data.userId,
-            createdAt: data.createdAt
-        }));
-        console.log('All registered tokens:', allTokens);
+        logger.debug('Push token registered successfully in memory');
+        logger.debug(`Total tokens after registration: ${global.globalPushTokens.size}`);
         
         return NextResponse.json({ 
             success: true, 
@@ -62,11 +55,7 @@ export async function POST(request: NextRequest) {
         });
         
     } catch (error) {
-        console.error('Failed to register push token:', error);
-        return NextResponse.json(
-            { error: 'Failed to register token' }, 
-            { status: 500 }
-        );
+        return handleApiError(error);
     }
 }
 

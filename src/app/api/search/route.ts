@@ -1,7 +1,7 @@
 import { validateRequest } from "@/auth";
 import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
-import { getPostDataInclude, PostsPage, getUserDataSelect } from "@/lib/types";
+import { getPostDataSelect, PostsPage, getUserDataSelect } from "@/lib/types";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
           },
         ],
       },
-      include: getPostDataInclude(user.id),
+      select: getPostDataSelect(user.id),
       orderBy: { createdAt: "desc" },
       take: pageSize + 1,
       cursor: cursor ? { id: cursor } : undefined,

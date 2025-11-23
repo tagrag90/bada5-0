@@ -1,3 +1,5 @@
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { del } from '@vercel/blob';
 
@@ -34,9 +36,9 @@ export async function GET(req: Request) {
       unusedMedia.map(async (media) => {
         try {
           await del(media.url);
-          console.log(`🗑️ Blob 파일 삭제됨: ${media.url}`);
+          logger.debug(`Blob 파일 삭제됨: ${media.url}`);
         } catch (error) {
-          console.error(`❌ Blob 파일 삭제 실패: ${media.url}`, error);
+          logger.error(`Blob 파일 삭제 실패: ${media.url}`, error);
         }
       })
     );
@@ -50,11 +52,10 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log(`🧹 정리 완료: ${unusedMedia.length}개 미디어 파일 삭제됨`);
+    logger.info(`정리 완료: ${unusedMedia.length}개 미디어 파일 삭제됨`);
 
     return new Response();
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

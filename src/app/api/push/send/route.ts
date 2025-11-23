@@ -1,3 +1,5 @@
+import { handleApiError } from '@/lib/api-error-handler';
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { APNS_CONFIG, JWT_CONFIG } from '@/lib/apns-config';
@@ -73,15 +75,15 @@ async function sendAPNSNotification(deviceToken: string, payload: any): Promise<
     );
 
     if (response.ok) {
-      console.log(`Push notification sent successfully to ${deviceToken.substring(0, 20)}...`);
+      logger.debug(`Push notification sent successfully to ${deviceToken.substring(0, 20)}...`);
       return true;
     } else {
       const error = await response.text();
-      console.error(`APNs error: ${response.status} - ${error}`);
+      logger.error(`APNs error: ${response.status} - ${error}`);
       return false;
     }
   } catch (error) {
-    console.error('Failed to send APNs notification:', error);
+    logger.error('Failed to send APNs notification:', error);
     return false;
   }
 }
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
       sendToAll = false // 모든 사용자에게 발송
     } = await request.json();
 
-    console.log('Push notification request received:', {
+    logger.debug('Push notification request received:', {
       title,
       body,
       badge,
@@ -129,7 +131,7 @@ export async function POST(request: NextRequest) {
       return false;
     });
 
-    console.log(`Filtered tokens for sending:`, {
+    logger.debug(`Filtered tokens for sending:`, {
       totalTokens: global.globalPushTokens.size,
       filteredTokens: tokensToSend.length,
       tokensToSend: tokensToSend.map(([token, data]) => ({
@@ -140,7 +142,7 @@ export async function POST(request: NextRequest) {
       }))
     });
 
-    console.log(`Sending push notifications to ${tokensToSend.length} devices`);
+    logger.info(`Sending push notifications to ${tokensToSend.length} devices`);
 
     // 각 디바이스에 푸시 알림 발송
     for (const [deviceToken, tokenData] of tokensToSend) {
@@ -164,11 +166,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to send push notifications:', error);
-    return NextResponse.json(
-      { error: 'Failed to send push notifications' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 

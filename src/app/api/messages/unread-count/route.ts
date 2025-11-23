@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import streamServerClient from "@/lib/stream";
 import { MessageCountInfo } from "@/lib/types";
 
@@ -20,7 +21,6 @@ export async function GET() {
 
     return Response.json(data);
   } catch (error) {
-    console.error(error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 }

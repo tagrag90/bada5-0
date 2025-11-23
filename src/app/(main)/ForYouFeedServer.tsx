@@ -1,7 +1,7 @@
 // 서버 컴포넌트 - 초기 데이터 페칭
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { getPostDataInclude, PostsPage } from "@/lib/types";
+import { getPostDataSelect, PostsPage } from "@/lib/types";
 import ForYouFeedClient from "./ForYouFeedClient";
 
 export default async function ForYouFeedServer() {
@@ -14,7 +14,7 @@ export default async function ForYouFeedServer() {
   if (isLoggedIn) {
     try {
       const posts = await prisma.post.findMany({
-        include: getPostDataInclude(user.id),
+        select: getPostDataSelect(user.id),
         orderBy: { createdAt: "desc" },
         take: 11, // 10개 + 1개 (nextCursor 확인용)
       });

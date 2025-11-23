@@ -1,3 +1,5 @@
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("YouTube API Error:", errorData);
+      logger.error("YouTube API Error:", errorData);
       return NextResponse.json(
         { error: "Failed to fetch from YouTube API" },
         { status: response.status },
@@ -45,10 +47,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Channel not found" }, { status: 404 });
     }
   } catch (error) {
-    console.error("Internal Server Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch YouTube stats" },
-      { status: 500 },
-    );
+    return handleApiError(error);
   }
 } 

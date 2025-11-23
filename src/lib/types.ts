@@ -31,6 +31,60 @@ export type UserData = Prisma.UserGetPayload<{
   select: ReturnType<typeof getUserDataSelect>;
 }>;
 
+// 최적화: include 대신 select 사용하여 필요한 필드만 가져오기
+export function getPostDataSelect(loggedInUserId: string) {
+  return {
+    id: true,
+    title: true,
+    content: true,
+    createdAt: true,
+    updatedAt: true,
+    userId: true,
+    studioId: true,
+    user: {
+      select: getUserDataSelect(loggedInUserId),
+    },
+    studio: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        avatarUrl: true,
+      },
+    },
+    attachments: {
+      select: {
+        id: true,
+        url: true,
+        type: true,
+      },
+    },
+    likes: {
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        userId: true,
+      },
+    },
+    bookmarks: {
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        userId: true,
+      },
+    },
+    _count: {
+      select: {
+        likes: true,
+        comments: true,
+      },
+    },
+  } satisfies Prisma.PostSelect;
+}
+
+// 하위 호환성을 위한 별칭 (점진적 마이그레이션)
 export function getPostDataInclude(loggedInUserId: string) {
   return {
     user: {
@@ -44,7 +98,13 @@ export function getPostDataInclude(loggedInUserId: string) {
         avatarUrl: true,
       },
     },
-    attachments: true,
+    attachments: {
+      select: {
+        id: true,
+        url: true,
+        type: true,
+      },
+    },
     likes: {
       where: {
         userId: loggedInUserId,
@@ -71,7 +131,7 @@ export function getPostDataInclude(loggedInUserId: string) {
 }
 
 export type PostData = Prisma.PostGetPayload<{
-  include: ReturnType<typeof getPostDataInclude>;
+  select: ReturnType<typeof getPostDataSelect>;
 }>;
 
 export interface PostsPage {

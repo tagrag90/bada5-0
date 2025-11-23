@@ -1,4 +1,6 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { requireStudioMember, requireStudioOwner } from "@/lib/permissions";
 import { NextRequest } from "next/server";
@@ -167,8 +169,8 @@ export async function PATCH(
 
     return Response.json(updatedMember);
   } catch (error: any) {
-    console.error("Error updating member role:", error);
-    return Response.json({ error: error.message }, { status: 403 });
+    logger.error("Error updating member role:", error);
+    return handleApiError(error);
   }
 }
 

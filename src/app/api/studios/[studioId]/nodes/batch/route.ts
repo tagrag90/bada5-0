@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { requireStudioMember } from "@/lib/permissions";
 import { NextRequest } from "next/server";
@@ -47,8 +48,7 @@ export async function PATCH(
 
     return Response.json({ message: "Nodes updated successfully", count: nodes.length });
   } catch (error: any) {
-    console.error("Error updating nodes batch:", error);
-    return Response.json({ error: error.message || "Failed to update nodes" }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

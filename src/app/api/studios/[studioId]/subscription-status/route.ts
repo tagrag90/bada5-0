@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
@@ -66,10 +67,6 @@ export async function GET(
       subscribedAt: subscription?.subscribedAt,
     });
   } catch (error) {
-    console.error(error);
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

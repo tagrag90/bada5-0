@@ -7,7 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import UserTooltip from "@/components/UserTooltip";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
-import { getPostDataInclude, UserData } from "@/lib/types";
+import { getPostDataSelect, UserData } from "@/lib/types";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -23,7 +23,7 @@ const getPost = cache(async (postId: string, loggedInUserId: string) => {
     where: {
       id: postId,
     },
-    include: getPostDataInclude(loggedInUserId),
+    select: getPostDataSelect(loggedInUserId),
   });
 
   if (!post) notFound();

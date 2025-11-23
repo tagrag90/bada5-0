@@ -1,7 +1,7 @@
 import { validateRequest } from "@/auth";
 import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
-import { getPostDataInclude } from "@/lib/types";
+import { getPostDataSelect } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -18,7 +18,7 @@ export async function GET(
 
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: getPostDataInclude(user.id),
+      select: getPostDataSelect(user.id),
     });
 
     if (!post) {

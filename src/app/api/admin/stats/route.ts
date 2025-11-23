@@ -1,4 +1,5 @@
 import { validateRequest } from "@/auth";
+import { handleApiError } from "@/lib/api-error-handler";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
@@ -201,7 +202,6 @@ export async function GET(req: NextRequest) {
 
     return Response.json(stats);
   } catch (error) {
-    console.error("Error fetching admin stats:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error);
   }
 } 
