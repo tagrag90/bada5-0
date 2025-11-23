@@ -240,27 +240,90 @@ export default function NodeSidebar({
           continue;
         }
 
+        console.log('[업로드 시작]', {
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          nodeType,
+          uploadType: nodeType === "PHOTO" ? 'media' : 'resource',
+          endpoint: nodeType === "PHOTO" ? '/api/upload' : '/api/upload-resource',
+        });
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', nodeType === "PHOTO" ? 'media' : 'resource');
 
-        const response = await fetch(nodeType === "PHOTO" ? '/api/upload' : '/api/upload-resource', {
+        const uploadUrl = nodeType === "PHOTO" ? '/api/upload' : '/api/upload-resource';
+        console.log('[업로드 요청]', {
+          url: uploadUrl,
+          method: 'POST',
+          fileSize: file.size,
+          fileType: file.type,
+        });
+
+        const response = await fetch(uploadUrl, {
           method: 'POST',
           body: formData,
         });
 
+        console.log('[업로드 응답]', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries()),
+        });
+
         if (!response.ok) {
           let errorMessage = '업로드 실패';
+          let errorDetails: any = null;
+          let responseText: string = '';
+          
           try {
-            const error = await response.json();
-            errorMessage = error.message || error.error || `서버 오류 (${response.status})`;
-          } catch {
+            responseText = await response.text();
+            console.log('[업로드 에러 응답 텍스트]', responseText);
+            
+            try {
+              errorDetails = JSON.parse(responseText);
+              console.log('[업로드 에러 응답 JSON]', errorDetails);
+              errorMessage = errorDetails.message || errorDetails.error || `서버 오류 (${response.status})`;
+            } catch (jsonError) {
+              // JSON 파싱 실패 - 텍스트 그대로 사용
+              console.log('[업로드 에러 JSON 파싱 실패]', jsonError);
+              errorMessage = responseText || `서버 오류 (${response.status})`;
+            }
+          } catch (textError) {
+            console.error('[업로드 에러 텍스트 읽기 실패]', textError);
             errorMessage = `서버 오류 (${response.status})`;
           }
+          
+          // 에러 상세 정보 콘솔 출력
+          console.error('[업로드 API 에러 상세]', {
+            status: response.status,
+            statusText: response.statusText,
+            errorDetails,
+            responseText,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            nodeType,
+            uploadUrl,
+          });
+          
+          logger.error('업로드 API 에러:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorDetails,
+            responseText,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+          });
+          
           throw new Error(errorMessage);
         }
 
         const result = await response.json();
+        console.log('[업로드 성공]', result);
 
         // 파일 목록에 추가
         setFileList(prev => [...prev, {

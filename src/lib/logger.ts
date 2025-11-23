@@ -38,6 +38,10 @@ export const logger = {
    */
   error: (...args: any[]) => {
     console.error('[ERROR]', ...args);
+    // 프로덕션 환경에서도 콘솔에 출력 (Vercel 로그가 없을 경우 대비)
+    if (!isDevelopment) {
+      console.error('[PRODUCTION ERROR]', ...args);
+    }
   },
 };
 
