@@ -24,6 +24,8 @@ import AddToNodeDialog from "@/components/posts/AddToNodeDialog";
 import NodeCreationToast from "@/components/workspace/NodeCreationToast";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
+import { useWorkspaceClipboard } from "@/hooks/useWorkspaceClipboard";
+import ModeToggleButton from "@/components/workspace/ModeToggleButton";
 
 interface StudioWorkspaceProps {
   studioId: string;
@@ -38,8 +40,18 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const queryClient = useQueryClient();
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]); // 다중 선택용
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [interactionMode, setInteractionMode] = useState<"drag" | "select">("drag"); // 드래그/선택 모드
+  
+  // 클립보드 훅
+  const { copy, paste, cut, clipboardData, loadFromStorage } = useWorkspaceClipboard(studioId);
+  
+  // 컴포넌트 마운트 시 로컬 스토리지에서 클립보드 로드
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
   const [workspaceStyle, setWorkspaceStyle] = useState<React.CSSProperties>({
     zIndex: 1,
     width: "100%",
@@ -196,6 +208,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const handleSidebarClose = useCallback(() => {
     setSidebarOpen(false);
     setSelectedNodeId(null);
+    setSelectedNodeIds([]);
     setNodeEditData(null);
   }, [setNodeEditData]);
 
@@ -244,9 +257,26 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     [studioId, fileId, queryClient, toast]
   );
 
-  // 노드 삭제 핸들러
+  // 노드 삭제 핸들러 (Optimistic Update 적용)
   const handleNodeDelete = useCallback(
     async (nodeId: string) => {
+      // 진행 중인 쿼리 취소
+      await queryClient.cancelQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+      
+      // 이전 데이터 백업
+      const previousNodes = queryClient.getQueryData(["studio-nodes", studioId, fileId]);
+      
+      // Optimistic Update: 즉시 노드 제거
+      queryClient.setQueryData(["studio-nodes", studioId, fileId], (old: any) => {
+        return old ? old.filter((node: any) => node.id !== nodeId) : [];
+      });
+      
+      // 선택 상태 초기화
+      setSelectedNodeId(null);
+      setSelectedNodeIds([]);
+      setSidebarOpen(false);
+      setNodeEditData(null);
+      
       try {
         const res = await fetch(`/api/studios/${studioId}/nodes/${nodeId}`, {
           method: "DELETE",
@@ -254,16 +284,19 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
         if (!res.ok) throw new Error("Failed to delete node");
 
+        // 성공 시 쿼리 무효화 (서버 동기화)
         queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
         queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
-        setSelectedNodeId(null);
-        setSidebarOpen(false);
-        setNodeEditData(null);
+        
         toast({
           title: "노드 삭제 완료",
           description: "노드가 삭제되었습니다.",
         });
       } catch (error: any) {
+        // 에러 시 롤백
+        if (previousNodes) {
+          queryClient.setQueryData(["studio-nodes", studioId, fileId], previousNodes);
+        }
         toast({
           title: "노드 삭제 실패",
           description: error.message,
@@ -271,12 +304,13 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, fileId, queryClient, toast]
+    [studioId, fileId, queryClient, toast, setNodeEditData]
   );
 
   // 노드 편집 핸들러
   const handleNodeEdit = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);
+    setSelectedNodeIds([nodeId]);
     setSidebarOpen(true);
     
     // 노드 데이터를 사이드바 컨텍스트로 전달
@@ -368,20 +402,21 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     });
   }, [nodes]);
 
-  // selectedNodeId 변경 시 노드의 selected 및 draggable 속성 업데이트
+  // selectedNodeId/selectedNodeIds 변경 시 노드의 selected 및 draggable 속성 업데이트
   useEffect(() => {
     setNodes((nds) =>
       nds.map((n) => {
         // 드래그 중인 노드는 draggable 속성을 변경하지 않음
         const isDragging = isDraggingRef.current === n.id;
+        const isSelected = selectedNodeIds.includes(n.id) || selectedNodeId === n.id;
         return {
           ...n,
-          selected: selectedNodeId === n.id,
-          draggable: isDragging ? true : (selectedNodeId === n.id),
+          selected: isSelected,
+          draggable: isDragging ? true : isSelected,
         };
       })
     );
-  }, [selectedNodeId, setNodes]);
+  }, [selectedNodeId, selectedNodeIds, setNodes]);
 
   // 노드 크기 변경 핸들러 (PHOTO 노드 리사이즈용)
   const handleNodesChange = useCallback(
@@ -398,20 +433,48 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             const newHeight = change.dimensions?.height;
             
             if (newWidth && newHeight) {
-              // API 호출하여 노드 크기 업데이트
-              fetch(`/api/studios/${studioId}/nodes/${change.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ width: newWidth, height: newHeight }),
-              }).catch((error) => {
-                console.error("Failed to update node size:", error);
-              });
+              // 리사이즈 중 표시
+              resizingNodeIds.current.add(change.id);
+              resizingNodeDimensions.current[change.id] = { width: newWidth, height: newHeight };
+              
+              // 디바운싱하여 API 호출
+              const timerId = setTimeout(() => {
+                fetch(`/api/studios/${studioId}/nodes/${change.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ width: newWidth, height: newHeight }),
+                })
+                  .then((res) => {
+                    if (res.ok) {
+                      // 성공 시 리사이즈 중 표시 제거
+                      resizingNodeIds.current.delete(change.id);
+                      // 쿼리 무효화하여 서버 데이터 동기화
+                      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+                    } else {
+                      // 실패 시 리사이즈 중 표시 제거 및 롤백
+                      resizingNodeIds.current.delete(change.id);
+                      delete resizingNodeDimensions.current[change.id];
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Failed to update node size:", error);
+                    // 에러 시 리사이즈 중 표시 제거
+                    resizingNodeIds.current.delete(change.id);
+                    delete resizingNodeDimensions.current[change.id];
+                  });
+              }, 300);
+              
+              // 이전 타이머가 있으면 취소
+              if ((positionUpdateTimers.current as any)[`resize_${change.id}`]) {
+                clearTimeout((positionUpdateTimers.current as any)[`resize_${change.id}`]);
+              }
+              (positionUpdateTimers.current as any)[`resize_${change.id}`] = timerId;
             }
           }
         }
       });
     },
-    [nodes, studioId, onNodesChange]
+    [nodes, studioId, onNodesChange, queryClient, fileId]
   );
 
   // 연결선 삭제 핸들러 (setEdges 사용 전에 정의되어야 함)
@@ -501,6 +564,17 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           position = currentNodePositions.current[node.id];
         }
         
+        // 리사이즈 중인 노드는 저장된 크기 사용
+        const isResizing = resizingNodeIds.current.has(node.id);
+        let nodeWidth = node.type === "PHOTO" ? (node.width || 300) : node.width;
+        let nodeHeight = node.type === "PHOTO" ? (node.height || 200) : "auto";
+        
+        if (isResizing && resizingNodeDimensions.current[node.id]) {
+          const savedDimensions = resizingNodeDimensions.current[node.id];
+          nodeWidth = savedDimensions.width;
+          nodeHeight = savedDimensions.height;
+        }
+        
         return {
           id: node.id,
           type: "custom",
@@ -516,11 +590,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             isPlanning,
             isConnectedToPlanning,
           },
-          selected: selectedNodeId === node.id,
-          draggable: isDragging ? true : (selectedNodeId === node.id), // 드래그 중이거나 선택된 노드만 드래그 가능
+          selected: selectedNodeIds.includes(node.id) || selectedNodeId === node.id,
+          draggable: isDragging ? true : (selectedNodeIds.includes(node.id) || selectedNodeId === node.id), // 드래그 중이거나 선택된 노드만 드래그 가능
           style: {
-            width: node.type === "PHOTO" ? (node.width || 300) : node.width,
-            height: node.type === "PHOTO" ? (node.height || 200) : "auto",
+            width: nodeWidth,
+            height: nodeHeight,
             backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
             border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
             borderRadius: "8px",
@@ -549,7 +623,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     }
   }, [edgesData, setEdges]);
 
-  // 노드 생성 뮤테이션
+  // 노드 생성 뮤테이션 (Optimistic Update 적용)
   const createNodeMutation = useMutation({
     mutationFn: async (data: { type: string; title: string; x: number; y: number; fileId?: string }) => {
         const body: any = { ...data };
@@ -569,8 +643,44 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+    onMutate: async (newNode) => {
+      // 진행 중인 쿼리 취소
+      await queryClient.cancelQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+      
+      // 이전 데이터 백업
+      const previousNodes = queryClient.getQueryData(["studio-nodes", studioId, fileId]);
+      
+      // Optimistic Update: 임시 노드 추가
+      const tempNode = {
+        id: `temp-${Date.now()}`,
+        ...newNode,
+        width: 300,
+        height: 200,
+        content: null,
+        emoji: null,
+        color: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        authorId: currentUser?.id || "",
+        isExecutable: false,
+        status: "IDLE",
+      };
+      
+      queryClient.setQueryData(["studio-nodes", studioId, fileId], (old: any) => {
+        return old ? [...old, tempNode] : [tempNode];
+      });
+      
+      return { previousNodes };
+    },
+    onSuccess: (newNode) => {
+      // 서버에서 받은 실제 노드로 교체
+      queryClient.setQueryData(["studio-nodes", studioId, fileId], (old: any) => {
+        if (!old) return [newNode];
+        return old.map((node: any) => 
+          node.id?.startsWith("temp-") ? newNode : node
+        );
+      });
+      
       toast({
         title: "노드 생성 완료",
         description: "새로운 노드가 추가되었습니다.",
@@ -578,7 +688,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       });
       setNodeCreationProgress(0);
     },
-    onError: (error: any) => {
+    onError: (error: any, newNode, context) => {
+      // 에러 시 롤백
+      if (context?.previousNodes) {
+        queryClient.setQueryData(["studio-nodes", studioId, fileId], context.previousNodes);
+      }
       console.error("Node creation error:", error);
       toast({
         title: "노드 생성 실패",
@@ -589,65 +703,12 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     },
   });
 
-  // 노드 생성 진행률 시뮬레이션
+  // 노드 생성 진행률 표시 (실제 진행률만)
   useEffect(() => {
     if (createNodeMutation.isPending) {
-      setNodeCreationProgress(0);
-      
-      // 불규칙한 진행률 시뮬레이션
-      const intervals: NodeJS.Timeout[] = [];
-      let currentProgress = 0;
-      
-      // 초기 빠른 진행 (0-40%)
-      const interval1 = setInterval(() => {
-        const increment = Math.random() * 10 + 3; // 3-13%씩 증가
-        currentProgress = Math.min(currentProgress + increment, 40);
-        setNodeCreationProgress(currentProgress);
-        if (currentProgress >= 40) {
-          clearInterval(interval1);
-        }
-      }, 80);
-      intervals.push(interval1);
-      
-      // 중간 진행 (40-70%)
-      setTimeout(() => {
-        const interval2 = setInterval(() => {
-          const increment = Math.random() * 5 + 2; // 2-7%씩 증가
-          currentProgress = Math.min(currentProgress + increment, 70);
-          setNodeCreationProgress(currentProgress);
-          if (currentProgress >= 70) {
-            clearInterval(interval2);
-          }
-        }, 100);
-        intervals.push(interval2);
-      }, 200);
-      
-      // 느린 진행 (70-90%)
-      setTimeout(() => {
-        const interval3 = setInterval(() => {
-          const increment = Math.random() * 2 + 0.5; // 0.5-2.5%씩 증가
-          currentProgress = Math.min(currentProgress + increment, 90);
-          setNodeCreationProgress(currentProgress);
-          if (currentProgress >= 90) {
-            clearInterval(interval3);
-            setNodeCreationProgress(90);
-          }
-        }, 150);
-        intervals.push(interval3);
-      }, 400);
-      
-      return () => {
-        intervals.forEach(interval => clearInterval(interval));
-      };
+      setNodeCreationProgress(50); // 진행 중 표시
     } else {
-      // 완료 시 100%로 이동 후 숨김
-      setNodeCreationProgress((prev) => {
-        if (prev < 100 && prev > 0) {
-          setTimeout(() => setNodeCreationProgress(0), 300);
-          return 100;
-        }
-        return prev;
-      });
+      setNodeCreationProgress(0); // 완료 시 숨김
     }
   }, [createNodeMutation.isPending]);
 
@@ -792,6 +853,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   
   // 현재 노드 위치를 저장 (nodesData 업데이트 시 비교용)
   const currentNodePositions = useRef<Record<string, { x: number; y: number }>>({});
+  
+  // 리사이즈 중인 노드의 크기 저장 (nodesData 업데이트 시 크기 보존용)
+  const resizingNodeDimensions = useRef<Record<string, { width: number; height: number }>>({});
+  const resizingNodeIds = useRef<Set<string>>(new Set());
 
   // 기획노드와 연결된 모든 노드 찾기 (DFS) - 재귀적으로 모든 연결 찾기
   const getConnectedNodes = useCallback((nodeId: string, visited: Set<string> = new Set()): string[] => {
@@ -814,15 +879,59 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
   // 노드 클릭 핸들러 (노드 선택)
   const onNodeClick = useCallback(
-    (_: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: Node) => {
       // 드래그 중이면 선택 변경 불가
       if (isDraggingRef.current) {
         return;
       }
-      // 노드 선택 (이미 선택된 노드면 해제)
-      setSelectedNodeId(prev => prev === node.id ? null : node.id);
+      
+      // 선택 모드일 때는 클릭으로 선택 가능
+      if (interactionMode === "select") {
+        // Shift + 클릭: 다중 선택 모드
+        if (event.shiftKey) {
+          setSelectedNodeIds(prev => {
+            if (prev.includes(node.id)) {
+              // 이미 선택된 노드면 해제
+              const newIds = prev.filter(id => id !== node.id);
+              setSelectedNodeId(newIds.length > 0 ? newIds[0] : null);
+              return newIds;
+            } else {
+              // 선택 추가
+              const newIds = [...prev, node.id];
+              setSelectedNodeId(node.id);
+              return newIds;
+            }
+          });
+        } else {
+          // 단일 선택 모드
+          setSelectedNodeId(node.id);
+          setSelectedNodeIds([node.id]);
+        }
+      } else {
+        // 드래그 모드일 때는 기존 동작 유지
+        // Shift + 클릭: 다중 선택 모드
+        if (event.shiftKey) {
+          setSelectedNodeIds(prev => {
+            if (prev.includes(node.id)) {
+              // 이미 선택된 노드면 해제
+              const newIds = prev.filter(id => id !== node.id);
+              setSelectedNodeId(newIds.length > 0 ? newIds[0] : null);
+              return newIds;
+            } else {
+              // 선택 추가
+              const newIds = [...prev, node.id];
+              setSelectedNodeId(node.id);
+              return newIds;
+            }
+          });
+        } else {
+          // 단일 선택 모드
+          setSelectedNodeId(node.id);
+          setSelectedNodeIds([node.id]);
+        }
+      }
     },
-    []
+    [interactionMode]
   );
 
   // 빈 공간 클릭 핸들러 (선택 해제)
@@ -831,14 +940,32 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     if (isDraggingRef.current) {
       return;
     }
-    setSelectedNodeId(null);
-  }, []);
+    // 선택 모드가 아닐 때만 선택 해제 (박스 선택 중에는 유지)
+    if (interactionMode === "drag") {
+      setSelectedNodeId(null);
+      setSelectedNodeIds([]);
+    }
+  }, [interactionMode]);
+
+  // 박스 선택 핸들러
+  const onSelectionChange = useCallback((params: { nodes: Node[] }) => {
+    if (interactionMode === "select") {
+      const selectedIds = params.nodes.map(n => n.id);
+      setSelectedNodeIds(selectedIds);
+      setSelectedNodeId(selectedIds.length > 0 ? selectedIds[0] : null);
+    }
+  }, [interactionMode]);
 
   // 기획노드 드래그 핸들러 (연결된 노드들도 함께 이동)
   const onNodeDragStart = useCallback(
     (_: any, node: Node) => {
+      // 선택 모드일 때는 노드 드래그 불가
+      if (interactionMode === "select") {
+        return;
+      }
+      
       // 선택되지 않은 노드는 드래그 불가
-      if (selectedNodeId !== node.id) {
+      if (!selectedNodeIds.includes(node.id) && selectedNodeId !== node.id) {
         return;
       }
 
@@ -872,7 +999,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         };
       }
     },
-    [nodes, edges, getConnectedNodes, selectedNodeId]
+    [nodes, edges, getConnectedNodes, selectedNodeId, selectedNodeIds]
   );
 
   const onNodeDrag = useCallback(
@@ -1027,6 +1154,248 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     [studioId, nodes, getConnectedNodes, fileId, queryClient]
   );
 
+  // 키보드 단축키 처리 (복사/붙여넣기/잘라내기)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlKey = isMac ? e.metaKey : e.ctrlKey;
+      
+      // 입력 필드에 포커스가 있으면 무시
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+      
+      // 드래그 중이면 무시
+      if (isDraggingRef.current) {
+        return;
+      }
+      
+      // 복사 (Ctrl/Cmd + C)
+      if (ctrlKey && e.key === 'c') {
+        e.preventDefault();
+        let nodesToCopy: Node[] = [];
+        let edgesToCopy: Edge[] = [];
+        
+        // 선택된 노드들 가져오기
+        const selectedNodes = nodes.filter(n => selectedNodeIds.includes(n.id));
+        if (selectedNodes.length === 0) {
+          // 단일 선택된 노드가 있으면 그것 사용
+          const singleNode = nodes.find(n => n.id === selectedNodeId);
+          if (singleNode) {
+            nodesToCopy = [singleNode];
+          } else {
+            return;
+          }
+        } else {
+          nodesToCopy = [...selectedNodes];
+        }
+        
+        // 기획 노드가 선택되었는지 확인하고 연결된 모든 노드 추가
+        const planningNodes = nodesToCopy.filter(n => n.data.type === "PLANNING");
+        if (planningNodes.length > 0) {
+          const allNodeIds = new Set<string>(nodesToCopy.map(n => n.id));
+          
+          // 각 기획 노드에 연결된 모든 노드 찾기
+          planningNodes.forEach(planningNode => {
+            const connectedNodeIds = getConnectedNodes(planningNode.id);
+            connectedNodeIds.forEach(nodeId => {
+              allNodeIds.add(nodeId);
+            });
+          });
+          
+          // 연결된 모든 노드 추가
+          nodesToCopy = nodes.filter(n => allNodeIds.has(n.id));
+        }
+        
+        // 복사할 노드들 간의 연결선만 필터링
+        const nodeIdsSet = new Set(nodesToCopy.map(n => n.id));
+        edgesToCopy = edges.filter(edge => {
+          const fromSelected = nodeIdsSet.has(edge.source);
+          const toSelected = nodeIdsSet.has(edge.target);
+          return fromSelected && toSelected; // 두 노드 모두 복사 대상이어야 함
+        });
+        
+        copy(nodesToCopy, edgesToCopy);
+        toast({
+          title: "복사됨",
+          description: `${nodesToCopy.length}개 노드가 복사되었습니다.`,
+        });
+      }
+      
+      // 붙여넣기 (Ctrl/Cmd + V)
+      if (ctrlKey && e.key === 'v') {
+        e.preventDefault();
+        if (!clipboardData) {
+          toast({
+            title: "클립보드가 비어있습니다",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        try {
+          // 뷰포트 중심 계산
+          let offsetX = 50;
+          let offsetY = 50;
+          if (reactFlowInstance) {
+            const viewport = reactFlowInstance.getViewport();
+            offsetX = -viewport.x + window.innerWidth / 2 - 150;
+            offsetY = -viewport.y + window.innerHeight / 2 - 100;
+          }
+          
+          paste(fileId, offsetX, offsetY).then((newNodes) => {
+            if (newNodes && newNodes.length > 0) {
+              toast({
+                title: "붙여넣기 완료",
+                description: `${newNodes.length}개 노드가 붙여넣어졌습니다.`,
+              });
+              queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+              queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+              
+              // 붙여넣은 노드 선택
+              const newNodeIds = newNodes.map(n => n.id);
+              setSelectedNodeIds(newNodeIds);
+              setSelectedNodeId(newNodeIds[0] || null);
+            }
+          }).catch((error) => {
+            console.error('Paste failed:', error);
+            toast({
+              title: "붙여넣기 실패",
+              description: error.message || "노드를 붙여넣는데 실패했습니다.",
+              variant: "destructive",
+            });
+          });
+        } catch (error: any) {
+          toast({
+            title: "붙여넣기 실패",
+            description: error.message || "알 수 없는 오류가 발생했습니다.",
+            variant: "destructive",
+          });
+        }
+      }
+      
+      // 잘라내기 (Ctrl/Cmd + X)
+      if (ctrlKey && e.key === 'x') {
+        e.preventDefault();
+        let nodesToCut: Node[] = [];
+        let edgesToCut: Edge[] = [];
+        
+        // 선택된 노드들 가져오기
+        const selectedNodes = nodes.filter(n => selectedNodeIds.includes(n.id));
+        if (selectedNodes.length === 0) {
+          // 단일 선택된 노드가 있으면 그것 사용
+          const singleNode = nodes.find(n => n.id === selectedNodeId);
+          if (singleNode) {
+            nodesToCut = [singleNode];
+          } else {
+            return;
+          }
+        } else {
+          nodesToCut = [...selectedNodes];
+        }
+        
+        // 기획 노드가 선택되었는지 확인하고 연결된 모든 노드 추가
+        const planningNodes = nodesToCut.filter(n => n.data.type === "PLANNING");
+        if (planningNodes.length > 0) {
+          const allNodeIds = new Set<string>(nodesToCut.map(n => n.id));
+          
+          // 각 기획 노드에 연결된 모든 노드 찾기
+          planningNodes.forEach(planningNode => {
+            const connectedNodeIds = getConnectedNodes(planningNode.id);
+            connectedNodeIds.forEach(nodeId => {
+              allNodeIds.add(nodeId);
+            });
+          });
+          
+          // 연결된 모든 노드 추가
+          nodesToCut = nodes.filter(n => allNodeIds.has(n.id));
+        }
+        
+        // 잘라낼 노드들 간의 연결선만 필터링
+        const nodeIdsSet = new Set(nodesToCut.map(n => n.id));
+        edgesToCut = edges.filter(edge => {
+          const fromSelected = nodeIdsSet.has(edge.source);
+          const toSelected = nodeIdsSet.has(edge.target);
+          return fromSelected && toSelected; // 두 노드 모두 잘라낼 대상이어야 함
+        });
+        
+        cut(nodesToCut, edgesToCut, handleNodeDelete).then(() => {
+          setSelectedNodeId(null);
+          setSelectedNodeIds([]);
+          toast({
+            title: "잘라내기 완료",
+            description: `${nodesToCut.length}개 노드가 잘라내어졌습니다.`,
+          });
+        }).catch((error) => {
+          console.error('Cut failed:', error);
+          toast({
+            title: "잘라내기 실패",
+            description: error.message || "노드를 잘라내는데 실패했습니다.",
+            variant: "destructive",
+          });
+        });
+      }
+      
+      // 삭제 (Delete 또는 Backspace)
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        
+        // 선택된 노드들 가져오기
+        const selectedNodes = nodes.filter(n => selectedNodeIds.includes(n.id));
+        let nodesToDelete: Node[] = [];
+        
+        if (selectedNodes.length === 0) {
+          // 단일 선택된 노드가 있으면 그것 사용
+          const singleNode = nodes.find(n => n.id === selectedNodeId);
+          if (singleNode) {
+            nodesToDelete = [singleNode];
+          } else {
+            return;
+          }
+        } else {
+          nodesToDelete = [...selectedNodes];
+        }
+        
+        if (nodesToDelete.length === 0) {
+          return;
+        }
+        
+        // 확인 다이얼로그
+        const nodeCount = nodesToDelete.length;
+        const confirmMessage = nodeCount === 1 
+          ? "이 노드를 삭제하시겠습니까?" 
+          : `${nodeCount}개 노드를 삭제하시겠습니까?`;
+        
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+        
+        // 노드 삭제 실행 (Optimistic Update는 handleNodeDelete 내부에서 처리)
+        Promise.all(nodesToDelete.map(node => handleNodeDelete(node.id)))
+          .then(() => {
+            toast({
+              title: "삭제 완료",
+              description: `${nodeCount}개 노드가 삭제되었습니다.`,
+            });
+          })
+          .catch((error) => {
+            console.error('Delete failed:', error);
+            toast({
+              title: "삭제 실패",
+              description: error.message || "노드를 삭제하는데 실패했습니다.",
+              variant: "destructive",
+            });
+          });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes, edges, selectedNodeIds, selectedNodeId, copy, paste, cut, clipboardData, fileId, reactFlowInstance, queryClient, studioId, toast, handleNodeDelete]);
+
   if (isLoadingNodes || isLoadingEdges) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full">
@@ -1069,6 +1438,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
+        onSelectionChange={onSelectionChange}
         onInit={setReactFlowInstance}
         onNodeContextMenu={(event, node) => {
           event.preventDefault();
@@ -1083,7 +1453,9 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           }
         }}
         nodeTypes={nodeTypes}
-        nodesDraggable={true} // 개별 노드의 draggable 속성으로 제어
+        nodesDraggable={interactionMode === "drag"} // 드래그 모드일 때만 노드 드래그 가능
+        panOnDrag={interactionMode === "drag"} // 드래그 모드일 때 빈 공간 드래그로 캔버스 이동 가능
+        selectionOnDrag={interactionMode === "select"} // 선택 모드일 때 박스 선택 활성화
         fitView
         style={{ backgroundColor: "#E5E5E5" }}
       >
@@ -1107,6 +1479,12 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         onClose={() => setIsAddPostDialogOpen(false)}
         studioId={studioId}
         fileId={fileId}
+      />
+
+      {/* 모드 전환 플로팅 버튼 */}
+      <ModeToggleButton
+        mode={interactionMode}
+        onModeChange={setInteractionMode}
       />
     </div>
   );

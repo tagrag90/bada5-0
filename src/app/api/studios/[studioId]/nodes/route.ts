@@ -113,6 +113,7 @@ export async function POST(
       height,
       color,
       config,
+      emoji, // 이모지 (선택적)
       fileId, // 워크스페이스 파일 ID (선택적)
     } = body;
     
@@ -154,6 +155,7 @@ export async function POST(
         type: type as any, // NodeType enum
         title,
         content: content || null,
+        emoji: emoji && emoji.trim() ? emoji.trim() : null, // 이모지 저장
         x: parseFloat(x),
         y: parseFloat(y),
         width: width ? parseFloat(width) : 300,
