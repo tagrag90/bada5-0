@@ -122,7 +122,15 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
   const isPhotoNode = data.type === "PHOTO";
 
   return (
-    <div className={`custom-node relative group`} style={{ borderRadius: '8px', overflow: 'visible', position: 'relative' }}>
+    <div 
+      className={`custom-node relative group ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`} 
+      style={{ 
+        borderRadius: '8px', 
+        overflow: 'visible', 
+        position: 'relative',
+        cursor: selected ? 'move' : 'pointer',
+      }}
+    >
       {/* 입력 연결점 - 좌측 (보더 위에 위치) */}
       <Handle 
         type="target" 
@@ -597,7 +605,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
             if (isHTML) {
               return (
                 <div 
-                  className={`text-xs text-gray-600 mt-1 break-words overflow-hidden ${data.type === "NOTE" ? "" : "line-clamp-3"}`}
+                  className={`text-xs text-gray-600 mt-1 break-words overflow-hidden leading-relaxed ${data.type === "NOTE" ? "" : "line-clamp-3"} [&_p]:my-1.5 [&_p]:first:mt-0 [&_p]:last:mb-0 [&_p]:empty:min-h-[1rem] [&_p]:empty:before:content-[''] [&_br]:block [&_br]:content-[''] [&_br]:mb-0.5`}
                   dangerouslySetInnerHTML={{ __html: data.content }}
                 />
               );

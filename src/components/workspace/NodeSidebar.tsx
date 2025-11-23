@@ -446,7 +446,7 @@ export default function NodeSidebar({
                 </Button>
               </div>
             </div>
-            <div className="border border-gray-200 rounded-md min-h-[200px] [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-normal [&_.ProseMirror_p]:my-1 [&_.ProseMirror_p:first-child]:mt-0 [&_.ProseMirror_p:last-child]:mb-0">
+            <div className="border border-gray-200 rounded-md min-h-[200px] [&_.ProseMirror]:text-sm [&_.ProseMirror]:leading-relaxed [&_.ProseMirror_p]:my-2 [&_.ProseMirror_p:first-child]:mt-0 [&_.ProseMirror_p:last-child]:mb-0 [&_.ProseMirror_p:empty]:min-h-[1.5rem] [&_.ProseMirror_p:empty]:before:content-[''] [&_.ProseMirror_br]:block [&_.ProseMirror_br]:content-[''] [&_.ProseMirror_br]:mb-1">
               <EditorContent editor={editor} />
             </div>
           </div>

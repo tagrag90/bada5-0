@@ -22,9 +22,10 @@ interface AddToNodeDialogProps {
   open: boolean;
   onClose: () => void;
   studioId?: string; // 특정 스튜디오에 추가할 경우
+  fileId?: string; // 워크스페이스 파일 ID (선택적)
 }
 
-export default function AddToNodeDialog({ post, open, onClose, studioId }: AddToNodeDialogProps) {
+export default function AddToNodeDialog({ post, open, onClose, studioId, fileId }: AddToNodeDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +74,7 @@ export default function AddToNodeDialog({ post, open, onClose, studioId }: AddTo
           }),
           x: 250,
           y: 250,
+          fileId: fileId || undefined, // fileId가 있으면 포함
         }),
       });
 
@@ -84,7 +86,12 @@ export default function AddToNodeDialog({ post, open, onClose, studioId }: AddTo
       return res.json();
     },
     onSuccess: (_, targetStudioId) => {
-      queryClient.invalidateQueries({ queryKey: ["studio-nodes", targetStudioId] });
+      // fileId가 있으면 해당 파일의 노드만 무효화, 없으면 전체 노드 무효화
+      if (fileId) {
+        queryClient.invalidateQueries({ queryKey: ["studio-nodes", targetStudioId, fileId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["studio-nodes", targetStudioId] });
+      }
       toast({
         title: "노드 추가 완료",
         description: "게시물이 워크스페이스에 노드로 추가되었습니다.",

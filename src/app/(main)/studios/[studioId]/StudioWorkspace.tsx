@@ -313,6 +313,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     }
     
     const isPlanning = node.type === "PLANNING";
+    const isSelected = selectedNodeId === node.id;
     
     return {
       id: node.id,
@@ -329,6 +330,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         isPlanning,
         isConnectedToPlanning: false,
       },
+      selected: isSelected,
+      draggable: isSelected, // 선택된 노드만 드래그 가능
       style: {
         width: node.type === "PHOTO" ? (node.width || 300) : node.width,
         height: node.type === "PHOTO" ? (node.height || 200) : "auto",
@@ -354,6 +357,31 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // 노드 위치 변경 시 현재 위치 저장
+  useEffect(() => {
+    nodes.forEach((node) => {
+      currentNodePositions.current[node.id] = {
+        x: node.position.x,
+        y: node.position.y,
+      };
+    });
+  }, [nodes]);
+
+  // selectedNodeId 변경 시 노드의 selected 및 draggable 속성 업데이트
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((n) => {
+        // 드래그 중인 노드는 draggable 속성을 변경하지 않음
+        const isDragging = isDraggingRef.current === n.id;
+        return {
+          ...n,
+          selected: selectedNodeId === n.id,
+          draggable: isDragging ? true : (selectedNodeId === n.id),
+        };
+      })
+    );
+  }, [selectedNodeId, setNodes]);
 
   // 노드 크기 변경 핸들러 (PHOTO 노드 리사이즈용)
   const handleNodesChange = useCallback(
@@ -460,10 +488,23 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         const isPlanning = node.type === "PLANNING";
         const isConnectedToPlanning = connectedToPlanning.has(node.id);
         
+        // 드래그 중이거나 위치 업데이트 중인 노드는 현재 위치를 유지
+        const isDragging = isDraggingRef.current === node.id;
+        const isUpdating = updatingNodeIds.current.has(node.id);
+        let position = { x: node.x, y: node.y };
+        
+        if (isDragging && draggingNodePosition.current) {
+          // 드래그 중인 노드는 저장된 위치 사용
+          position = draggingNodePosition.current;
+        } else if (isUpdating && currentNodePositions.current[node.id]) {
+          // 위치 업데이트 중인 노드는 현재 위치 사용
+          position = currentNodePositions.current[node.id];
+        }
+        
         return {
           id: node.id,
           type: "custom",
-          position: { x: node.x, y: node.y },
+          position,
           data: {
             label: node.title,
             content: node.content,
@@ -475,6 +516,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             isPlanning,
             isConnectedToPlanning,
           },
+          selected: selectedNodeId === node.id,
+          draggable: isDragging ? true : (selectedNodeId === node.id), // 드래그 중이거나 선택된 노드만 드래그 가능
           style: {
             width: node.type === "PHOTO" ? (node.width || 300) : node.width,
             height: node.type === "PHOTO" ? (node.height || 200) : "auto",
@@ -487,7 +530,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       });
       setNodes(newNodes);
     }
-  }, [nodesData, edgesData, setNodes, handleNodeEdit, handleNodeDelete]);
+  }, [nodesData, edgesData, setNodes, handleNodeEdit, handleNodeDelete, selectedNodeId]);
 
   useEffect(() => {
     if (edgesData) {
@@ -737,6 +780,18 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   // 드래그 시작 시 모든 노드의 초기 위치 저장 (그룹 이동용)
   const dragStartPositions = useRef<Record<string, { x: number; y: number }>>({});
   const connectedNodesGroup = useRef<string[]>([]);
+  
+  // 드래그 중인 노드 ID 추적 (드래그 중 선택 해제 방지용)
+  const isDraggingRef = useRef<string | null>(null);
+  
+  // 드래그 중인 노드의 현재 위치 저장 (nodesData 업데이트 시 위치 보존용)
+  const draggingNodePosition = useRef<{ x: number; y: number } | null>(null);
+  
+  // 위치 업데이트가 진행 중인 노드 ID 추적 (nodesData 업데이트 시 위치 보존용)
+  const updatingNodeIds = useRef<Set<string>>(new Set());
+  
+  // 현재 노드 위치를 저장 (nodesData 업데이트 시 비교용)
+  const currentNodePositions = useRef<Record<string, { x: number; y: number }>>({});
 
   // 기획노드와 연결된 모든 노드 찾기 (DFS) - 재귀적으로 모든 연결 찾기
   const getConnectedNodes = useCallback((nodeId: string, visited: Set<string> = new Set()): string[] => {
@@ -757,31 +812,79 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     return connected;
   }, [edges]);
 
+  // 노드 클릭 핸들러 (노드 선택)
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      // 드래그 중이면 선택 변경 불가
+      if (isDraggingRef.current) {
+        return;
+      }
+      // 노드 선택 (이미 선택된 노드면 해제)
+      setSelectedNodeId(prev => prev === node.id ? null : node.id);
+    },
+    []
+  );
+
+  // 빈 공간 클릭 핸들러 (선택 해제)
+  const onPaneClick = useCallback(() => {
+    // 드래그 중이면 선택 해제 불가
+    if (isDraggingRef.current) {
+      return;
+    }
+    setSelectedNodeId(null);
+  }, []);
+
   // 기획노드 드래그 핸들러 (연결된 노드들도 함께 이동)
   const onNodeDragStart = useCallback(
     (_: any, node: Node) => {
-      // 기획노드가 아니면 기본 동작
-      if (node.data.type !== "PLANNING") return;
+      // 선택되지 않은 노드는 드래그 불가
+      if (selectedNodeId !== node.id) {
+        return;
+      }
 
-      // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
-      const connectedNodeIds = getConnectedNodes(node.id);
-      connectedNodesGroup.current = connectedNodeIds;
-      
-      connectedNodeIds.forEach((connectedId) => {
-        const connectedNode = nodes.find((n) => n.id === connectedId);
-        if (connectedNode && !dragStartPositions.current[connectedId]) {
-          dragStartPositions.current[connectedId] = {
-            x: connectedNode.position.x,
-            y: connectedNode.position.y,
-          };
-        }
-      });
+      // 드래그 시작 표시 및 현재 위치 저장
+      isDraggingRef.current = node.id;
+      draggingNodePosition.current = {
+        x: node.position.x,
+        y: node.position.y,
+      };
+
+      // 기획노드인 경우 연결된 노드들도 함께 이동
+      if (node.data.type === "PLANNING") {
+        // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
+        const connectedNodeIds = getConnectedNodes(node.id);
+        connectedNodesGroup.current = connectedNodeIds;
+        
+        connectedNodeIds.forEach((connectedId) => {
+          const connectedNode = nodes.find((n) => n.id === connectedId);
+          if (connectedNode && !dragStartPositions.current[connectedId]) {
+            dragStartPositions.current[connectedId] = {
+              x: connectedNode.position.x,
+              y: connectedNode.position.y,
+            };
+          }
+        });
+      } else {
+        // 일반 노드도 초기 위치 저장
+        dragStartPositions.current[node.id] = {
+          x: node.position.x,
+          y: node.position.y,
+        };
+      }
     },
-    [nodes, edges, getConnectedNodes]
+    [nodes, edges, getConnectedNodes, selectedNodeId]
   );
 
   const onNodeDrag = useCallback(
     (_: any, node: Node) => {
+      // 드래그 중인 노드의 현재 위치 업데이트
+      if (isDraggingRef.current === node.id) {
+        draggingNodePosition.current = {
+          x: node.position.x,
+          y: node.position.y,
+        };
+      }
+
       // 기획노드가 아니면 기본 동작
       if (node.data.type !== "PLANNING") return;
 
@@ -825,6 +928,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   // 노드 위치 업데이트 (디바운싱)
   const onNodeDragStop = useCallback(
     (_: any, node: Node) => {
+      // 드래그 종료 표시 및 위치 초기화
+      isDraggingRef.current = null;
+      draggingNodePosition.current = null;
+
       // 기획노드인 경우 연결된 노드들도 함께 업데이트
       const nodeIdsToUpdate: string[] = [];
       
@@ -844,6 +951,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         nodeIdsToUpdate.push(node.id);
         delete dragStartPositions.current[node.id];
       }
+
+      // 위치 업데이트 시작 표시
+      nodeIdsToUpdate.forEach((nId) => {
+        updatingNodeIds.current.add(nId);
+      });
 
       // 기존 타이머가 있으면 취소
       nodeIdsToUpdate.forEach((nId) => {
@@ -869,10 +981,27 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           }).filter(Boolean);
 
           if (updates.length > 0) {
-            await fetch(`/api/studios/${studioId}/nodes/batch`, {
+            const res = await fetch(`/api/studios/${studioId}/nodes/batch`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ nodes: updates }),
+            });
+
+            if (!res.ok) {
+              throw new Error("Failed to update node positions");
+            }
+
+            // 위치 업데이트 완료 표시 (서버 동기화 전에 제거)
+            nodeIdsToUpdate.forEach((nId) => {
+              updatingNodeIds.current.delete(nId);
+            });
+
+            // 서버에서 업데이트된 노드 데이터 다시 가져오기
+            queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+          } else {
+            // 업데이트할 노드가 없으면 즉시 제거
+            nodeIdsToUpdate.forEach((nId) => {
+              updatingNodeIds.current.delete(nId);
             });
           }
 
@@ -882,6 +1011,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           });
         } catch (error: any) {
           console.error("Failed to update node positions:", error);
+          // 에러 발생 시 위치 업데이트 표시 제거
+          nodeIdsToUpdate.forEach((nId) => {
+            updatingNodeIds.current.delete(nId);
+          });
+          // 에러 발생 시 노드를 원래 위치로 되돌리지 않음 (사용자가 이동한 위치 유지)
         }
       }, 300);
 
@@ -890,7 +1024,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         positionUpdateTimers.current[nId] = timer;
       });
     },
-    [studioId, nodes, getConnectedNodes]
+    [studioId, nodes, getConnectedNodes, fileId, queryClient]
   );
 
   if (isLoadingNodes || isLoadingEdges) {
@@ -930,6 +1064,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           onEdgesChange(changes);
         }}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
@@ -947,6 +1083,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           }
         }}
         nodeTypes={nodeTypes}
+        nodesDraggable={true} // 개별 노드의 draggable 속성으로 제어
         fitView
         style={{ backgroundColor: "#E5E5E5" }}
       >
@@ -969,6 +1106,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         open={isAddPostDialogOpen}
         onClose={() => setIsAddPostDialogOpen(false)}
         studioId={studioId}
+        fileId={fileId}
       />
     </div>
   );
