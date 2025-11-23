@@ -592,27 +592,52 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
   // 노드 편집 핸들러
   const handleNodeEdit = useCallback((nodeId: string) => {
+    // 임시 노드 ID인 경우 저장하지 않도록 체크
+    if (nodeId?.startsWith("temp-")) {
+      console.warn("임시 노드 ID로 편집 시도:", nodeId);
+      return;
+    }
+    
     setSelectedNodeId(nodeId);
     setSelectedNodeIds([nodeId]);
     setSidebarOpen(true);
     
     // 노드 데이터를 사이드바 컨텍스트로 전달
-    if (nodesData) {
-      const node = nodesData.find((n: any) => n.id === nodeId);
-      if (node) {
-        setNodeEditData({
-          nodeId: node.id,
-          initialTitle: node.title || "",
-          initialContent: node.content || "",
-          initialEmoji: node.emoji || "",
-          nodeType: node.type || "NOTE",
-          onSave: handleNodeSave,
-          onDelete: handleNodeDelete,
-          onClose: handleSidebarClose,
-        });
+    // nodesData가 없으면 쿼리에서 직접 가져오기
+    const getNodeData = () => {
+      if (nodesData) {
+        const node = nodesData.find((n: any) => n.id === nodeId);
+        if (node) return node;
       }
+      
+      // nodesData에 없으면 쿼리 캐시에서 찾기
+      const cachedNodes = queryClient.getQueryData(["studio-nodes", studioId, fileId]) as any[];
+      if (cachedNodes) {
+        const node = cachedNodes.find((n: any) => n.id === nodeId);
+        if (node) return node;
+      }
+      
+      return null;
+    };
+    
+    const node = getNodeData();
+    if (node) {
+      setNodeEditData({
+        nodeId: node.id,
+        initialTitle: node.title || "",
+        initialContent: node.content || "",
+        initialEmoji: node.emoji || "",
+        nodeType: node.type || "NOTE",
+        onSave: handleNodeSave,
+        onDelete: handleNodeDelete,
+        onClose: handleSidebarClose,
+      });
+    } else {
+      console.warn("노드를 찾을 수 없습니다:", nodeId);
+      // 노드를 찾을 수 없으면 쿼리 무효화 후 재시도
+      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
     }
-  }, [nodesData, handleNodeSave, handleNodeDelete, handleSidebarClose, setNodeEditData]);
+  }, [nodesData, handleNodeSave, handleNodeDelete, handleSidebarClose, setNodeEditData, studioId, fileId, queryClient]);
 
   // ReactFlow를 위한 노드/연결선 변환
   const initialNodes: Node[] = nodesData?.map((node: any) => {
@@ -989,6 +1014,18 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       // 썸네일 자동 생성 스케줄링
       scheduleThumbnailGeneration();
       
+      // 노드 선택만 (화면 이동 없음)
+      setSelectedNodeId(newNode.id);
+      setSelectedNodeIds([newNode.id]);
+      
+      // PHOTO 타입 노드는 생성 후 자동으로 편집 모드 열기
+      if (newNode.type === "PHOTO") {
+        // 노드 데이터가 업데이트될 때까지 약간의 지연 후 편집 모드 열기
+        setTimeout(() => {
+          handleNodeEdit(newNode.id);
+        }, 200);
+      }
+      
       toast({
         title: "노드 생성 완료",
         description: "새로운 노드가 추가되었습니다.",
@@ -1029,26 +1066,30 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         return;
       }
 
-      // 기본 좌표 (뷰포트 중심 또는 기본값)
-      let x = 250;
-      let y = 250;
+      // 화면 중앙 좌표 (뷰포트 기준)
+      let x = 0;
+      let y = 0;
 
       if (reactFlowInstance) {
         try {
-          // 뷰포트 중심 좌표 계산
-          const viewport = reactFlowInstance.getViewport();
-          // ReactFlow의 좌표계: viewport.x는 이미 변환된 값
-          // 화면 중심을 계산하려면 viewport.x/y를 사용
-          const centerX = -viewport.x + (window.innerWidth - 400) / 2;
-          const centerY = -viewport.y + window.innerHeight / 2;
+          // 화면 중앙을 월드 좌표로 변환
+          // ReactFlow의 screenToFlowPosition 사용
+          const centerScreenX = window.innerWidth / 2;
+          const centerScreenY = window.innerHeight / 2;
           
-          if (!isNaN(centerX) && !isNaN(centerY)) {
-            x = centerX;
-            y = centerY;
+          // 화면 좌표를 플로우 좌표로 변환
+          const flowPosition = reactFlowInstance.screenToFlowPosition({
+            x: centerScreenX,
+            y: centerScreenY,
+          });
+          
+          if (!isNaN(flowPosition.x) && !isNaN(flowPosition.y)) {
+            x = flowPosition.x;
+            y = flowPosition.y;
           }
         } catch (error) {
           console.error("Error calculating node position:", error);
-          // 기본값 유지
+          // 기본값 유지 (0, 0)
         }
       }
 
@@ -1779,7 +1820,24 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         onNodeDrag={onNodeDrag}
         onNodeDragStop={onNodeDragStop}
         onSelectionChange={onSelectionChange}
-        onInit={setReactFlowInstance}
+        onInit={(instance) => {
+          setReactFlowInstance(instance);
+          // 초기 로드 시에만 최대 줌인 (한 번만 실행)
+          const hasInitialized = sessionStorage.getItem(`workspace-initialized-${fileId}`);
+          if (!hasInitialized && nodesData && nodesData.length > 0) {
+            setTimeout(() => {
+              instance.fitView({ padding: 0.1, duration: 0 });
+              instance.zoomTo(2);
+              sessionStorage.setItem(`workspace-initialized-${fileId}`, 'true');
+            }, 100);
+          } else if (!hasInitialized) {
+            // 노드가 없으면 중앙에 최대 줌인 (한 번만)
+            setTimeout(() => {
+              instance.setCenter(0, 0, { zoom: 2, duration: 0 });
+              sessionStorage.setItem(`workspace-initialized-${fileId}`, 'true');
+            }, 100);
+          }
+        }}
         onNodeContextMenu={(event, node) => {
           event.preventDefault();
           if (confirm("이 노드를 삭제하시겠습니까?")) {
@@ -1796,7 +1854,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         nodesDraggable={interactionMode === "drag"} // 드래그 모드일 때만 노드 드래그 가능
         panOnDrag={interactionMode === "drag"} // 드래그 모드일 때 빈 공간 드래그로 캔버스 이동 가능
         selectionOnDrag={interactionMode === "select"} // 선택 모드일 때 박스 선택 활성화
-        fitView
+        minZoom={0.1}
+        maxZoom={4}
+        defaultViewport={{ x: 0, y: 0, zoom: 2 }}
+        fitView={false}
         style={{ backgroundColor: "#E5E5E5" }}
       >
         <Background 
