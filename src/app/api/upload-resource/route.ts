@@ -1,6 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from '@/auth';
+import { handleApiError } from '@/lib/api-error-handler';
 
 // 자료 공유 노드용 파일 업로드 (모든 파일 타입 허용)
 export async function POST(request: NextRequest) {
@@ -40,11 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Vercel Blob 업로드 실패:', error);
-    return NextResponse.json(
-      { error: 'Upload failed', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'upload-resource');
   }
 }
 

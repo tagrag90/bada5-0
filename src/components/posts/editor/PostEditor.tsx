@@ -33,6 +33,7 @@ import Dropcursor from "@tiptap/extension-dropcursor";
 import LinkPreview from "./extensions/LinkPreview";
 import { useQuery } from "@tanstack/react-query";
 import StudioBadge from "@/components/StudioBadge";
+import { logger } from "@/lib/logger";
 // import LinkPreviewComponent from "./LinkPreviewComponent"; // 링크 미리보기 기능 제거
 
 // 디바운스 함수 추가
@@ -52,7 +53,7 @@ interface PostEditorProps {
 }
 
 export default function PostEditor({ onSuccess, post, studioId, studio }: PostEditorProps) {
-  console.log("🔍 PostEditor 렌더링됨", { post: !!post, studioId, studio: !!studio });
+  logger.debug("🔍 PostEditor 렌더링됨", { post: !!post, studioId, studio: !!studio });
 
   const { user } = useSession();
   const [editorInput, setEditorInput] = useState("");
@@ -179,17 +180,17 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
   // const fetchLinkPreview = async (url: string) => {
     // URL별 중복 요청 방지
     if (loadingUrls.has(url)) {
-      console.log(`이미 로딩 중인 URL: ${url}`);
+      logger.debug(`이미 로딩 중인 URL: ${url}`);
       return;
     }
 
     // 이미 존재하는 미리보기 확인
     if (linkPreviews.some(preview => preview.url === url)) {
-      console.log(`이미 존재하는 미리보기: ${url}`);
+      logger.debug(`이미 존재하는 미리보기: ${url}`);
       return;
     }
 
-    console.log(`새로운 링크 미리보기 생성 시작: ${url}`);
+    logger.debug(`새로운 링크 미리보기 생성 시작: ${url}`);
 
     // 로딩 상태에 URL 추가
     setLoadingUrls(prev => {
@@ -207,19 +208,19 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       }
 
       const metadata = await response.json();
-      console.log(`링크 미리보기 데이터 수신:`, metadata);
+      logger.debug(`링크 미리보기 데이터 수신:`, metadata);
 
       // 미리보기 데이터 추가 (중복 체크 한번 더)
       setLinkPreviews(prev => {
         const exists = prev.some(preview => preview.url === url);
         if (exists) {
-          console.log(`중복 방지: 이미 존재하는 URL ${url}`);
+          logger.debug(`중복 방지: 이미 존재하는 URL ${url}`);
           return prev;
         }
 
         // URL 제거 안내
-        console.log(`✅ 링크 미리보기 생성 완료: ${url}`);
-        console.log(`💡 게시 시 해당 URL은 자동으로 숨겨집니다.`);
+        logger.debug(`✅ 링크 미리보기 생성 완료: ${url}`);
+        logger.debug(`💡 게시 시 해당 URL은 자동으로 숨겨집니다.`);
 
         return [...prev, {
           ...metadata,
@@ -228,7 +229,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
       });
 
     } catch (error) {
-      console.error('링크 미리보기 생성 실패:', error);
+      logger.error('링크 미리보기 생성 실패:', error);
     } finally {
       // 로딩 상태에서 URL 제거
       setLoadingUrls(prev => {
@@ -407,7 +408,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
 
   const handleSubmit = async () => {
     try {
-      console.log("🔍 배포 디버깅 - handleSubmit 시작");
+      logger.debug("🔍 배포 디버깅 - handleSubmit 시작");
 
       const payload = isEditMode && post ? {
         id: post.id,
@@ -425,7 +426,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         studioId: studio ? studio.id : selectedStudioId || undefined,
       };
 
-      console.log("📦 배포 디버깅 - payload:", JSON.stringify(payload, null, 2));
+      logger.debug("📦 배포 디버깅 - payload:", JSON.stringify(payload, null, 2));
 
       if (isEditMode && post) {
         await mutation.mutateAsync(payload);
@@ -433,7 +434,7 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         await mutation.mutateAsync(payload);
       }
 
-      console.log("✅ 배포 디버깅 - mutation 성공");
+      logger.debug("✅ 배포 디버깅 - mutation 성공");
 
       // 성공 시 에디터 상태 초기화
       if (editor) {
@@ -451,8 +452,8 @@ export default function PostEditor({ onSuccess, post, studioId, studio }: PostEd
         onSuccess();
       }
     } catch (error) {
-      console.error("❌ 배포 디버깅 - mutation 실패:", error);
-      console.error("❌ 배포 디버깅 - 에러 상세:", {
+      logger.error("❌ 배포 디버깅 - mutation 실패:", error);
+      logger.error("❌ 배포 디버깅 - 에러 상세:", {
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         name: error instanceof Error ? error.name : undefined

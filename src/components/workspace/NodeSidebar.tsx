@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
+import { logger } from "@/lib/logger";
 
 interface NodeSidebarProps {
   nodeId: string;
@@ -199,7 +200,7 @@ export default function NodeSidebar({
       
       await onSave(nodeId, title, contentToSave, emojiValue);
     } catch (error) {
-      console.error("Failed to save node:", error);
+      logger.error("Failed to save node:", error);
       // 에러는 상위 컴포넌트에서 toast로 표시되므로 여기서는 에러를 다시 throw하지 않음
     } finally {
       setIsSaving(false);
@@ -215,7 +216,7 @@ export default function NodeSidebar({
       await onDelete(nodeId);
       onClose();
     } catch (error) {
-      console.error("Failed to delete node:", error);
+      logger.error("Failed to delete node:", error);
     } finally {
       setIsDeleting(false);
     }
@@ -269,7 +270,7 @@ export default function NodeSidebar({
           description: `${file.name} 업로드 완료!`,
         });
       } catch (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
         toast({
           variant: "destructive",
           description: `${file.name} 업로드 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,

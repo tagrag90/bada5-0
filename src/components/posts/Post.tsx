@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 // import ReactHtmlParser from "react-html-parser"; // react-html-parser 제거로 인한 교체
 import LinkPreviewComponent from "./editor/LinkPreviewComponent";
 import StudioBadge from "../StudioBadge";
+import { logger } from "@/lib/logger";
 
 interface PostProps {
   post: PostData;
@@ -277,7 +278,7 @@ export default function Post({ post }: PostProps) {
           }
           return null;
         } catch (error) {
-          console.error('링크 미리보기 파싱 오류:', error);
+          logger.error('링크 미리보기 파싱 오류:', error);
           return null;
         }
       })()}

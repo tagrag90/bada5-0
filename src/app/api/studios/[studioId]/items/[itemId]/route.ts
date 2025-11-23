@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { requireStudioMember } from "@/lib/permissions";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 // PATCH /api/studios/[studioId]/items/[itemId]
 export async function PATCH(
@@ -39,7 +40,7 @@ export async function PATCH(
 
     return Response.json(item);
   } catch (error: any) {
-    return Response.json({ error: error.message }, { status: 403 });
+    return handleApiError(error, 'studios-items-itemId-patch');
   }
 }
 
@@ -63,7 +64,7 @@ export async function DELETE(
 
     return Response.json({ message: "삭제되었습니다" });
   } catch (error: any) {
-    return Response.json({ error: error.message }, { status: 403 });
+    return handleApiError(error, 'studios-items-itemId-delete');
   }
 }
 

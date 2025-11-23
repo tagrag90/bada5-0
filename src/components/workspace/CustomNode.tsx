@@ -10,6 +10,7 @@ import { PostData } from "@/lib/types";
 import UserAvatar from "@/components/UserAvatar";
 import Image from "next/image";
 import { getCompressedImageUrl } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface CustomNodeData {
   label: string;
@@ -86,7 +87,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
             }
           })
           .catch((error) => {
-            console.error("Failed to update node size:", error);
+            logger.error("Failed to update node size:", error);
           });
       }
     }
@@ -97,18 +98,18 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
     queryKey: ["post", data.postId],
     queryFn: async () => {
       if (!data.postId) {
-        console.log("CustomNode: postId가 없습니다", { nodeId: id, type: data.type, postId: data.postId });
+        logger.debug("CustomNode: postId가 없습니다", { nodeId: id, type: data.type, postId: data.postId });
         return null;
       }
-      console.log("CustomNode: 게시물 데이터 요청", { postId: data.postId });
+      logger.debug("CustomNode: 게시물 데이터 요청", { postId: data.postId });
       const res = await fetch(`/api/posts/${data.postId}`);
       if (!res.ok) {
         const error = await res.json().catch(() => ({ error: "Unknown error" }));
-        console.error("CustomNode: 게시물 로드 실패", { postId: data.postId, error });
+        logger.error("CustomNode: 게시물 로드 실패", { postId: data.postId, error });
         throw new Error(error.error || "Failed to fetch post");
       }
       const post = await res.json();
-      console.log("CustomNode: 게시물 데이터 로드 성공", { postId: data.postId, hasUser: !!post.user, hasContent: !!post.content });
+      logger.debug("CustomNode: 게시물 데이터 로드 성공", { postId: data.postId, hasUser: !!post.user, hasContent: !!post.content });
       return post;
     },
     enabled: data.type === "POST" && !!data.postId,
@@ -281,7 +282,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
                     alt={firstImage.name || "Photo"}
                     onLoad={handleImageLoad}
                     onError={(e) => {
-                      console.error("이미지 로드 실패:", firstImage.url, firstImage);
+                      logger.error("이미지 로드 실패:", firstImage.url, firstImage);
                       e.currentTarget.style.display = 'none';
                     }}
                     style={{ 
@@ -323,7 +324,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
                 </div>
               );
             } catch (error) {
-              console.error("PHOTO 노드 content 파싱 실패:", error, data.content);
+              logger.error("PHOTO 노드 content 파싱 실패:", error, data.content);
               return (
                 <div className="relative w-full h-full min-h-[200px]">
                   <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg" style={{ border: '2px solid #000' }}>
@@ -435,7 +436,7 @@ export default function CustomNode({ data, id, selected }: NodeProps<CustomNodeD
                             window.URL.revokeObjectURL(url);
                             a.remove();
                           } catch (error) {
-                            console.error('다운로드 실패:', error);
+                            logger.error('다운로드 실패:', error);
                             // 실패 시 기본 방식으로 폴백
                             const a = document.createElement('a');
                             a.href = file.url;

@@ -1,6 +1,7 @@
 import { validateRequest } from "@/auth";
 import { createVesselSSOToken, getVesselSSOUrl } from "@/lib/sso";
 import { NextRequest, NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 /**
  * Vessel SSO 토큰 발급 API
@@ -64,11 +65,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Vessel SSO token generation error:", error);
-    return NextResponse.json(
-      { error: "SSO 토큰 생성에 실패했습니다" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'sso-vessel');
   }
 }
 

@@ -1,5 +1,6 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
+import { handleApiError } from "@/lib/api-error-handler";
 
 export async function GET() {
   try {
@@ -38,10 +39,7 @@ export async function GET() {
 
     return Response.json(fullUser);
   } catch (error) {
-    return Response.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'users-me');
   }
 }
 

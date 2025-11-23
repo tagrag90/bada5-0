@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { checkStudioAccess } from "@/lib/permissions";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 // GET /api/studios/[studioId]/files
 export async function GET(
@@ -46,11 +47,7 @@ export async function GET(
 
     return Response.json(files);
   } catch (error: any) {
-    console.error("Error fetching workspace files:", error);
-    return Response.json(
-      { error: error.message || "Failed to fetch files" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'studios-files-get');
   }
 }
 
@@ -124,11 +121,7 @@ export async function POST(
 
     return Response.json(newFile, { status: 201 });
   } catch (error: any) {
-    console.error("Error creating workspace file:", error);
-    return Response.json(
-      { error: error.message || "Failed to create file" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'studios-files-post');
   }
 }
 

@@ -1,6 +1,7 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 export async function GET(
   req: NextRequest,
@@ -77,7 +78,6 @@ export async function GET(
       hasMore: offset + limit < total,
     });
   } catch (error) {
-    console.error("Error fetching followers list:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleApiError(error, 'users-followers-list');
   }
 }

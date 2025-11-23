@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { requireStudioMember } from "@/lib/permissions";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 // GET /api/studios/[studioId]/items
 export async function GET(
@@ -60,7 +61,7 @@ export async function GET(
 
     return Response.json(items);
   } catch (error: any) {
-    return Response.json({ error: error.message }, { status: 403 });
+    return handleApiError(error, 'studios-items-get');
   }
 }
 
@@ -122,8 +123,7 @@ export async function POST(
 
     return Response.json(item, { status: 201 });
   } catch (error: any) {
-    console.error(error);
-    return Response.json({ error: error.message }, { status: 403 });
+    return handleApiError(error, 'studios-items-post');
   }
 }
 

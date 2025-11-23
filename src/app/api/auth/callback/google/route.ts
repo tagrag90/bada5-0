@@ -3,6 +3,7 @@ import kyInstance from "@/lib/ky";
 import prisma from "@/lib/prisma";
 import streamServerClient from "@/lib/stream";
 import { slugify } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import { OAuth2RequestError } from "arctic";
 import { generateIdFromEntropySize } from "lucia";
 import { cookies } from "next/headers";
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   const state = req.nextUrl.searchParams.get("state");
 
   // 디버깅: 요청 정보 로그
-  console.log("[Google OAuth Callback] 요청 시작:", {
+  logger.debug("[Google OAuth Callback] 요청 시작:", {
     hasCode: !!code,
     hasState: !!state,
     url: req.url,
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   const storedCodeVerifier = cookieStore.get("code_verifier")?.value;
 
   // 디버깅: 쿠키 상태 로그
-  console.log("[Google OAuth Callback] 쿠키 상태:", {
+  logger.debug("[Google OAuth Callback] 쿠키 상태:", {
     hasStoredState: !!storedState,
     hasStoredCodeVerifier: !!storedCodeVerifier,
     stateMatch: state === storedState,
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
       missingStoredCodeVerifier: !storedCodeVerifier,
       stateMismatch: state !== storedState,
     };
-    console.error("[Google OAuth Callback] 검증 실패:", errorDetails);
+    logger.error("[Google OAuth Callback] 검증 실패:", errorDetails);
     
     // 개발 환경에서만 상세 에러 메시지 반환
     if (process.env.NODE_ENV === "development") {
@@ -67,14 +68,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    console.log("[Google OAuth Callback] 토큰 검증 시작");
+    logger.debug("[Google OAuth Callback] 토큰 검증 시작");
     const tokens = await google.validateAuthorizationCode(
       code,
       storedCodeVerifier,
     );
-    console.log("[Google OAuth Callback] 토큰 검증 성공");
+    logger.debug("[Google OAuth Callback] 토큰 검증 성공");
 
-    console.log("[Google OAuth Callback] 사용자 정보 요청 시작");
+    logger.debug("[Google OAuth Callback] 사용자 정보 요청 시작");
     const googleUser = await kyInstance
       .get("https://www.googleapis.com/oauth2/v1/userinfo", {
         headers: {
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest) {
         },
       })
       .json<{ id: string; name: string; email: string }>();
-    console.log("[Google OAuth Callback] 사용자 정보 획득:", {
+    logger.debug("[Google OAuth Callback] 사용자 정보 획득:", {
       id: googleUser.id,
       name: googleUser.name,
       email: googleUser.email,
@@ -317,11 +318,11 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Google OAuth Callback] 에러 발생:", error);
+    logger.error("[Google OAuth Callback] 에러 발생:", error);
     
     // 에러 상세 정보 로깅
     if (error instanceof Error) {
-      console.error("[Google OAuth Callback] 에러 상세:", {
+      logger.error("[Google OAuth Callback] 에러 상세:", {
         name: error.name,
         message: error.message,
         stack: error.stack,
@@ -329,7 +330,7 @@ export async function GET(req: NextRequest) {
     }
     
     if (error instanceof OAuth2RequestError) {
-      console.error("[Google OAuth Callback] OAuth2RequestError:", {
+      logger.error("[Google OAuth Callback] OAuth2RequestError:", {
         description: error.description,
         message: error.message,
       });

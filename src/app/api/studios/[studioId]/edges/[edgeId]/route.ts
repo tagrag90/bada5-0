@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { requireStudioMember } from "@/lib/permissions";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 // DELETE /api/studios/[studioId]/edges/[edgeId]
 export async function DELETE(
@@ -35,8 +36,7 @@ export async function DELETE(
 
     return Response.json({ message: "Edge deleted successfully" });
   } catch (error: any) {
-    console.error("Error deleting edge:", error);
-    return Response.json({ error: error.message || "Failed to delete edge" }, { status: 500 });
+    return handleApiError(error, 'studios-edges-edgeId-delete');
   }
 }
 

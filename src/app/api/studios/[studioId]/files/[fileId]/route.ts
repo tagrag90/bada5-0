@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { checkStudioAccess } from "@/lib/permissions";
 import { NextRequest } from "next/server";
+import { handleApiError } from "@/lib/api-error-handler";
 
 // GET /api/studios/[studioId]/files/[fileId]
 export async function GET(
@@ -52,11 +53,7 @@ export async function GET(
 
     return Response.json(file);
   } catch (error: any) {
-    console.error("Error fetching workspace file:", error);
-    return Response.json(
-      { error: error.message || "Failed to fetch file" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'studios-files-fileId-get');
   }
 }
 
@@ -128,14 +125,10 @@ export async function PATCH(
 
     return Response.json(updatedFile);
   } catch (error: any) {
-    console.error("Error updating workspace file:", error);
     if (error.code === "P2025") {
       return Response.json({ error: "파일을 찾을 수 없습니다" }, { status: 404 });
     }
-    return Response.json(
-      { error: error.message || "Failed to update file" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'studios-files-fileId-patch');
   }
 }
 
@@ -170,14 +163,10 @@ export async function DELETE(
 
     return Response.json({ message: "파일이 성공적으로 삭제되었습니다" });
   } catch (error: any) {
-    console.error("Error deleting workspace file:", error);
     if (error.code === "P2025") {
       return Response.json({ error: "파일을 찾을 수 없습니다" }, { status: 404 });
     }
-    return Response.json(
-      { error: error.message || "Failed to delete file" },
-      { status: 500 }
-    );
+    return handleApiError(error, 'studios-files-fileId-delete');
   }
 }
 

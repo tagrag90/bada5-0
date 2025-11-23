@@ -3,9 +3,19 @@
 import React, { Suspense, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import StudioWorkspace from "../../StudioWorkspace";
+import dynamic from "next/dynamic";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useOptionalUser } from "@/app/(main)/SessionProvider";
+import { Loader2 } from "lucide-react";
+
+const StudioWorkspace = dynamic(() => import("../../StudioWorkspace"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+    </div>
+  ),
+});
 
 function WorkspaceFileContent() {
   const params = useParams();

@@ -2,7 +2,18 @@
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PostData } from "@/lib/types";
-import PostEditor from "./PostEditor";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+const PostEditor = dynamic(() => import("./PostEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+    </div>
+  ),
+});
 
 interface PostEditorModalProps {
   isOpen: boolean;
