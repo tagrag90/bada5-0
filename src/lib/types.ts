@@ -38,7 +38,6 @@ export function getPostDataSelect(loggedInUserId: string) {
     title: true,
     content: true,
     createdAt: true,
-    updatedAt: true,
     userId: true,
     studioId: true,
     user: {
@@ -57,6 +56,8 @@ export function getPostDataSelect(loggedInUserId: string) {
         id: true,
         url: true,
         type: true,
+        createdAt: true,
+        postId: true,
       },
     },
     likes: {
@@ -103,6 +104,8 @@ export function getPostDataInclude(loggedInUserId: string) {
         id: true,
         url: true,
         type: true,
+        createdAt: true,
+        postId: true,
       },
     },
     likes: {
