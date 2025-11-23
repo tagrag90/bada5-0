@@ -48,6 +48,13 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
   const thumbnailGenerationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reactFlowWrapperRef = useRef<HTMLDivElement>(null);
   
+  // 쿼리 무효화 디바운스 (중복 호출 방지) - ref 선언
+  const queryInvalidationTimer = useRef<NodeJS.Timeout | null>(null);
+  const pendingInvalidations = useRef<Set<string>>(new Set());
+  
+  // 쿼리 무효화 디바운스 헬퍼 함수 ref (다른 함수들보다 먼저 정의)
+  const debouncedInvalidateQueriesRef = useRef<((queryKey: (string | undefined)[]) => void) | null>(null);
+  
   // 클립보드 훅
   const { copy, paste, cut, clipboardData, loadFromStorage } = useWorkspaceClipboard(studioId);
   
@@ -164,7 +171,19 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       return;
     }
 
+    // iframe 내부가 아니고 사용자가 보이는 상태면 썸네일 생성하지 않음 (뷰포트 이동 방지)
+    if (window.parent === window && document.visibilityState === 'visible') {
+      console.log('[썸네일 생성] 사용자가 보이는 상태에서 실행 중단 (뷰포트 이동 방지)');
+      return;
+    }
+
+    // 현재 뷰포트 저장 (에러 발생 시 복원용)
+    let currentViewport: { x: number; y: number; zoom: number } | null = null;
+    
     try {
+      // 현재 뷰포트 저장
+      currentViewport = reactFlowInstance.getViewport();
+
       // React Flow의 모든 노드 가져오기
       const currentNodes = reactFlowInstance.getNodes();
       console.log('[썸네일 생성] 현재 노드 개수:', currentNodes.length);
@@ -205,9 +224,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         console.log('[썸네일 생성] 노드 영역이 유효하지 않아서 중단');
         return;
       }
-
-      // 현재 뷰포트 저장
-      const currentViewport = reactFlowInstance.getViewport();
 
       // React Flow 뷰포트 요소 찾기 (여러 가능한 선택자 시도)
       let reactFlowElement = reactFlowWrapperRef.current.querySelector('.react-flow__viewport') as HTMLElement;
@@ -261,9 +277,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         height: nodesBounds.height + padding * 2,
       });
       console.log('[썸네일 생성] html2canvas 완료', { width: canvas.width, height: canvas.height });
-
-      // 원래 뷰포트로 복원
-      reactFlowInstance.setViewport(currentViewport);
 
       // Canvas를 Blob으로 변환하고 업로드
       await new Promise<void>((resolve, reject) => {
@@ -336,6 +349,16 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       });
     } catch (error) {
       console.error('[썸네일 생성] 전체 프로세스 실패:', error);
+    } finally {
+      // 에러 발생 여부와 관계없이 항상 뷰포트 복원
+      if (currentViewport && reactFlowInstance) {
+        try {
+          reactFlowInstance.setViewport(currentViewport);
+          console.log('[썸네일 생성] 뷰포트 복원 완료');
+        } catch (error) {
+          console.error('[썸네일 생성] 뷰포트 복원 실패:', error);
+        }
+      }
     }
   }, [fileId, reactFlowInstance, studioId, queryClient]);
 
@@ -351,7 +374,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     }
   }, []);
 
-  // 파일 로드 시 썸네일이 없고 노드가 있으면 자동 생성
+  // 파일 로드 시 썸네일이 없고 노드가 있으면 자동 생성 (iframe 내부에서만)
   useEffect(() => {
     console.log('[썸네일 스케줄] useEffect 조건 확인:', {
       fileId: !!fileId,
@@ -363,7 +386,15 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       isLoadingNodes,
       isLoadingEdges,
       shouldGenerateThumbnail,
+      isIframe: window.parent !== window,
+      isVisible: document.visibilityState === 'visible',
     });
+
+    // iframe 내부가 아니면 자동 생성하지 않음 (사용자 뷰포트 이동 방지)
+    if (window.parent === window) {
+      console.log('[썸네일 스케줄] iframe 내부가 아니므로 자동 생성 안 함');
+      return;
+    }
 
     if (
       fileId &&
@@ -467,10 +498,47 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     setNodeEditData(null);
   }, [setNodeEditData]);
 
-  // 썸네일 생성 스케줄링 (debounce)
+  // 쿼리 무효화 디바운스 헬퍼 함수 (모든 함수보다 먼저 정의 - 다른 함수들이 의존함)
+  const debouncedInvalidateQueries = useCallback((queryKey: (string | undefined)[]) => {
+    const key = JSON.stringify(queryKey);
+    pendingInvalidations.current.add(key);
+    
+    // 기존 타이머 취소
+    if (queryInvalidationTimer.current) {
+      clearTimeout(queryInvalidationTimer.current);
+    }
+    
+    // 100ms 후 일괄 무효화
+    queryInvalidationTimer.current = setTimeout(() => {
+      const keysToInvalidate = Array.from(pendingInvalidations.current);
+      pendingInvalidations.current.clear();
+      
+      keysToInvalidate.forEach(keyStr => {
+        try {
+          const parsedKey = JSON.parse(keyStr);
+          queryClient.invalidateQueries({ queryKey: parsedKey });
+        } catch (error) {
+          console.error('Failed to parse query key:', error);
+        }
+      });
+      
+      queryInvalidationTimer.current = null;
+    }, 100);
+  }, [queryClient]);
+  
+  // debouncedInvalidateQueries를 ref에 저장 (다른 함수들이 안전하게 접근할 수 있도록)
+  debouncedInvalidateQueriesRef.current = debouncedInvalidateQueries;
+
+  // 썸네일 생성 스케줄링 (debounce) - iframe 내부에서만 실행
   const scheduleThumbnailGeneration = useCallback(() => {
     if (!fileId) {
       console.log('[썸네일 스케줄] fileId 없어서 중단');
+      return;
+    }
+
+    // iframe 내부가 아니면 스케줄링하지 않음 (사용자 뷰포트 이동 방지)
+    if (window.parent === window) {
+      console.log('[썸네일 스케줄] iframe 내부가 아니므로 스케줄링 안 함');
       return;
     }
 
@@ -515,7 +583,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         const updatedNode = await res.json();
         console.log("Node updated successfully:", updatedNode);
 
-        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+        // 쿼리 무효화 (디바운스 적용)
+        if (debouncedInvalidateQueriesRef.current) {
+          debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+        }
         
         // 썸네일 자동 생성 스케줄링
         scheduleThumbnailGeneration();
@@ -534,7 +605,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         throw error;
       }
     },
-    [studioId, fileId, queryClient, toast, scheduleThumbnailGeneration]
+    [studioId, fileId, toast, scheduleThumbnailGeneration]
   );
 
   // 노드 삭제 핸들러 (Optimistic Update 적용)
@@ -564,9 +635,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
         if (!res.ok) throw new Error("Failed to delete node");
 
-        // 성공 시 쿼리 무효화 (서버 동기화)
-        queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+        // 성공 시 쿼리 무효화 (서버 동기화, 디바운스 적용)
+        if (debouncedInvalidateQueriesRef.current) {
+          debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+          debouncedInvalidateQueriesRef.current(["studio-edges", studioId, fileId]);
+        }
         
         // 썸네일 자동 생성 스케줄링
         scheduleThumbnailGeneration();
@@ -587,7 +660,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, fileId, queryClient, toast, setNodeEditData]
+    [studioId, fileId, scheduleThumbnailGeneration, toast, setNodeEditData]
   );
 
   // 노드 편집 핸들러
@@ -605,8 +678,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     // 노드 데이터를 사이드바 컨텍스트로 전달
     // nodesData가 없으면 쿼리에서 직접 가져오기
     const getNodeData = () => {
-      if (nodesData) {
-        const node = nodesData.find((n: any) => n.id === nodeId);
+    if (nodesData) {
+      const node = nodesData.find((n: any) => n.id === nodeId);
         if (node) return node;
       }
       
@@ -621,23 +694,25 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     };
     
     const node = getNodeData();
-    if (node) {
-      setNodeEditData({
-        nodeId: node.id,
-        initialTitle: node.title || "",
-        initialContent: node.content || "",
-        initialEmoji: node.emoji || "",
-        nodeType: node.type || "NOTE",
-        onSave: handleNodeSave,
-        onDelete: handleNodeDelete,
-        onClose: handleSidebarClose,
-      });
+      if (node) {
+        setNodeEditData({
+          nodeId: node.id,
+          initialTitle: node.title || "",
+          initialContent: node.content || "",
+          initialEmoji: node.emoji || "",
+          nodeType: node.type || "NOTE",
+          onSave: handleNodeSave,
+          onDelete: handleNodeDelete,
+          onClose: handleSidebarClose,
+        });
     } else {
       console.warn("노드를 찾을 수 없습니다:", nodeId);
-      // 노드를 찾을 수 없으면 쿼리 무효화 후 재시도
-      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+      // 노드를 찾을 수 없으면 쿼리 무효화 후 재시도 (디바운스 적용)
+      if (debouncedInvalidateQueriesRef.current) {
+        debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+      }
     }
-  }, [nodesData, handleNodeSave, handleNodeDelete, handleSidebarClose, setNodeEditData, studioId, fileId, queryClient]);
+  }, [nodesData, handleNodeSave, handleNodeDelete, handleSidebarClose, setNodeEditData, studioId, fileId]);
 
   // ReactFlow를 위한 노드/연결선 변환
   const initialNodes: Node[] = nodesData?.map((node: any) => {
@@ -741,23 +816,63 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             const newHeight = change.dimensions?.height;
             
             if (newWidth && newHeight) {
-              // 리사이즈 중 표시
+              // 리사이즈 중 표시 (즉시 추가하여 nodesData 업데이트 시 보호)
               resizingNodeIds.current.add(change.id);
               resizingNodeDimensions.current[change.id] = { width: newWidth, height: newHeight };
               
+              // 리사이즈 종료 감지를 위한 타이머 설정 (리사이즈가 멈추면 제거)
+              const resizeEndTimerKey = `resize_end_${change.id}`;
+              if ((positionUpdateTimers.current as any)[resizeEndTimerKey]) {
+                clearTimeout((positionUpdateTimers.current as any)[resizeEndTimerKey]);
+              }
+              
+              // 500ms 동안 리사이즈 이벤트가 없으면 리사이즈 종료로 간주
+              (positionUpdateTimers.current as any)[resizeEndTimerKey] = setTimeout(() => {
+                resizingNodeIds.current.delete(change.id);
+                delete (positionUpdateTimers.current as any)[resizeEndTimerKey];
+              }, 500);
+              
               // 디바운싱하여 API 호출
+              const timerKey = `resize_${change.id}`;
+              
+              // 이전 타이머가 있으면 취소
+              if (positionUpdateTimers.current[timerKey]) {
+                clearTimeout(positionUpdateTimers.current[timerKey]);
+              }
+              
               const timerId = setTimeout(() => {
                 fetch(`/api/studios/${studioId}/nodes/${change.id}`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ width: newWidth, height: newHeight }),
                 })
-                  .then((res) => {
+                  .then(async (res) => {
                     if (res.ok) {
-                      // 성공 시 리사이즈 중 표시 제거
-                      resizingNodeIds.current.delete(change.id);
-                      // 쿼리 무효화하여 서버 데이터 동기화
-                      queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+                      // 서버 응답 확인
+                      const updatedNode = await res.json();
+                      
+                      // 서버에서 반환된 크기와 현재 저장된 크기가 같으면 서버 동기화 완료
+                      if (
+                        Math.abs(updatedNode.width - newWidth) < 1 &&
+                        Math.abs(updatedNode.height - newHeight) < 1
+                      ) {
+                        // 쿼리 무효화하여 서버 데이터 동기화 (디바운스 적용)
+                        if (debouncedInvalidateQueriesRef.current) {
+                          debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+                        }
+                        
+                        // 서버 응답이 완전히 반영될 때까지 리사이즈 상태 유지 (1000ms)
+                        // 리사이즈 완료 감지 타이머가 이미 설정되어 있으므로 여기서는 추가 작업 불필요
+                        // 리사이즈 완료 감지 타이머가 resizingNodeIds에서 제거하면,
+                        // 그 후 nodesData 업데이트 시 저장된 크기가 서버 데이터와 같으면 자동으로 제거됨
+                      } else {
+                        // 서버 응답이 예상과 다르면 저장된 크기 유지
+                        console.warn('서버 응답 크기가 예상과 다름', { 
+                          expected: { width: newWidth, height: newHeight },
+                          actual: { width: updatedNode.width, height: updatedNode.height }
+                        });
+                        // 저장된 크기는 유지하고 서버 데이터는 무시
+                      }
                     } else {
                       // 실패 시 리사이즈 중 표시 제거 및 롤백
                       resizingNodeIds.current.delete(change.id);
@@ -769,20 +884,20 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
                     // 에러 시 리사이즈 중 표시 제거
                     resizingNodeIds.current.delete(change.id);
                     delete resizingNodeDimensions.current[change.id];
+                  })
+                  .finally(() => {
+                    // 타이머 정리
+                    delete positionUpdateTimers.current[timerKey];
                   });
               }, 300);
               
-              // 이전 타이머가 있으면 취소
-              if ((positionUpdateTimers.current as any)[`resize_${change.id}`]) {
-                clearTimeout((positionUpdateTimers.current as any)[`resize_${change.id}`]);
-              }
-              (positionUpdateTimers.current as any)[`resize_${change.id}`] = timerId;
+              positionUpdateTimers.current[timerKey] = timerId;
             }
           }
         }
       });
     },
-    [nodes, studioId, onNodesChange, queryClient, fileId]
+    [nodes, studioId, onNodesChange, fileId]
   );
 
   // 연결선 삭제 핸들러 (setEdges 사용 전에 정의되어야 함)
@@ -796,7 +911,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         if (!res.ok) throw new Error("Failed to delete edge");
 
         setEdges((eds) => eds.filter((e) => e.id !== edgeId));
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+        // 쿼리 무효화 (디바운스 적용)
+        if (debouncedInvalidateQueriesRef.current) {
+          debouncedInvalidateQueriesRef.current(["studio-edges", studioId, fileId]);
+        }
         toast({
           title: "연결선 삭제 완료",
           description: "연결선이 삭제되었습니다.",
@@ -809,7 +927,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, setEdges, queryClient, toast]
+    [studioId, fileId, setEdges, toast]
   );
 
   // 노드 데이터가 업데이트되면 반영
@@ -848,23 +966,23 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         const currentPositions = new Map<string, { x: number; y: number }>();
         currentNodes.forEach((n) => {
           currentPositions.set(n.id, { x: n.position.x, y: n.position.y });
-        });
-        
-        const newNodes: Node[] = nodesData.map((node: any) => {
-          // POST 타입일 때 content에서 postId 추출
-          let postId: string | undefined;
-          if (node.type === "POST" && node.content) {
-            try {
-              const parsed = JSON.parse(node.content);
-              postId = parsed.postId;
-              console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
-            } catch (error) {
-              console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
-            }
+      });
+      
+      const newNodes: Node[] = nodesData.map((node: any) => {
+        // POST 타입일 때 content에서 postId 추출
+        let postId: string | undefined;
+        if (node.type === "POST" && node.content) {
+          try {
+            const parsed = JSON.parse(node.content);
+            postId = parsed.postId;
+            console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
+          } catch (error) {
+            console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
           }
-          
-          const isPlanning = node.type === "PLANNING";
-          const isConnectedToPlanning = connectedToPlanning.has(node.id);
+        }
+        
+        const isPlanning = node.type === "PLANNING";
+        const isConnectedToPlanning = connectedToPlanning.has(node.id);
           
           // 드래그 중이거나 위치 업데이트 중인 노드는 현재 위치를 유지
           const isDragging = isDraggingRef.current === node.id;
@@ -897,39 +1015,59 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           let nodeWidth = node.type === "PHOTO" ? (node.width || 300) : node.width;
           let nodeHeight = node.type === "PHOTO" ? (node.height || 200) : "auto";
           
-          if (isResizing && resizingNodeDimensions.current[node.id]) {
+          // 리사이즈 중이거나 저장된 크기가 있으면 우선 사용
+          if (resizingNodeDimensions.current[node.id]) {
             const savedDimensions = resizingNodeDimensions.current[node.id];
+            // 저장된 크기를 항상 우선 사용 (사용자가 조정한 크기)
             nodeWidth = savedDimensions.width;
             nodeHeight = savedDimensions.height;
+            
+            // 리사이즈가 완전히 끝났고 서버 데이터와 같으면 저장된 크기 제거
+            if (!isResizing) {
+              const serverWidth = node.type === "PHOTO" ? (node.width || 300) : node.width;
+              const serverHeight = node.type === "PHOTO" ? (node.height || 200) : node.height;
+              
+              // 서버 데이터와 비교하여 차이가 1픽셀 이하면 서버 데이터 사용 (동기화 완료)
+              if (
+                Math.abs(savedDimensions.width - serverWidth) <= 1 &&
+                (serverHeight === "auto" || Math.abs(savedDimensions.height - serverHeight) <= 1)
+              ) {
+                // 서버 데이터와 동기화 완료 - 저장된 크기 제거
+                delete resizingNodeDimensions.current[node.id];
+                // 서버 데이터 사용
+                nodeWidth = serverWidth;
+                nodeHeight = serverHeight === "auto" ? "auto" : serverHeight;
+              }
+            }
           }
-          
-          return {
-            id: node.id,
-            type: "custom",
+        
+        return {
+          id: node.id,
+          type: "custom",
             position,
-            data: {
-              label: node.title,
-              content: node.content,
-              type: node.type,
-              emoji: node.emoji,
-              postId,
-              onEdit: handleNodeEdit,
-              onDelete: handleNodeDelete,
-              isPlanning,
-              isConnectedToPlanning,
-            },
+          data: {
+            label: node.title,
+            content: node.content,
+            type: node.type,
+            emoji: node.emoji,
+            postId,
+            onEdit: handleNodeEdit,
+            onDelete: handleNodeDelete,
+            isPlanning,
+            isConnectedToPlanning,
+          },
             selected: selectedNodeIds.includes(node.id) || selectedNodeId === node.id,
             draggable: isDragging ? true : (isPlanning || selectedNodeIds.includes(node.id) || selectedNodeId === node.id), // 기획 노드는 항상 드래그 가능, 일반 노드는 선택된 경우만
-            style: {
+          style: {
               width: nodeWidth,
               height: nodeHeight,
-              backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
-              border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
-              borderRadius: "8px",
-              padding: node.type === "PHOTO" ? "0" : "12px",
-            },
-          };
-        });
+            backgroundColor: node.type === "PHOTO" ? "transparent" : "#fff",
+            border: node.type === "PHOTO" ? "none" : (isPlanning ? "2px solid #9333ea" : "2px solid #000"),
+            borderRadius: "8px",
+            padding: node.type === "PHOTO" ? "0" : "12px",
+          },
+        };
+      });
         
         return newNodes;
       });
@@ -1017,6 +1155,8 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       // 노드 선택만 (화면 이동 없음)
       setSelectedNodeId(newNode.id);
       setSelectedNodeIds([newNode.id]);
+      
+      // 쿼리 무효화는 이미 onMutate에서 처리되었으므로 여기서는 불필요
       
       // PHOTO 타입 노드는 생성 후 자동으로 편집 모드 열기
       if (newNode.type === "PHOTO") {
@@ -1154,8 +1294,10 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         // 연결선 상태 업데이트
         setEdges((eds) => addEdge(params, eds));
 
-        // 쿼리 무효화하여 새로고침
-        queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+        // 쿼리 무효화하여 새로고침 (디바운스 적용)
+        if (debouncedInvalidateQueriesRef.current) {
+          debouncedInvalidateQueriesRef.current(["studio-edges", studioId, fileId]);
+        }
         toast({
           title: "연결선 생성 성공",
           description: "노드가 연결되었습니다.",
@@ -1169,7 +1311,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         });
       }
     },
-    [studioId, fileId, setEdges, queryClient, toast]
+    [studioId, fileId, setEdges, toast]
   );
 
   // 화이트보드가 전체 화면을 차지하도록 설정 (사이드바 뒤까지 포함)
@@ -1331,25 +1473,25 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
 
       // 기획노드인 경우 연결된 노드들도 함께 이동
       if (isPlanningNode) {
-        // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
-        const connectedNodeIds = getConnectedNodes(node.id);
-        connectedNodesGroup.current = connectedNodeIds;
+      // 드래그 시작 시 모든 연결된 노드의 초기 위치 저장
+      const connectedNodeIds = getConnectedNodes(node.id);
+      connectedNodesGroup.current = connectedNodeIds;
         
         // 기획 노드 자신의 초기 위치도 저장
         dragStartPositions.current[node.id] = {
           x: node.position.x,
           y: node.position.y,
         };
-        
-        connectedNodeIds.forEach((connectedId) => {
-          const connectedNode = nodes.find((n) => n.id === connectedId);
-          if (connectedNode && !dragStartPositions.current[connectedId]) {
-            dragStartPositions.current[connectedId] = {
-              x: connectedNode.position.x,
-              y: connectedNode.position.y,
-            };
-          }
-        });
+      
+      connectedNodeIds.forEach((connectedId) => {
+        const connectedNode = nodes.find((n) => n.id === connectedId);
+        if (connectedNode && !dragStartPositions.current[connectedId]) {
+          dragStartPositions.current[connectedId] = {
+            x: connectedNode.position.x,
+            y: connectedNode.position.y,
+          };
+        }
+      });
       } else {
         // 일반 노드도 초기 위치 저장
         dragStartPositions.current[node.id] = {
@@ -1485,21 +1627,21 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
             });
 
             if (!res.ok) {
-              throw new Error("Failed to update node positions");
+              const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+              throw new Error(errorData.error || "Failed to update node positions");
             }
 
-            // 서버 동기화 완료 후 위치 업데이트 표시 제거
-            // invalidateQueries 호출 전에 제거하면 위치가 덮어씌워질 수 있음
-            // 서버 응답 후 약간의 지연을 두고 제거
-            setTimeout(() => {
-              nodeIdsToUpdate.forEach((nId) => {
-                updatingNodeIds.current.delete(nId);
-                delete currentNodePositions.current[nId];
-              });
-            }, 100);
-
-            // 서버에서 업데이트된 노드 데이터 다시 가져오기
-            queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
+            // 서버 응답 확인 후 위치 업데이트 표시 제거
+            // 서버에서 업데이트된 노드 데이터 다시 가져오기 (디바운스 적용)
+            if (debouncedInvalidateQueriesRef.current) {
+              debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+            }
+            
+            // 서버 동기화 완료 후 위치 업데이트 표시 제거 (서버 응답 확인 후)
+            nodeIdsToUpdate.forEach((nId) => {
+              updatingNodeIds.current.delete(nId);
+              delete currentNodePositions.current[nId];
+            });
             
             // 썸네일 자동 생성 스케줄링
             scheduleThumbnailGeneration();
@@ -1521,6 +1663,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           nodeIdsToUpdate.forEach((nId) => {
             updatingNodeIds.current.delete(nId);
             delete currentNodePositions.current[nId];
+            delete positionUpdateTimers.current[nId];
           });
           // 에러 발생 시 노드를 원래 위치로 되돌리지 않음 (사용자가 이동한 위치 유지)
         }
@@ -1531,8 +1674,64 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
         positionUpdateTimers.current[nId] = timer;
       });
     },
-    [studioId, nodes, getConnectedNodes, fileId, queryClient]
+    [studioId, nodes, getConnectedNodes, fileId, scheduleThumbnailGeneration]
   );
+
+  // 컴포넌트 언마운트 시 모든 타이머 정리 및 Ref 객체 정리
+  useEffect(() => {
+    return () => {
+      // 모든 위치 업데이트 타이머 정리
+      Object.values(positionUpdateTimers.current).forEach(timer => {
+        clearTimeout(timer);
+      });
+      positionUpdateTimers.current = {};
+
+      // 썸네일 생성 타이머 정리
+      if (thumbnailGenerationTimeoutRef.current) {
+        clearTimeout(thumbnailGenerationTimeoutRef.current);
+        thumbnailGenerationTimeoutRef.current = null;
+      }
+
+      // 쿼리 무효화 타이머 정리
+      if (queryInvalidationTimer.current) {
+        clearTimeout(queryInvalidationTimer.current);
+        queryInvalidationTimer.current = null;
+      }
+
+      // 리사이즈 타이머 정리
+      Object.keys(positionUpdateTimers.current).forEach(key => {
+        if (key.startsWith('resize_')) {
+          clearTimeout(positionUpdateTimers.current[key]);
+          delete positionUpdateTimers.current[key];
+        }
+      });
+
+      // Ref 객체 정리 (메모리 누수 방지)
+      dragStartPositions.current = {};
+      connectedNodesGroup.current = [];
+      currentNodePositions.current = {};
+      resizingNodeDimensions.current = {};
+      resizingNodeIds.current.clear();
+      updatingNodeIds.current.clear();
+      pendingInvalidations.current.clear();
+      isDraggingRef.current = null;
+      draggingNodePosition.current = null;
+    };
+  }, []);
+
+  // 파일 변경 시 세션 스토리지 정리
+  useEffect(() => {
+    if (fileId) {
+      // 이전 파일의 초기화 플래그 정리 (같은 세션 내 다른 파일로 이동 시)
+      const currentKey = `workspace-initialized-${fileId}`;
+      const allKeys = Object.keys(sessionStorage);
+      allKeys.forEach(key => {
+        if (key.startsWith('workspace-initialized-') && key !== currentKey) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
+  }, [fileId]);
 
   // 키보드 단축키 처리 (복사/붙여넣기/잘라내기)
   useEffect(() => {
@@ -1630,8 +1829,11 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
                 title: "붙여넣기 완료",
                 description: `${newNodes.length}개 노드가 붙여넣어졌습니다.`,
               });
-              queryClient.invalidateQueries({ queryKey: ["studio-nodes", studioId, fileId] });
-              queryClient.invalidateQueries({ queryKey: ["studio-edges", studioId, fileId] });
+              // 쿼리 무효화 (디바운스 적용)
+              if (debouncedInvalidateQueriesRef.current) {
+                debouncedInvalidateQueriesRef.current(["studio-nodes", studioId, fileId]);
+                debouncedInvalidateQueriesRef.current(["studio-edges", studioId, fileId]);
+              }
               
               // 붙여넣은 노드 선택
               const newNodeIds = newNodes.map(n => n.id);
@@ -1774,7 +1976,7 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [nodes, edges, selectedNodeIds, selectedNodeId, copy, paste, cut, clipboardData, fileId, reactFlowInstance, queryClient, studioId, toast, handleNodeDelete]);
+  }, [nodes, edges, selectedNodeIds, selectedNodeId, copy, paste, cut, clipboardData, fileId, reactFlowInstance, studioId, toast, handleNodeDelete, getConnectedNodes]);
 
   if (isLoadingNodes || isLoadingEdges) {
     return (
