@@ -2,7 +2,6 @@ import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import { handleApiError } from '@/lib/api-error-handler';
 import { logger } from '@/lib/logger';
-import prisma from '@/lib/prisma';
 
 // Vercel 함수 타임아웃 설정 (최대 60초)
 export const maxDuration = 60;
@@ -183,33 +182,10 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // 데이터베이스에 미디어 정보 저장 (게시물 미디어인 경우만)
-    let mediaId = null;
-    if (uploadType === 'media') {
-      try {
-        const mediaType = file.type.startsWith('image/') ? 'IMAGE' : 'VIDEO';
-        const media = await prisma.media.create({
-          data: {
-            url: blob.url,
-            type: mediaType,
-          },
-        });
-        mediaId = media.id;
-        logger.debug('미디어 DB 저장 완료, ID:', media.id);
-      } catch (dbError) {
-        // Blob 업로드는 성공했지만 DB 저장 실패한 경우
-        logger.error('미디어 DB 저장 실패 (Blob 업로드는 성공):', {
-          error: dbError instanceof Error ? dbError.message : String(dbError),
-          blobUrl: blob.url,
-        });
-        // Blob URL은 반환하되, DB 저장 실패는 경고로 처리
-        // (이미 업로드된 파일이므로 사용자는 사용 가능)
-      }
-    }
-
+    // Blob 업로드 성공 시 URL 반환
+    // Media 레코드는 게시물 생성 시 별도로 생성됨 (Prisma 의존성 제거)
     return NextResponse.json({
       url: blob.url,
-      mediaId,
       success: true
     });
 
@@ -222,9 +198,10 @@ export async function POST(request: NextRequest) {
     // 콘솔에 상세 에러 출력 (Vercel 로그 대신 사용)
     console.error('[업로드 API] 전체 에러:', {
       error: errorMessage,
-      stack: errorStack,
       name: errorName,
+      stack: errorStack,
       nodeEnv: process.env.NODE_ENV,
+      hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
     });
     
     logger.error('파일 업로드 에러:', {
@@ -233,11 +210,19 @@ export async function POST(request: NextRequest) {
       name: errorName,
     });
     
-    // 클라이언트에 더 자세한 에러 정보 제공
+    // 클라이언트에 더 자세한 에러 정보 제공 (프로덕션에서도 메시지는 전달)
+    const responseMessage = errorMessage || '알 수 없는 오류가 발생했습니다.';
+    
     return NextResponse.json({
       error: '파일 업로드 실패',
-      message: errorMessage || '알 수 없는 오류가 발생했습니다.',
-      details: process.env.NODE_ENV === 'development' ? errorStack : undefined,
-    }, { status: 500 });
+      message: responseMessage,
+      errorType: errorName,
+      // 프로덕션에서도 기본 에러 메시지는 전달 (스택은 제외)
+    }, { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }

@@ -278,30 +278,47 @@ export default function NodeSidebar({
           let errorDetails: any = null;
           let responseText: string = '';
           
+          // 응답 본문 읽기 시도
           try {
-            responseText = await response.text();
-            console.log('[업로드 에러 응답 텍스트]', responseText);
+            const contentType = response.headers.get('content-type');
+            console.log('[업로드 에러] 응답 헤더:', {
+              status: response.status,
+              statusText: response.statusText,
+              contentType,
+              headers: Object.fromEntries(response.headers.entries()),
+            });
             
-            try {
-              errorDetails = JSON.parse(responseText);
-              console.log('[업로드 에러 응답 JSON]', errorDetails);
+            if (contentType?.includes('application/json')) {
+              // JSON 응답인 경우
+              errorDetails = await response.json();
+              console.error('[업로드 에러 응답 JSON]', errorDetails);
               errorMessage = errorDetails.message || errorDetails.error || `서버 오류 (${response.status})`;
-            } catch (jsonError) {
-              // JSON 파싱 실패 - 텍스트 그대로 사용
-              console.log('[업로드 에러 JSON 파싱 실패]', jsonError);
-              errorMessage = responseText || `서버 오류 (${response.status})`;
+            } else {
+              // 텍스트 응답인 경우
+              responseText = await response.text();
+              console.error('[업로드 에러 응답 텍스트]', responseText);
+              
+              // 텍스트를 JSON으로 파싱 시도
+              try {
+                errorDetails = JSON.parse(responseText);
+                errorMessage = errorDetails.message || errorDetails.error || responseText || `서버 오류 (${response.status})`;
+              } catch {
+                // JSON이 아닌 경우 텍스트 그대로 사용
+                errorMessage = responseText || `서버 오류 (${response.status})`;
+              }
             }
-          } catch (textError) {
-            console.error('[업로드 에러 텍스트 읽기 실패]', textError);
-            errorMessage = `서버 오류 (${response.status})`;
+          } catch (readError) {
+            console.error('[업로드 에러 응답 읽기 실패]', readError);
+            errorMessage = `서버 오류 (${response.status}): 응답을 읽을 수 없습니다`;
           }
           
-          // 에러 상세 정보 콘솔 출력
+          // 에러 상세 정보 콘솔 출력 (항상 출력)
           console.error('[업로드 API 에러 상세]', {
             status: response.status,
             statusText: response.statusText,
             errorDetails,
             responseText,
+            errorMessage,
             fileName: file.name,
             fileSize: file.size,
             fileType: file.type,
@@ -319,7 +336,9 @@ export default function NodeSidebar({
             fileType: file.type,
           });
           
-          throw new Error(errorMessage);
+          // 에러 메시지가 없으면 기본 메시지 사용
+          const finalErrorMessage = errorMessage || `서버 오류 (${response.status})`;
+          throw new Error(finalErrorMessage);
         }
 
         const result = await response.json();
@@ -334,6 +353,13 @@ export default function NodeSidebar({
           type: file.type,
           uploadedAt: new Date().toISOString(),
         }]);
+        
+        console.log('[업로드 성공] 파일 정보:', {
+          url: result.url,
+          fileId: result.fileId,
+          mediaId: result.mediaId,
+          fileName: file.name,
+        });
 
         toast({
           description: `${file.name} 업로드 완료!`,

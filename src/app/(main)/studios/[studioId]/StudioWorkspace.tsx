@@ -722,7 +722,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
       try {
         const parsed = JSON.parse(node.content);
         postId = parsed.postId;
-        console.log("StudioWorkspace: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
       } catch (error) {
         console.error("StudioWorkspace: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
         // JSON 파싱 실패 시 무시
@@ -975,7 +974,6 @@ function WorkspaceContent({ studioId, fileId }: StudioWorkspaceProps) {
           try {
             const parsed = JSON.parse(node.content);
             postId = parsed.postId;
-            console.log("StudioWorkspace useEffect: POST 노드 postId 추출", { nodeId: node.id, postId, content: node.content });
           } catch (error) {
             console.error("StudioWorkspace useEffect: POST 노드 content 파싱 실패", { nodeId: node.id, content: node.content, error });
           }
